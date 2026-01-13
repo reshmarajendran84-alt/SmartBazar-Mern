@@ -12,16 +12,20 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
+      required: null,
     },
     otp: String,
     otpExpiry: Date,
+otpLastSent: Date,
+
     isVerified: {
       type: Boolean,
       default: false,
     },
     role: {
       type: String,
+        enum: ["user", "admin"],
+
       default: "user",
     },
   },
