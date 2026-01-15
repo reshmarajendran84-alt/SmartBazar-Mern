@@ -5,20 +5,14 @@ import {
   verifyOtp,
   signupUser,
   loginUser,
-  forgotPassword,
-  resetPassword
+  forgotPassword,resetPassword
 } from "../controllers/authController.js";
-
-import {
-  protect,
-  authorize,
-  validate,
-} from "../middlewares/authMiddleware.js";
+// import { otpLimiter } from "../middlewares/rateLimiter.js";
 
 const router = express.Router();
 
 router.post("/check-email", checkEmail);
-router.post("/send-otp", sendSignupOtp);
+router.post("/send-otp", /*otpLimiter,*/ sendSignupOtp);
 router.post("/verify-otp", verifyOtp);
 router.post("/signup", signupUser);
 router.post("/login", loginUser);
