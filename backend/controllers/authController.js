@@ -3,14 +3,11 @@ import authService from "../services/authServices.js";
 
 export const checkEmail = async (req, res) => {
   try {
-    const result = await authService.checkEmail(req.body.email);
-    return res.json(result);
-  } catch (err) { 
-    console.error("checkEmail error:", err);
-    return res.status(500).json({ message: err.message });
+    res.json(await authService.checkEmail(req.body.email));
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
-
 /* ================= SEND OTP FOR SIGNUP ================= */
 export const sendSignupOtp = async (req, res) => {
   try {
@@ -19,7 +16,6 @@ export const sendSignupOtp = async (req, res) => {
     res.status(400).json({ message: err.message });
   }
 };
-
 /* ================= VERIFY OTP ================= */
 export const verifyOtp = async (req, res) => {
   try {
@@ -28,8 +24,7 @@ export const verifyOtp = async (req, res) => {
     res.status(400).json({ message: err.message });
   }
 };
-
-/* ================= SET PASSWORD (FINAL SIGNUP STEP) ================= */
+/* =================  SIGNUP  ================= */
 export const signupUser = async (req, res) => {
   try {
     res.json(await authService.signupUser(req.body.email, req.body.password));
@@ -45,7 +40,6 @@ export const loginUser = async (req, res) => {
     res.status(401).json({ message: err.message });
   }
 };
-
 /* ================= FORGOT PASSWORD ================= */
 export const forgotPassword = async (req, res) => {
   try {

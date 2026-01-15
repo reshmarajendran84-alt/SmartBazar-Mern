@@ -4,8 +4,7 @@ import hashPassword from "../utils/hashPassword.js";
 import generateOTP from "../utils/generateOTP.js";
 import jwt from "jsonwebtoken";
 
-class AuthService {
-
+class authService {
   async checkEmail(email) {
     const user = await User.findOne({ email });
     return user && user.isVerified && user.password
@@ -22,7 +21,7 @@ class AuthService {
     if (!user) user = await User.create({ email });
 
     if (user.otpLastSent && Date.now() - user.otpLastSent < 30000)
-      throw new Error("Wait 30 seconds before resending OTP");
+      throw new Error("Wait before resending OTP");
 
     user.otp = generateOTP();
     user.otpExpiry = Date.now() + 5 * 60 * 1000;
@@ -37,7 +36,7 @@ class AuthService {
 
     if (!user || user.otp !== otp)
       throw new Error("Invalid OTP");
-console.log(user.otp);
+
     if (user.otpExpiry < Date.now())
       throw new Error("OTP expired");
 
@@ -83,4 +82,4 @@ console.log(user.otp);
   }
 }
 
-export default new AuthService();
+export default new authService();
