@@ -1,22 +1,15 @@
 import express from "express";
-import {
-  checkEmail,
-  sendSignupOtp,
-  verifyOtp,
-  signupUser,
-  loginUser,
-  forgotPassword,resetPassword
-} from "../controllers/authController.js";
+import authController from "../controllers/authController.js";
 // import { otpLimiter } from "../middlewares/rateLimiter.js";
 
 const router = express.Router();
 
-router.post("/check-email", checkEmail);
-router.post("/send-otp", /*otpLimiter,*/ sendSignupOtp);
-router.post("/verify-otp", verifyOtp);
-router.post("/signup", signupUser);
-router.post("/login", loginUser);
-router.post("/forget-password", forgotPassword);
-router.post("/reset-password", resetPassword);
+router.post("/check-email", authController.checkEmail);
+router.post("/send-otp", /* otpLimiter, */ authController.sendSignupOtp);
+router.post("/verify-otp", authController.verifyOtp);
+router.post("/set-password", authController.setPassword);
+router.post("/login", authController.login);
+router.post("/forgot-password", authController.forgotPassword);
+router.post("/reset-password", authController.resetPassword);
 
 export default router;

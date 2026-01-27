@@ -1,64 +1,75 @@
-import authService from "../services/authServices.js"; 
-/* ================= CHECK EMAIL & DECIDE FLOW ================= */
+import authService from "../services/authService.js";
 
-export const checkEmail = async (req, res) => {
-  try {
-    res.json(await authService.checkEmail(req.body.email));
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+class AuthController {
+  async checkEmail(req, res) {
+    try {
+      const { email } = req.body;
+      const result = await authService.checkEmail(email);
+      res.json(result);
+    } catch (err) {
+      res.status(400).json({ message: err.message });
+    }
   }
-};
-/* ================= SEND OTP FOR SIGNUP ================= */
-export const sendSignupOtp = async (req, res) => {
-  try {
-    res.json(await authService.sendSignupOtp(req.body.email));
-  } catch (err) {
-    res.status(400).json({ message: err.message });
+
+  async sendSignupOtp(req, res) {
+    try {
+      const { email } = req.body;
+      const result = await authService.sendSignupOtp(email);
+      res.json(result);
+    } catch (err) {
+      res.status(400).json({ message: err.message });
+    }
   }
-};
-/* ================= VERIFY OTP ================= */
-export const verifyOtp = async (req, res) => {
-  try {
-    res.json(await authService.verifyOtp(req.body.email, req.body.otp));
-  } catch (err) {
-    res.status(400).json({ message: err.message });
+
+  async verifyOtp(req, res) {
+    try {
+      const { email, otp } = req.body;
+      const result = await authService.verifyOtp(email, otp);
+      res.json(result);
+    } catch (err) {
+      res.status(400).json({ message: err.message });
+    }
   }
-};
-/* =================  SIGNUP  ================= */
-export const signupUser = async (req, res) => {
-  try {
-    res.json(await authService.signupUser(req.body.email, req.body.password));
-  } catch (err) {
-    res.status(400).json({ message: err.message });
+
+  async setPassword(req, res) {
+    try {
+      const { email, password } = req.body;
+      const result = await authService.setPassword(email, password);
+      res.json(result);
+    } catch (err) {
+      res.status(400).json({ message: err.message });
+    }
   }
-};
-/* ================= LOGIN ================= */
-export const loginUser = async (req, res) => {
-  try {
-    res.json(await authService.loginUser(req.body.email, req.body.password));
-  } catch (err) {
-    res.status(401).json({ message: err.message });
+
+  async login(req, res) {
+    try {
+      const { email, password } = req.body;
+      const result = await authService.loginUser(email, password);
+      res.json(result);
+    } catch (err) {
+      res.status(400).json({ message: err.message });
+    }
   }
-};
-/* ================= FORGOT PASSWORD ================= */
-export const forgotPassword = async (req, res) => {
-  try {
-    const result = await authService.forgotPassword(req.body.email);
-    res.json(result);
-  } catch (err) {
-    res.status(404).json({ message: err.message });
+
+  async forgotPassword(req, res) {
+    try {
+      const { email } = req.body;
+      const result = await authService.sendForgotPasswordOtp(email);
+      res.json(result);
+    } catch (err) {
+      res.status(400).json({ message: err.message });
+    }
   }
-};
-/* ================= RESET PASSWORD ================= */
-export const resetPassword = async (req, res) => {
-  try {
-    const result = await authService.resetPassword(
-      req.body.email,
-      req.body.otp,
-      req.body.newPassword
-    );
-    res.json(result);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
+
+  async resetPassword(req, res) {
+    try {
+      const { email, otp, newPassword } = req.body;
+      const result = await authService.resetPassword(email, otp, newPassword);
+      res.json(result);
+    } catch (err) {
+      res.status(400).json({ message: err.message });
+    }
   }
-};
+}
+
+export default new AuthController();
