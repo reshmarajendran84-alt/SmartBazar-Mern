@@ -62,14 +62,21 @@ class AuthController {
   }
 
   async resetPassword(req, res) {
-    try {
-      const { email, otp, newPassword } = req.body;
-      const result = await authService.resetPassword(email, otp, newPassword);
-      res.json(result);
-    } catch (err) {
-      res.status(400).json({ message: err.message });
+  try {
+    const { email, otp, newPassword } = req.body; // ✅ FIRST
+
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({
+        message: "Email, OTP and new password are required"
+      });
     }
+
+    const result = await authService.resetPassword(email, otp, newPassword);
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
   }
 }
+
 
 export default new AuthController();

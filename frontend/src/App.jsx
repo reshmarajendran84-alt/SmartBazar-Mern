@@ -4,14 +4,13 @@ import AdminLogin from "./pages/AdminLogin";
 import ProtectedRoute from "./components/ProtectRoute";
 import UserProfile from "./pages/UserProfile";
 import AdminDashboard from "./pages/AdminDashboard";
-
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<AuthPage />} />
-
-        <Route path="/profile" element={
+        <Route path="/login" element={<AuthPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage  />} />        <Route path="/profile" element={
           <ProtectedRoute role="user">
             <UserProfile />
           </ProtectedRoute>
