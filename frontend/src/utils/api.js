@@ -2,22 +2,19 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL: "http://localhost:5000/api",
-  headers: {
-    "Content-Type": "application/json"
-  }
 });
 
-api.interceptors.request.use(
-  (request) => {
-    const token = localStorage.getItem("token");
+api.interceptors.request.use((config) => {
+  const userToken = localStorage.getItem("token");
+  const adminToken = localStorage.getItem("adminToken");
 
-    if (token) {
-      request.headers.Authorization = `Bearer ${token}`;
-    }
+  if (adminToken) {
+    config.headers.Authorization = `Bearer ${adminToken}`;
+  } else if (userToken) {
+    config.headers.Authorization = `Bearer ${userToken}`;
+  }
 
-    return request;
-  },
-  (error) => Promise.reject(error)
-);
+  return config;
+});
 
 export default api;

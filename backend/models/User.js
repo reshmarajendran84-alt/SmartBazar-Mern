@@ -28,6 +28,16 @@ otpLastSent: Date,
 
       default: "user",
     },
+    addresses: [
+  {
+    name: String,
+    phone: String,
+    city: String,
+    pincode: String,
+    addressLine: String
+  }
+]
+
   },
   { timestamps: true }
 );

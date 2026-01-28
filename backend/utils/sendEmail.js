@@ -3,24 +3,29 @@ import nodemailer from "nodemailer";
 const sendEmail = async (to, otp) => {
   try {
     const transporter = nodemailer.createTransport({
-      service: "gmail", 
+      service: "gmail",
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
     });
 
+    await transporter.verify(); // ✅ important
+
     await transporter.sendMail({
-      from: `"SmartBazar Auth" <${process.env.EMAIL_USER}>`,
+      from: `"SmartBazar" <${process.env.EMAIL_USER}>`,
       to,
       subject: "Your OTP Code",
-      html: `<h2>Your OTP is: ${otp}</h2><p>It is valid for 5 minutes.</p>`,
+      html: `
+        <h2>Your OTP is ${otp}</h2>
+        <p>This OTP is valid for 5 minutes.</p>
+      `,
     });
 
-    console.log(`OTP sent to ${to}: ${otp}`);
-  } catch (err) {
-    console.error("Email send error:", err);
-    throw new Error("Failed to send OTP email");
+    console.log("✅ OTP email sent to:", to);
+  } catch (error) {
+    console.error("❌ Email error:", error.message);
+    throw new Error("Email sending failed");
   }
 };
 
