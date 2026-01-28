@@ -22,6 +22,7 @@ export default function AuthPage() {
       }
     } catch (err) {
       alert(err.response?.data?.message || "Error");
+      console.log(err);
     }
   };
 

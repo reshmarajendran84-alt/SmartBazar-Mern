@@ -1,68 +1,32 @@
-import authService from "../services/authService.js";
+import Admin from "../models/Admin.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
-class AuthController {
-  checkEmail = async (req, res) => {
-    try {
-      const { email } = req.body;
-      res.json(await authService.checkEmail(email));
-    } catch (err) {
-      res.status(400).json({ message: err.message });
-    }
-  };
+class AdminController {
+  async login(req, res) {
+    const { email, password } = req.body;
 
-  sendSignupOtp = async (req, res) => {
-    try {
-      const { email } = req.body;
-      res.json(await authService.sendSignupOtp(email));
-    } catch (err) {
-      res.status(400).json({ message: err.message });
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password required" });
     }
-  };
 
-  verifyOtp = async (req, res) => {
-    try {
-      const { email, otp } = req.body;
-      res.json(await authService.verifyOtp(email, otp));
-    } catch (err) {
-      res.status(400).json({ message: err.message });
-    }
-  };
+    const admin = await Admin.findOne({ email });
+if (!admin) return res.status(400).json({ message: "Invalid credentials" });
 
-  setPassword = async (req, res) => {
-    try {
-      const { email, password } = req.body;
-      res.json(await authService.setPassword(email, password));
-    } catch (err) {
-      res.status(400).json({ message: err.message });
-    }
-  };
+const isMatch = await bcrypt.compare(password, admin.password);
+if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
-  login = async (req, res) => {
-    try {
-      const { email, password } = req.body;
-      res.json(await authService.loginUser(email, password));
-    } catch (err) {
-      res.status(400).json({ message: err.message });
-    }
-  };
+    const token = jwt.sign(
+      { id: admin._id, role: "admin" },
+      process.env.ADMIN_JWT_SECRET,
+      { expiresIn: "1d" }
+    );
 
-  forgotPassword = async (req, res) => {
-    try {
-      const { email } = req.body;
-      res.json(await authService.sendForgotPasswordOtp(email));
-    } catch (err) {
-      res.status(400).json({ message: err.message });
-    }
-  };
-
-  resetPassword = async (req, res) => {
-    try {
-      const { email, otp, newPassword } = req.body;
-      res.json(await authService.resetPassword(email, otp, newPassword));
-    } catch (err) {
-      res.status(400).json({ message: err.message });
-    }
-  };
+    return res.json({
+      message: "Admin login successful",
+      token,
+    });
+  }
 }
 
-export default new AuthController();
+export default new AdminController();
