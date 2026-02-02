@@ -1,20 +1,14 @@
-import { response } from "express";
 import api from "../utils/api";
 
-export const login =async(data)=>{
-    const reponse = await api.post("/auth/login",data);
-    return reponse.data;
+export const loginUser = async (data) => {
+  const response = await api.post("/auth/login", data);
+  return response.data;
 };
+
 export const checkEmail = async (email) => {
   const response = await api.post("/auth/check-email", { email });
-  if (res.data.flow === "LOGIN") {
-    setStep("login");
-  } else {
-    await api.post("/auth/send-otp", { email });
-    setStep("otp");
-  }
-    return response.data;
-
+  return response.data; 
+ 
 };
 // Send signup OTP
 export const sendSignupOtp = async (email) => {
@@ -23,32 +17,37 @@ export const sendSignupOtp = async (email) => {
 };
 
 export const verifyOtp = async (email, otp) => {
-  try {
-    await api.post("/auth/verify-otp", { email, otp });
-    alert("OTP verified");
-    setStep("setPassword");
-  } catch (err) {
-    alert(err.response?.data?.message);
-  }
+  const response = await api.post("/auth/verify-otp", { email, otp });
+  return response.data;
 };
+
 export const setUserPassword = async (email, password) => {
-  try {
-    await api.post("/auth/set-password", {
-      email,
-      password
-    });
-    alert("Signup completed. Please login.");
-    setStep("login");
-  } catch (err) {
-    alert(err.response?.data?.message);
-  }
+  const response = await api.post("/auth/set-password", {
+    email,
+    password,
+  });
+  return response.data;
 };
-export const login = async () => {
+
+export const login = async (email,password) => {
   try {
-    const res = await api.post("/auth/login", { email, password });
+    const res = await api.post("/auth/login", { email,password });
     localStorage.setItem("token", res.data.token);
     alert("Login success");
   } catch (err) {
     alert(err.response?.data?.message);
   }
+};
+
+export const forgotPassword = async (email) => {
+  const response = await api.post("/auth/forgot-password", { email });
+  return response.data;
+};
+export const resetPassword = async (email, otp, newPassword) => {
+  const response = await api.post("/auth/reset-password", {
+    email,
+    otp,
+    newPassword,
+  });
+  return response.data;
 };

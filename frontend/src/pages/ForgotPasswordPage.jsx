@@ -34,7 +34,7 @@ export default function ForgotPasswordPage() {
       });
 
       alert("Password reset successful");
-      navigate("/login");
+      navigate("/");
     } catch (err) {
       console.log("RESET ERROR:", err.response?.data);
       alert(err.response?.data?.message || "Reset failed");

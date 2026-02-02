@@ -1,4 +1,14 @@
 import mongoose from "mongoose";
+const addressSchema = new mongoose.Schema({
+  fullName: String,
+  phone: String,
+  addressLine: String,
+  city: String,
+  state: String,
+  pincode: String,
+  country: { type: String, default: "India" },
+  isDefault: { type: Boolean, default: false }
+});
 
 const userSchema = new mongoose.Schema(
   {
@@ -28,15 +38,7 @@ otpLastSent: Date,
 
       default: "user",
     },
-    addresses: [
-  {
-    name: String,
-    phone: String,
-    city: String,
-    pincode: String,
-    addressLine: String
-  }
-]
+    addresses: [addressSchema]
 
   },
   { timestamps: true }
