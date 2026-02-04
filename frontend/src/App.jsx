@@ -1,45 +1,71 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
+// User
 import AuthPage from "./pages/AuthPage";
-import AdminLogin from "./pages/AdminLogin";
-import AdminDashboard from "./layouts/AdminDashboard";
 import UserProfile from "./pages/UserProfile";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ProtectedRoute from "./routes/ProtectedRouter";
 import Navbar from "./layouts/Navbar";
-import { Navigate } from "react-router-dom";
+
+// Admin
+import AdminLogin from "./pages/AdminLogin";
+import AdminLayout from "./layouts/AdminLayout";
+import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
+import AdminProtectedRoute from "./routes/AdminProtectedRoute";
 
 function App() {
   return (
     <BrowserRouter>
-    <Navbar/>
-
       <Routes>
-        <Route path="/" element={<Navigate to="/login" />} />
+        {/* ---------- USER ROUTES ---------- */}
 
-        <Route path="/login" element={<AuthPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-  <Route path="/profile/address" element={<UserProfile />} />
+        <Route
+          path="/login"
+          element={
+            <>
+              <Navbar />
+              <AuthPage />
+            </>
+          }
+        />
+
+        <Route
+          path="/forgot-password"
+          element={
+            <>
+              <Navbar />
+              <ForgotPasswordPage />
+            </>
+          }
+        />
+
         <Route
           path="/profile"
           element={
             <ProtectedRoute role="user">
-              <UserProfile />
+              <>
+                <Navbar />
+                <UserProfile />
+              </>
             </ProtectedRoute>
           }
         />
-                  <Route path="dashboard" element={<AdminUsers />} />
+
+        {/* ---------- ADMIN ROUTES ---------- */}
 
         <Route path="/admin/login" element={<AdminLogin />} />
-        <Route
-          path="/admin/dashboard"
-          element={
-            <ProtectedRoute role="admin">
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
 
+        <Route element={<AdminProtectedRoute />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="users" element={<AdminUsers />} />
+          </Route>
+        </Route>
+
+        {/* ---------- FALLBACK ---------- */}
+        <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </BrowserRouter>
   );

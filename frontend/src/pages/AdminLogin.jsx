@@ -1,5 +1,5 @@
 import { useState } from "react";
-import adminApi from "../utils/api";
+import adminApi from "../services/adminApi";
 import { useNavigate } from "react-router-dom";
 
 const AdminLogin = () => {
@@ -9,35 +9,57 @@ const AdminLogin = () => {
 
   const login = async () => {
     try {
-      const res = await adminApi.post("/admin/login", { email, password });
+      // ✅ correct API
+      const res = await adminApi.post("/login", { email, password });
+
       localStorage.setItem("adminToken", res.data.token);
-      navigate("/admin/dashboard");
+
+      // ✅ go directly to user list
+      navigate("/admin/users");
     } catch (err) {
       alert(err.response?.data?.message || "Login failed");
     }
   };
 
   return (
-    <div className="h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-6 w-96 rounded-xl shadow space-y-4">
-        <h2 className="text-xl font-bold text-center">Admin Login</h2>
+    <div className="min-h-screen flex items-center justify-center
+                    bg-linear-to-br from-indigo-600 via-violet-600 to-purple-600 px-4">
+
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 space-y-6">
+
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-800">SmartBazar Admin</h2>
+          <p className="text-sm text-gray-500">Secure admin access 🔐</p>
+        </div>
 
         <input
-          className="input"
-          placeholder="Email"
+          className="w-full px-4 py-3 rounded-lg border border-gray-300
+                     focus:ring-2 focus:ring-indigo-500 outline-none"
+          placeholder="Admin Email"
+          value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
 
         <input
-          className="input"
           type="password"
           placeholder="Password"
+          className="w-full px-4 py-3 rounded-lg border border-gray-300
+                     focus:ring-2 focus:ring-indigo-500 outline-none"
+          value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        <button className="btn w-full" onClick={login}>
-          Login
+        <button
+          onClick={login}
+          className="w-full py-3 rounded-lg font-semibold text-white
+                     bg-indigo-600 hover:bg-indigo-700 transition-all shadow-md"
+        >
+          Admin Login
         </button>
+
+        <p className="text-center text-xs text-gray-400 pt-4">
+          © 2026 SmartBazar
+        </p>
       </div>
     </div>
   );

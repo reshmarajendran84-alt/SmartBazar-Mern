@@ -1,6 +1,15 @@
-import adminApi from "../utils/api";
+import axios from "axios";
 
-export const getAllUsers = () => adminApi.get("/admin/users");
+const adminApi = axios.create({
+  baseURL: "http://localhost:5000/api/admin",
+});
 
-export const deleteUser = (id) =>
-  adminApi.delete(`/admin/users/${id}`);
+adminApi.interceptors.request.use((config) => {
+  const token = localStorage.getItem("adminToken");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+export default adminApi;
