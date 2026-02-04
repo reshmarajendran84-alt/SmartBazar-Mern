@@ -47,18 +47,14 @@ class UserService {
       { _id: userId },
       { $pull: { addresses: { _id: addressId } } }
     );
-    return true;
   }
 
   async setDefaultAddress(userId, addressId) {
     const user = await User.findById(userId);
-
     user.addresses.forEach(addr => {
       addr.isDefault = addr._id.toString() === addressId;
     });
-
     await user.save();
-    return true;
   }
 }
 

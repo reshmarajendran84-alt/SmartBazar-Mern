@@ -10,7 +10,7 @@ const sendEmail = async (to, otp) => {
       },
     });
 
-    await transporter.verify(); // ✅ important
+    await transporter.verify(); 
 
     await transporter.sendMail({
       from: `"SmartBazar" <${process.env.EMAIL_USER}>`,

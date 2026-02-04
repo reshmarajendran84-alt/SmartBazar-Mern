@@ -13,12 +13,12 @@ class AuthController {
 
   async sendSignupOtp(req, res) {
     try {
-      const { email } = req.body;
-      const result = await authService.sendSignupOtp(email);
-      res.json(result);
-    } catch (err) {
-      res.status(400).json({ message: err.message });
-    }
+     const { email} = req.body;
+    const data = await authService.sendSignupOtp(email);
+    res.json(data);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
   }
 
   async verifyOtp(req, res) {

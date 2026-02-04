@@ -1,6 +1,7 @@
 import { useState } from "react";
 import api from "../utils/api";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function AuthPage() {
   const [email, setEmail] = useState("");
@@ -8,6 +9,7 @@ export default function AuthPage() {
   const [otp, setOtp] = useState("");
   const [step, setStep] = useState("EMAIL");
   const navigate = useNavigate();
+const { login } = useAuth();
 
 const checkEmail = async () => {
   if (!email) {
@@ -21,36 +23,28 @@ const checkEmail = async () => {
     if (res.data.flow === "LOGIN") {
       setStep("LOGIN");
     } else {
-      await sendOtp();     // only moves if OTP succeeds
+      await sendOtp(); 
       setStep("OTP");
     }
   } catch (error) {
     alert(error.response?.data?.message || "Error checking email");
   }
 };
-
-
-  const login = async () => {
-    try {
-      const res = await api.post("/auth/login", { email, password });
-      localStorage.setItem("token", res.data.token);
-      navigate("/profile");
-    } catch {
-      alert("Login failed"); // no need to define unused 'err'
-    }
-  };
+const handleLogin = async () => {
+  const res = await api.post("/auth/login", { email, password });
+  login(res.data.token);
+  navigate("/profile");
+};
 const sendOtp = async () => {
   if (!email) {
-    alert("Email is required");
     return;
   }
 
   try {
-    console.log("Sending OTP to:", email);
-    await api.post("/auth/send-otp", { email });
+    await api.post("/auth/send-otp", { email, name });
+    setStep("OTP");
   } catch (error) {
     alert(error.response?.data?.message || "Failed to send OTP");
-    throw error; // important so checkEmail knows it failed
   }
 };
 
@@ -85,6 +79,8 @@ const sendOtp = async () => {
           </p>
         </div>
 
+
+
         {/* Email */}
         <input
           className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none"
@@ -103,7 +99,7 @@ const sendOtp = async () => {
               className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none"
               onChange={e => setPassword(e.target.value)}
             />
-            <PrimaryButton onClick={login}>Login</PrimaryButton>
+<PrimaryButton onClick={handleLogin}>Login</PrimaryButton>
           </>
         )}
 

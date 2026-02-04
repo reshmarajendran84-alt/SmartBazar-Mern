@@ -6,13 +6,19 @@ const addressSchema = new mongoose.Schema({
   city: String,
   state: String,
   pincode: String,
-  country: { type: String, default: "India" },
-  isDefault: { type: Boolean, default: false }
+ country: {
+    type: String,
+    default: "India",
+  },
+  isDefault: {
+    type: Boolean,
+    default: false,
+  },
 });
-
 const userSchema = new mongoose.Schema(
-  {
-    email: {
+
+  {  name: String,
+   email: {
       type: String,
       required: true,
       unique: true,
@@ -44,3 +50,4 @@ otpLastSent: Date,
   { timestamps: true }
 );
 export default mongoose.model("User", userSchema);
+

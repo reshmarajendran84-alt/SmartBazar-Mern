@@ -1,18 +1,17 @@
 import express from "express";
-import AdminController from "../controllers/adminController.js";
-import { validate } from "../middlewares/authValidationMiddleware.js";
-import { adminLoginSchema } from "../validators/adminValidator.js";
 import adminProtect from "../middlewares/AdminProtectMiddleware.js";
-
+import User from "../models/User.js";
+import AdminController from "../controllers/adminController.js";
 const router = express.Router();
+router.post("/login", AdminController.login);
 
-router.get("/dashboard", adminProtect, (req, res) => {
-  res.json({
-    message: "Welcome Admin",
-    admin: req.admin.email,
-  });
+router.get("/users", adminAuth, adminController.getAllUsers);
+
+
+router.get("/users/:id", adminProtect, async (req, res) => {
+  const user = await User.findById(req.params.id).select("-password");
+  res.json(user);
 });
 
-router.post("/login", validate(adminLoginSchema), AdminController.login);
 
 export default router;

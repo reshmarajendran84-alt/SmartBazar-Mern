@@ -6,6 +6,7 @@ import generateOTP from "../utils/generateOTP.js";
 import sendEmail from "../utils/sendEmail.js";
 
 class AuthService {
+
   async checkEmail(email) {
     const user = await User.findOne({ email });
     return user && user.isVerified && user.password
@@ -14,6 +15,7 @@ class AuthService {
   }
 
   async sendSignupOtp(email) {
+
     let user = await User.findOne({ email });
 
     if (user && user.isVerified) {
@@ -21,11 +23,11 @@ class AuthService {
     }
 
     if (!user) {
-      user = await User.create({ email });
+      user = await User.create({  email });
     }
 
     if (user.otpLastSent && Date.now() - user.otpLastSent < 30000) {
-      throw new Error("Wait before resending OTP");
+      throw new Error("Wait 30 seconds before resending OTP");
     }
 
     const otp = generateOTP();
@@ -37,13 +39,13 @@ class AuthService {
     await user.save();
     await sendEmail(email, otp);
 
-    return { message: "OTP sent to email" };
+    return { message: "OTP sent successfully" };
   }
 
   async verifyOtp(email, otp) {
     const user = await User.findOne({ email });
 
-    if (!user || user.otp !== otp) {
+    if (!user || user.otp !== String(otp)) {
       throw new Error("Invalid OTP");
     }
 
@@ -63,7 +65,7 @@ class AuthService {
     const user = await User.findOne({ email });
 
     if (!user || !user.isVerified) {
-      throw new Error("OTP verification required");
+      throw new Error("Verify OTP first");
     }
 
     if (user.password) {
@@ -86,7 +88,7 @@ class AuthService {
     if (!match) throw new Error("Invalid credentials");
 
     const token = jwt.sign(
-      { id: user._id, role: "user" },
+      {  id: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
@@ -113,7 +115,7 @@ class AuthService {
   async resetPassword(email, otp, newPassword) {
     const user = await User.findOne({ email });
 
-    if (!user || user.otp !== otp) {
+    if (!user || user.otp !== String(otp)) {
       throw new Error("Invalid OTP");
     }
 
