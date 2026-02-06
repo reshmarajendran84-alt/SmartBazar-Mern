@@ -9,12 +9,12 @@ const AdminLogin = () => {
 
   const login = async () => {
     try {
-      // ✅ correct API
+   
 const res = await adminApi.post("/login", { email, password });
-
+// console.log(email,password);
       localStorage.setItem("adminToken", res.data.token);
 
-      // ✅ go directly to user list
+      
       navigate("/admin/users");
     } catch (err) {
       alert(err.response?.data?.message || "Login failed");

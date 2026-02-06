@@ -9,7 +9,6 @@ export default function ForgotPasswordPage() {
   const [newPassword, setNewPassword] = useState("");
   const navigate = useNavigate();
 
-  // Step 1: Send OTP
   const sendOtp = async () => {
     if (!email) return alert("Please enter your email");
     try {
@@ -19,9 +18,9 @@ await api.post("/forgot-password", { email });
     } catch (err) {
       alert(err.response?.data?.message || "Error sending OTP");
     }
+    console.log(otp);
   };
 
-  // Step 2: Reset Password
   const resetPassword = async () => {
     if (!otp || !newPassword)
       return alert("OTP and new password required");
@@ -35,6 +34,7 @@ await api.post("/reset-password", { email, otp, newPassword });
       console.log("RESET ERROR:", err.response?.data);
       alert(err.response?.data?.message || "Reset failed");
     }
+    console.log(resetPassword);
   };
 
   return (

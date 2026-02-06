@@ -57,11 +57,12 @@ const sendOtp = async () => {
   try {
     await Api.post("/send-otp", { email });
     setStep("OTP");
-        console.log(otp);
+      
 
   } catch (error) {
     alert(error.response?.data?.message || "Failed to send OTP");
   }
+    console.log(otp);
 };
 
 
@@ -78,11 +79,12 @@ const sendOtp = async () => {
     try {
       await Api.post("/set-password", { email, password });
       setStep("LOGIN");
-            console.log(email,password)
+           
 
     } catch {
       alert("Error");
     }
+     console.log(email,password)
   };
 
   return (
