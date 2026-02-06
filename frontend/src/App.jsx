@@ -17,6 +17,7 @@ import AdminProtectedRoute from "./routes/AdminProtectedRoute";
 function App() {
   return (
     <BrowserRouter>
+
       <Routes>
         {/* ---------- USER ROUTES ---------- */}
 
@@ -45,7 +46,6 @@ function App() {
     path="/profile"
     element={
       <>
-        <Navbar />
         <UserProfile />
       </>
     }
