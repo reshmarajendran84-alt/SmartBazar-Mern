@@ -1,5 +1,6 @@
 import { useAuth } from "../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
+import { memo } from "react";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -33,4 +34,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;
+export default memo(Navbar);

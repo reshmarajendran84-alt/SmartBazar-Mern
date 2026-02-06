@@ -1,5 +1,5 @@
 import { useState } from "react";
-import adminApi from "../services/adminApi";
+import adminApi from "../../utils/adminApi";
 import { useNavigate } from "react-router-dom";
 
 const AdminLogin = () => {
@@ -10,7 +10,7 @@ const AdminLogin = () => {
   const login = async () => {
     try {
       // ✅ correct API
-      const res = await adminApi.post("/login", { email, password });
+const res = await adminApi.post("/login", { email, password });
 
       localStorage.setItem("adminToken", res.data.token);
 

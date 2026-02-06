@@ -1,7 +1,7 @@
 import { useState } from "react";
-import api from "../utils/api";
+import Api from "../../utils/api";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 
 export default function AuthPage() {
   const [email, setEmail] = useState("");
@@ -18,7 +18,7 @@ const checkEmail = async () => {
   }
 
   try {
-    const res = await api.post("/auth/check-email", { email });
+    const res = await Api.post("/check-email", { email });
 
     if (res.data.flow === "LOGIN") {
       setStep("LOGIN");
@@ -31,18 +31,34 @@ const checkEmail = async () => {
   }
 };
 const handleLogin = async () => {
-  const res = await api.post("/auth/login", { email, password });
-  login(res.data.token);
-  navigate("/profile");
+  if (!email || !password) {
+    alert("Email and password are required");
+    return;
+  }
+
+  try {
+    const res = await Api.post("/login", {
+      email,
+      password,
+    });
+console.log(email,password);
+    login(res.data.token);
+    navigate("/profile");
+  } catch (error) {
+    alert(error.response?.data?.message || "Login failed");
+  }
 };
+
 const sendOtp = async () => {
   if (!email) {
     return;
   }
 
   try {
-    await api.post("/auth/send-otp", { email, name });
+    await Api.post("/send-otp", { email });
     setStep("OTP");
+        console.log(otp);
+
   } catch (error) {
     alert(error.response?.data?.message || "Failed to send OTP");
   }
@@ -51,7 +67,7 @@ const sendOtp = async () => {
 
   const verifyOtp = async () => {
     try {
-      await api.post("/auth/verify-otp", { email, otp });
+      await Api.post("/verify-otp", { email, otp });
       setStep("SET_PASSWORD");
     } catch {
       alert("Invalid OTP");
@@ -60,8 +76,10 @@ const sendOtp = async () => {
 
   const setPasswordFn = async () => {
     try {
-      await api.post("/auth/set-password", { email, password });
+      await Api.post("/set-password", { email, password });
       setStep("LOGIN");
+            console.log(email,password)
+
     } catch {
       alert("Error");
     }

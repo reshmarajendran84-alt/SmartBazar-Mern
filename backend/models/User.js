@@ -50,4 +50,3 @@ otpLastSent: Date,
   { timestamps: true }
 );
 export default mongoose.model("User", userSchema);
-

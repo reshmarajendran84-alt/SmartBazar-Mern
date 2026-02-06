@@ -1,5 +1,5 @@
 import { useState } from "react";
-import api from "../utils/api";
+import api  from "../../utils/api";
 import { useNavigate } from "react-router-dom";
 
 export default function ForgotPasswordPage() {
@@ -13,7 +13,7 @@ export default function ForgotPasswordPage() {
   const sendOtp = async () => {
     if (!email) return alert("Please enter your email");
     try {
-      await api.post("/auth/forgot-password", { email });
+await api.post("/forgot-password", { email });
       alert("OTP sent to your email");
       setStep("RESET");
     } catch (err) {
@@ -27,11 +27,7 @@ export default function ForgotPasswordPage() {
       return alert("OTP and new password required");
 
     try {
-      await api.post("/auth/reset-password", {
-        email,
-        otp,
-        newPassword,
-      });
+await api.post("/reset-password", { email, otp, newPassword });
 
       alert("Password reset successful");
       navigate("/");

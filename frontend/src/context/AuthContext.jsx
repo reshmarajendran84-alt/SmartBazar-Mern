@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
-import api from "../utils/api";
+import userApi from "../utils/userApi";
 
 const AuthContext = createContext();
 
@@ -13,21 +13,21 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   }, []);
 
-  const loadProfile = useCallback(async () => {
-    try {
-      const res = await api.get("/user/profile");
-      setUser(res.data);
-    } catch {
-      logout();
-    } finally {
-      setLoading(false);
-    }
-  }, [logout]);
+const loadProfile = useCallback(async () => {
+  try {
+    const res = await userApi.get("/profile");
+    setUser(res.data);
+  } catch {
+    logout();
+  } finally {
+    setLoading(false);
+  }
+}, [logout]);
 
   const login = (token) => {
-    localStorage.setItem("token", token);
-    loadProfile();
-  };
+  localStorage.setItem("token", token);
+  loadProfile();
+};
 
   useEffect(() => {
     if (localStorage.getItem("token")) {

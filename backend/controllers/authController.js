@@ -63,7 +63,7 @@ class AuthController {
 
   async resetPassword(req, res) {
   try {
-    const { email, otp, newPassword } = req.body; // ✅ FIRST
+    const { email, otp, newPassword } = req.body; 
 
     if (!email || !otp || !newPassword) {
       return res.status(400).json({

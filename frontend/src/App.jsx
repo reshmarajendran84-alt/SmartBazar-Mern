@@ -1,17 +1,17 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 // User
-import AuthPage from "./pages/AuthPage";
-import UserProfile from "./pages/UserProfile";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage";
-import ProtectedRoute from "./routes/ProtectedRouter";
+import AuthPage from "./pages/auth/AuthPage";
+import UserProfile from "./pages/user/UserProfile";
+import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
+import UserProtectedRoute from "./routes/UserProtectedRoute";
 import Navbar from "./layouts/Navbar";
 
 // Admin
-import AdminLogin from "./pages/AdminLogin";
+import AdminLogin from "./pages/auth/AdminLogin";
 import AdminLayout from "./layouts/AdminLayout";
-import AdminDashboard from "./pages/AdminDashboard";
-import AdminUsers from "./pages/AdminUsers";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsers from "./pages/admin/AdminUsers";
 import AdminProtectedRoute from "./routes/AdminProtectedRoute";
 
 function App() {
@@ -40,17 +40,18 @@ function App() {
           }
         />
 
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute role="user">
-              <>
-                <Navbar />
-                <UserProfile />
-              </>
-            </ProtectedRoute>
-          }
-        />
+    <Route element={<UserProtectedRoute />}>
+  <Route
+    path="/profile"
+    element={
+      <>
+        <Navbar />
+        <UserProfile />
+      </>
+    }
+  />
+</Route>
+
 
         {/* ---------- ADMIN ROUTES ---------- */}
 

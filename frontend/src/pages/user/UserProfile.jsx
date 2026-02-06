@@ -1,11 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  getProfile,
-  getAddresses,
-  addAddress,
-  deleteAddress,
-  setDefaultAddress,
-} from "../services/addressApi";
+import userApi from "../../utils/userApi";
 
 const UserProfile = () => {
   const [user, setUser] = useState(null);
@@ -24,32 +18,29 @@ const UserProfile = () => {
     loadData();
   }, []);
 
-  const loadData = async () => {
-    try {
-      const profile = await getProfile();
-      const addr = await getAddresses();
-      setUser(profile.data);
-      setAddresses(addr.data);
-    } catch {
-      setError("Failed to load profile");
-    } finally {
-      setLoading(false);
-    }
-  };
+ const loadData = async () => {
+  try {
+    const profileRes = await userApi.get("/profile");
+const addressRes = await userApi.get("/address");
+
+
+    setUser(profileRes.data);
+    setAddresses(addressRes.data);
+  } catch {
+    setError("Failed to load profile");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleAdd = async () => {
-    try {
-      const res = await addAddress(newAddress);
-      setAddresses(res.data);
-      setNewAddress({ addressLine: "", city: "", state: "", pincode: "" });
-    } catch {
-      setError("Failed to add address");
-    }
-  };
+const res = await userApi.post("/address", newAddress);
+  setAddresses(res.data);
+};
 
   const handleDelete = async (id) => {
     try {
-      await deleteAddress(id);
+await userApi.delete(`/address/${id}`);
       setAddresses(prev => prev.filter(a => a._id !== id));
     } catch {
       setError("Failed to delete address");
@@ -58,7 +49,7 @@ const UserProfile = () => {
 
   const makeDefault = async (id) => {
     try {
-      await setDefaultAddress(id);
+await userApi.patch(`/address/${id}/default`);
       setAddresses(prev =>
         prev.map(a => ({ ...a, isDefault: a._id === id }))
       );
