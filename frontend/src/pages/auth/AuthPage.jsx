@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Api from "../../utils/api";
+import api from "../../utils/api";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
@@ -18,7 +18,7 @@ const checkEmail = async () => {
   }
 
   try {
-    const res = await Api.post("/check-email", { email });
+    const res = await api.post("/check-email", { email });
 
     if (res.data.flow === "LOGIN") {
       setStep("LOGIN");
@@ -37,12 +37,12 @@ const handleLogin = async () => {
   }
 
   try {
-    const res = await Api.post("/login", {
+    const res = await api.post("/login", {
       email,
       password,
     });
 console.log(email,password);
-    login(res.data.token);
+    await login(res.data.token);
     navigate("/profile");
   } catch (error) {
     alert(error.response?.data?.message || "Login failed");
@@ -55,7 +55,7 @@ const sendOtp = async () => {
   }
 
   try {
-    await Api.post("/send-otp", { email });
+    await api.post("/send-otp", { email });
     setStep("OTP");
       
 
@@ -68,7 +68,7 @@ const sendOtp = async () => {
 
   const verifyOtp = async () => {
     try {
-      await Api.post("/verify-otp", { email, otp });
+      await api.post("/verify-otp", { email, otp });
       setStep("SET_PASSWORD");
     } catch {
       alert("Invalid OTP");
@@ -77,7 +77,7 @@ const sendOtp = async () => {
 
   const setPasswordFn = async () => {
     try {
-      await Api.post("/set-password", { email, password });
+      await api.post("/set-password", { email, password });
       setStep("LOGIN");
            
 

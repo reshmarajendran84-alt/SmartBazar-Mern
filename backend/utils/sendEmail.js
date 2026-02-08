@@ -5,15 +5,15 @@ const sendEmail = async (to, otp) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: "reshmarajendran84@gmail.com",
+        pass: "xkzczklnkxjqqlhq",
       },
     });
 
     await transporter.verify(); 
 
     await transporter.sendMail({
-      from: `"SmartBazar" <${process.env.EMAIL_USER}>`,
+      from: `"SmartBazar" reshmarajendran84@gmail.com`,
       to,
       subject: "Your OTP Code",
       html: `

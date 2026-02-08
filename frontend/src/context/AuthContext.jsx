@@ -26,6 +26,7 @@ const loadProfile = useCallback(async () => {
 
   const login = (token) => {
   localStorage.setItem("token", token);
+  setUser({token});
   loadProfile();
 };
 
