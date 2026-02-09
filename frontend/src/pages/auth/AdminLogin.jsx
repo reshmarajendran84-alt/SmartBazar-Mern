@@ -11,14 +11,15 @@ const AdminLogin = () => {
     try {
    
 const res = await adminApi.post("/login", { email, password });
-// console.log(email,password);
       localStorage.setItem("adminToken", res.data.token);
 
       
-      navigate("/admin/users");
+      navigate("/users");
     } catch (err) {
       alert(err.response?.data?.message || "Login failed");
+
     }
+
   };
 
   return (
