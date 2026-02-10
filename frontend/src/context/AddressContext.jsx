@@ -22,11 +22,15 @@ const {user}=useAuth();
   const addAddress = async (data) => {
     const res = await api.post("/user/address", data);
     setAddresses(res.data);
+      await fetchAddresses();
+
   };
 
   const updateAddress = async (id, data) => {
     const res = await api.put(`/user/address/${id}`, data);
     setAddresses(res.data);
+      await fetchAddresses();
+
   };
 
   const deleteAddress = async (id) => {
@@ -39,6 +43,7 @@ const {user}=useAuth();
     setAddresses(prev =>
       prev.map(a => ({ ...a, isDefault: a._id === id }))
     );
+    await fetchAddresses();
   };
 
   useEffect(() => {

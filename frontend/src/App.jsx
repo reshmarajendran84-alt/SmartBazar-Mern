@@ -35,7 +35,8 @@ function App() {
         <Route
           path="/auth/forgot-password"
           element={
-            <>
+            <>                          <Navbar />
+
               <ForgotPasswordPage />
             </>
           }
@@ -45,6 +46,8 @@ function App() {
   path="/user/profile"
   element={
     <UserProtectedRoute>
+                                <Navbar />
+
       <UserProfile />
     </UserProtectedRoute>
   }
