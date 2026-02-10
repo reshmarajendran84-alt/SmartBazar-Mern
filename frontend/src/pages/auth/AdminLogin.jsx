@@ -1,5 +1,5 @@
 import { useState } from "react";
-import adminApi from "../../utils/adminApi";
+import api from "../../utils/api";
 import { useNavigate } from "react-router-dom";
 
 const AdminLogin = () => {
@@ -10,11 +10,11 @@ const AdminLogin = () => {
   const login = async () => {
     try {
    
-const res = await adminApi.post("/login", { email, password });
+const res = await api.post("/admin/login", { email, password });
       localStorage.setItem("adminToken", res.data.token);
 
       
-      navigate("/users");
+       navigate("/admin/users");
     } catch (err) {
       alert(err.response?.data?.message || "Login failed");
 
@@ -29,6 +29,7 @@ const res = await adminApi.post("/login", { email, password });
       <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 space-y-6">
 
         <div className="text-center">
+          
           <h2 className="text-2xl font-bold text-gray-800">SmartBazar Admin</h2>
           <p className="text-sm text-gray-500">Secure admin access 🔐</p>
         </div>

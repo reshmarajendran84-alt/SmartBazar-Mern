@@ -2,9 +2,10 @@ import User from "../models/User.js";
 
 class UserService {
 
-  async getProfile(userId) {
+  async getProfile(userId) { 
+
     return await User.findById(userId).select("-password");
-  }
+}
 
   async updateProfile(userId, data) {
     return await User.findByIdAndUpdate(userId, data, { new: true });

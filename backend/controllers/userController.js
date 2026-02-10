@@ -1,10 +1,11 @@
+import User from "../models/User.js"; // ✅ ADD THIS
 import userService from "../services/AddressService.js";
 
 class UserController {
 
   async getProfile(req, res) {
-    const data = await userService.getProfile(req.user.id);
-    res.json(data);
+    const user = await User.findById(req.user.id).select("-password");
+    res.json(user);
   }
 
   async updateProfile(req, res) {

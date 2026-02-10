@@ -8,7 +8,7 @@ const Navbar = () => {
 
   return (
     <nav className="bg-white shadow px-6 py-4 flex justify-between">
-      <h1 className="font-bold text-xl">SmartBazar</h1>
+      <h1 className="font-bold text-xl">SmartBazar   project</h1>
 
       {user ? (
         <div className="flex items-center gap-4">
@@ -19,7 +19,7 @@ const Navbar = () => {
           <button
             onClick={() => {
               logout();
-              navigate("/login");
+              navigate("/auth/login");
             }}
             className="text-red-500"
           >
@@ -27,7 +27,7 @@ const Navbar = () => {
           </button>
         </div>
       ) : (
-        <Link to="/login">Login</Link>
+        <Link to="/auth/login">Login</Link>
       )}
     
     </nav>

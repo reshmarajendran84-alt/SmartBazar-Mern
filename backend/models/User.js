@@ -6,6 +6,8 @@ const addressSchema = new mongoose.Schema({
   city: String,
   state: String,
   pincode: String,
+  
+
  country: {
     type: String,
     default: "India",

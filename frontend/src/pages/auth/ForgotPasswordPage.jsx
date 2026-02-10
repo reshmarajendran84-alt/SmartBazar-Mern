@@ -12,7 +12,7 @@ export default function ForgotPasswordPage() {
   const sendOtp = async () => {
     if (!email) return alert("Please enter your email");
     try {
-await api.post("/forgot-password", { email });
+await api.post("/auth/forgot-password", { email });
       alert("OTP sent to your email");
       setStep("RESET");
     } catch (err) {
@@ -26,7 +26,7 @@ await api.post("/forgot-password", { email });
       return alert("OTP and new password required");
 
     try {
-await api.post("/reset-password", { email, otp, newPassword });
+await api.post("/auth/reset-password", { email, otp, newPassword });
 
       alert("Password reset successful");
       navigate("/");

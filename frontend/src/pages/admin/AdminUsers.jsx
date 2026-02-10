@@ -1,17 +1,19 @@
 import { useEffect, useState } from "react";
-import adminApi from "../../utils/adminApi";
+import api from "../../utils/api";
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
 
   const loadUsers = async () => {
-    try {
-const res = await adminApi.get("/users");
-      setUsers(res.data.users);
-    } catch (err) {
-      console.error(err.response?.data || err.message);
-    }
-  };
+  try {
+    console.log("Calling /admin/users");
+    const res = await api.get("/admin/users");
+    console.log("Users response:", res.data);
+    setUsers(res.data.users);
+  } catch (err) {
+    console.error("Users error:", err.response?.data || err.message);
+  }
+};
 
   useEffect(() => {
     loadUsers();
@@ -25,7 +27,7 @@ const res = await adminApi.get("/users");
     if (!confirmDelete) return;
 
     try {
-await adminApi.delete(`/users/${id}`);
+await api.delete(`/admin/users/${id}`);
       setUsers((prev) => prev.filter((u) => u._id !== id));
     } catch (err) {
       alert("Failed to delete user");

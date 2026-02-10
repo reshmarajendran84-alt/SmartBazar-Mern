@@ -22,35 +22,34 @@ function App() {
         {/* ---------- USER ROUTES ---------- */}
 
         <Route
-          path="/login"
+          path="/auth/login"
           element={
             <>
-              <Navbar />
+                          <Navbar />
+
               <AuthPage />
             </>
           }
         />
 
         <Route
-          path="/forgot-password"
+          path="/auth/forgot-password"
           element={
             <>
-              <Navbar />
               <ForgotPasswordPage />
             </>
           }
         />
 
-    <Route element={<UserProtectedRoute />}>
   <Route
-    path="/profile"
-    element={
-      <>
-        <UserProfile />
-      </>
-    }
-  />
-</Route>
+  path="/user/profile"
+  element={
+    <UserProtectedRoute>
+      <UserProfile />
+    </UserProtectedRoute>
+  }
+/>
+
 
 
         {/* ---------- ADMIN ROUTES ---------- */}
@@ -60,13 +59,13 @@ function App() {
         <Route element={<AdminProtectedRoute />}>
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
-            <Route path="dashboard" element={<AdminDashboard />} />
+            {/* <Route path="/admin/dashboard" element={<AdminDashboard />} /> */}
             <Route path="users" element={<AdminUsers />} />
           </Route>
         </Route>
 
         {/* ---------- FALLBACK ---------- */}
-        <Route path="*" element={<Navigate to="/login" />} />
+        <Route path="*" element={<Navigate to="/auth/login" />} />
       </Routes>
     </BrowserRouter>
   );

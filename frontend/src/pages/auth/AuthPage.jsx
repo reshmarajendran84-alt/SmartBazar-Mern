@@ -18,7 +18,7 @@ const checkEmail = async () => {
   }
 
   try {
-    const res = await api.post("/check-email", { email });
+    const res = await api.post("/auth/check-email", { email });
 
     if (res.data.flow === "LOGIN") {
       setStep("LOGIN");
@@ -37,13 +37,17 @@ const handleLogin = async () => {
   }
 
   try {
-    const res = await api.post("/login", {
+    const res = await api.post("/auth/login", {
       email,
       password,
     });
 console.log(email,password);
     await login(res.data.token);
-    navigate("/profile");
+
+    navigate("/user/profile");
+    console.log("TOKEN FROM LOGIN:", res.data.token);
+setEmail("");
+setPassword("");
   } catch (error) {
     alert(error.response?.data?.message || "Login failed");
   }
@@ -55,7 +59,7 @@ const sendOtp = async () => {
   }
 
   try {
-    await api.post("/send-otp", { email });
+    await api.post("/auth/send-otp", { email });
     setStep("OTP");
       
 
@@ -68,7 +72,7 @@ const sendOtp = async () => {
 
   const verifyOtp = async () => {
     try {
-      await api.post("/verify-otp", { email, otp });
+      await api.post("/auth/verify-otp", { email, otp });
       setStep("SET_PASSWORD");
     } catch {
       alert("Invalid OTP");
@@ -77,7 +81,7 @@ const sendOtp = async () => {
 
   const setPasswordFn = async () => {
     try {
-      await api.post("/set-password", { email, password });
+      await api.post("/auth/set-password", { email, password });
       setStep("LOGIN");
            
 
@@ -87,13 +91,15 @@ const sendOtp = async () => {
      console.log(email,password)
   };
 
+ 
+  
   return (
     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-indigo-600 via-violet-600 to-purple-600 px-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 space-y-6">
 
         {/* Header */}
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-800">SmartBazar</h2>
+          <h2 className="text-2xl font-bold text-gray-800">samrtBazar</h2>
           <p className="text-sm text-gray-500">
             {step === "LOGIN" ? "Welcome back 👋" : "Secure authentication"}
           </p>
@@ -146,7 +152,7 @@ const sendOtp = async () => {
           </>
         )}
 <p
-          onClick={() => navigate("/forgot-password")}
+          onClick={() => navigate("/auth/forgot-password")}
           className="text-sm text-blue-500 text-center underline cursor-pointer"
         >
           Forgot Password?
