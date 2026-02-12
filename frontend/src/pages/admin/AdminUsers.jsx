@@ -55,6 +55,7 @@ await api.delete(`/admin/users/${id}`);
             >
               <span className="truncate">{u.email}</span>
               <span className="capitalize">{u.role || "user"}</span>
+              <span className="capitalize">{u.isVerified ? "verified" : "not verifird"}</span>
               <div className="text-center">
                 <button
                   onClick={() => deleteUser(u._id)}

@@ -62,7 +62,7 @@ function App() {
         <Route element={<AdminProtectedRoute />}>
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
-            {/* <Route path="/admin/dashboard" element={<AdminDashboard />} /> */}
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="users" element={<AdminUsers />} />
           </Route>
         </Route>
