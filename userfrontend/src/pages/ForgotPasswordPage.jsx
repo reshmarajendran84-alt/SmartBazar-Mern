@@ -1,6 +1,7 @@
 import { useState } from "react";
-import api  from "../../utils/api";
+import api  from "../utils/api";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export default function ForgotPasswordPage() {
   const [step, setStep] = useState("EMAIL"); // EMAIL | RESET
@@ -10,44 +11,53 @@ export default function ForgotPasswordPage() {
   const navigate = useNavigate();
 
   const sendOtp = async () => {
-    if (!email) return alert("Please enter your email");
+    if (!email) return toast.warning("Please enter your email ⚠️");
     try {
 await api.post("/auth/forgot-password", { email });
-      alert("OTP sent to your email");
+      toast.success("OTP sent to your email");
       setStep("RESET");
     } catch (err) {
-      alert(err.response?.data?.message || "Error sending OTP");
+      toast.error(err.response?.data?.message || "Error sending OTP");
     }
     console.log(otp);
   };
 
-  const resetPassword = async () => {
-    if (!otp || !newPassword)
-      return alert("OTP and new password required");
+const resetPassword = async () => {
+  if (!otp || !newPassword)
+    return toast.warning("OTP and new password required ⚠️");
 
-    try {
-await api.post("/auth/reset-password", { email, otp, newPassword });
+  try {
+    await api.post("/auth/reset-password", {
+      email,
+      otp,
+      newPassword,
+    });
 
-      alert("Password reset successful");
-      navigate("/");
-    } catch (err) {
-      console.log("RESET ERROR:", err.response?.data);
-      alert(err.response?.data?.message || "Reset failed");
-    }
-    console.log(resetPassword);
-  };
+    toast.success("Password reset successful 🎉");
+
+    navigate("/auth/login");
+  } catch (err) {
+    toast.error(err.response?.data?.message || "Reset failed ❌");
+  }
+};
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-600 px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 space-y-6">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-800">Forgot Password</h2>
-          <p className="text-sm text-gray-500">
-            {step === "EMAIL"
-              ? "Enter your email to receive OTP"
-              : "Enter OTP and new password"}
-          </p>
-        </div>
+   <div className="min-h-[calc(100vh-140px)] flex items-center justify-center 
+                bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-600 px-4 py-10">
+
+  <div className="w-full max-w-md bg-white 
+                  rounded-3xl shadow-2xl 
+                  p-8 space-y-6">
+         <div className="text-center">
+      <h2 className="text-2xl font-bold text-gray-800">
+        Forgot Password
+      </h2>
+      <p className="text-sm text-gray-500 mt-1">
+        {step === "EMAIL"
+          ? "Enter your email to receive OTP"
+          : "Enter OTP and new password"}
+      </p>
+    </div>
 
         {step === "EMAIL" && (
           <input
@@ -85,6 +95,7 @@ await api.post("/auth/reset-password", { email, otp, newPassword });
           {step === "EMAIL" ? "Send OTP" : "Reset Password"}
         </button>
       </div>
+
     </div>
   );
 }

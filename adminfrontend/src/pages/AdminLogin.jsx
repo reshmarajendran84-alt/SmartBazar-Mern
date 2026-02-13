@@ -1,6 +1,8 @@
 import { useState } from "react";
-import api from "../../utils/api";
+import api from "../utils/api";
 import { useNavigate } from "react-router-dom";
+
+import { toast } from "react-toastify";
 
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
@@ -16,9 +18,10 @@ const res = await api.post("/admin/login", { email, password });
       
        navigate("/admin/users");
     } catch (err) {
-      alert(err.response?.data?.message || "Login failed");
+toast.error(err.response?.data?.message || "Login failed ❌");
 
     }
+toast.success("Login successful ✅");
 
   };
 
