@@ -1,4 +1,4 @@
-import User from "../models/User.js"; // ✅ ADD THIS
+import User from "../models/User.js";
 import userService from "../services/AddressService.js";
 
 class UserController {
