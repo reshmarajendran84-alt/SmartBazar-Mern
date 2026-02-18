@@ -2,9 +2,6 @@ import jwt from "jsonwebtoken";
 import Admin from "../models/Admin.js";
 
 const adminProtect = async (req, res, next) => {
-  console.log("TOKEN:", token);
-console.log("SECRET:", process.env.ADMIN_JWT_SECRET);
-
   try {
     const authHeader = req.headers.authorization;
 
@@ -13,6 +10,9 @@ console.log("SECRET:", process.env.ADMIN_JWT_SECRET);
     }
 
     const token = authHeader.split(" ")[1];
+
+    console.log("TOKEN:", token);
+    console.log("SECRET:", process.env.ADMIN_JWT_SECRET);
 
     const decoded = jwt.verify(token, process.env.ADMIN_JWT_SECRET);
 

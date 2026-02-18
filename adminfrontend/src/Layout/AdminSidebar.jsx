@@ -26,6 +26,14 @@ const AdminSidebar = () => {
         <NavLink to="/admin/users" className={linkClass}>
           👥 Users
         </NavLink>
+        <NavLink to="/admin/categories" className={linkClass}>
+  🗂 Categories
+</NavLink>
+<NavLink to="/admin/products/create" className={linkClass}>
+   🛒 Add Product
+</NavLink>
+
+
       </nav>
     </div>
   );

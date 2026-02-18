@@ -1,5 +1,5 @@
 import { useState } from "react";
-import api from "../utils/api";
+import api from "../../utils/api";
 import { useNavigate } from "react-router-dom";
 
 import { toast } from "react-toastify";
@@ -7,21 +7,27 @@ import { toast } from "react-toastify";
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
 
   const login = async () => {
     try {
-   
+       setLoading(true);
+
 const res = await api.post("/admin/login", { email, password });
       localStorage.setItem("adminToken", res.data.token);
 
-      
-       navigate("/admin/users");
+      toast.success("Login successful ✅");
+
+navigate("/admin");
     } catch (err) {
 toast.error(err.response?.data?.message || "Login failed ❌");
 
+    }finally{
+          setLoading(false);
+
     }
-toast.success("Login successful ✅");
 
   };
 
@@ -54,12 +60,12 @@ toast.success("Login successful ✅");
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        <button
+        <button disabled={loading}
           onClick={login}
           className="w-full py-3 rounded-lg font-semibold text-white
                      bg-indigo-600 hover:bg-indigo-700 transition-all shadow-md"
         >
-          Admin Login
+  {loading ? "Logging in..." : "Admin Login"}
         </button>
 
         <p className="text-center text-xs text-gray-400 pt-4">

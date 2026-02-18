@@ -1,30 +1,45 @@
-import { Outlet } from "react-router-dom";
-import AdminSidebar from "../components/AdminSidebar";
-import AdminHeader from "../Layout/Header";
-import AdminFooter from "../Layout/Footer";
+import { NavLink, Outlet } from "react-router-dom";
 
 const AdminLayout = () => {
+  const linkClass = ({ isActive }) =>
+    isActive
+      ? "text-indigo-600 font-semibold"
+      : "text-gray-600";
+
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen">
 
-      {/* Sidebar */}
-      <AdminSidebar />
+      {/* SIDEBAR */}
+      <aside className="w-64 bg-white shadow p-5 space-y-4">
 
-      {/* Right Section */}
-      <div className="flex flex-col flex-1">
+        <h2 className="text-xl font-bold">SmartBazar</h2>
 
-        {/* Header */}
-        <AdminHeader />
+        <nav className="flex flex-col gap-3">
 
-        {/* Page Content */}
-        <div className="flex-1 p-4 md:p-6">
-          <Outlet />
-        </div>
+          <NavLink to="/admin/dashboard" className={linkClass}>
+            Dashboard
+          </NavLink>
 
-        {/* Footer */}
-        <AdminFooter />
+          <NavLink to="/admin/categories" className={linkClass}>
+            Categories
+          </NavLink>
 
-      </div>
+          <NavLink to="/admin/users" className={linkClass}>
+            Users
+          </NavLink>
+
+          <NavLink to="/admin/products" className={linkClass}>
+            Products
+          </NavLink>
+
+        </nav>
+      </aside>
+
+      {/* PAGE CONTENT */}
+      <main className="flex-1 p-6 bg-gray-100">
+        <Outlet />
+      </main>
+
     </div>
   );
 };
