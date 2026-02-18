@@ -13,8 +13,8 @@ class ProductController {
 
   async getAll(req, res) {
     try {
-      const data = await ProductService.getAllProducts();
-      res.json(data);
+      const products = await ProductService.getAllProducts();
+      res.json({ products });   // ✅ ALWAYS send response
     } catch (err) {
       res.status(500).json({ message: err.message });
     }
@@ -22,8 +22,8 @@ class ProductController {
 
   async getOne(req, res) {
     try {
-      const data = await ProductService.getSingleProduct(req.params.id);
-      res.json(data);
+      const product = await ProductService.getSingleProduct(req.params.id);
+      res.json(product);
     } catch (err) {
       res.status(500).json({ message: err.message });
     }

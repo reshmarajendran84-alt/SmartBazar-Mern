@@ -1,102 +1,99 @@
-import { useState } from "react";
-import { useProduct } from "../../../context/ProductContext";
+import { useEffect, useState } from "react";
+import api from "../../utils/api";
 import { toast } from "react-toastify";
 
-const ProductForm = () => {
-
-  const { createProduct, categories } = useProduct();
-
+const ProductForm = ({ editing, onSuccess }) => {
   const [form, setForm] = useState({
     name: "",
     price: "",
-    category: "",
     stock: "",
-    description: "",
+    category: "",
   });
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const [categories, setCategories] = useState([]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+useEffect(()=>{
+loadCategories();
+if(editing){
+    setForm({
+        name:editing.name,
+        price:editing.price,
+        stock:editing.stock,
+        category:editing.category?._id || "",
+    });
+}
+},[editing]);
 
-    try {
-      await createProduct(form);
+  const loadCategories = async () => {
+  try {
+    const res = await api.get("/admin/category");
+setCategories(res.data);
+  } catch {
+    toast.error("Failed to load categories");
+  }
+};
 
-      toast.success("Product created 🚀");
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-      setForm({
-        name: "",
-        price: "",
-        category: "",
-        stock: "",
-        description: "",
-      });
+  if (!form.category) {
+    return toast.error("Please select a category");
+  }
 
-    } catch {
-      toast.error("Failed ❌");
+  try {
+    if (editing) {
+      await api.put(`/admin/product/${editing._id}`, form);
+      toast.success("Product updated");
+    } else {
+      await api.post("/admin/product", form);
+      toast.success("Product added");
     }
-  };
+
+    onSuccess();
+  } catch (err) {
+    toast.error(err.response?.data?.message || "Save failed");
+  }
+};
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white p-6 rounded-xl shadow space-y-4 max-w-xl"
-    >
-
+    <form onSubmit={handleSubmit} className="border p-4 mb-4 rounded">
       <input
-        name="name"
+        placeholder="Name"
         value={form.name}
-        onChange={handleChange}
-        placeholder="Product name"
-        className="w-full border p-2 rounded"
+        onChange={(e) => setForm({ ...form, name: e.target.value })}
+        className="border p-2 w-full mb-2"
       />
 
       <input
-        name="price"
-        value={form.price}
-        onChange={handleChange}
         placeholder="Price"
-        className="w-full border p-2 rounded"
+        value={form.price}
+        onChange={(e) => setForm({ ...form, price: e.target.value })}
+        className="border p-2 w-full mb-2"
+      />
+
+      <input
+        placeholder="Stock"
+        value={form.stock}
+        onChange={(e) => setForm({ ...form, stock: e.target.value })}
+        className="border p-2 w-full mb-2"
       />
 
       <select
-        name="category"
         value={form.category}
-        onChange={handleChange}
-        className="w-full border p-2 rounded"
+        onChange={(e) => setForm({ ...form, category: e.target.value })}
+        className="border p-2 w-full mb-2"
       >
         <option value="">Select Category</option>
-
-        {categories.map((cat) => (
-          <option key={cat._id} value={cat._id}>
-            {cat.name}
+        {categories?.map((c) => (
+          <option key={c._id} value={c._id}>
+            {c.name}
           </option>
         ))}
-
       </select>
 
-      <input
-        name="stock"
-        value={form.stock}
-        onChange={handleChange}
-        placeholder="Stock"
-        className="w-full border p-2 rounded"
-      />
-
-      <textarea
-        name="description"
-        value={form.description}
-        onChange={handleChange}
-        placeholder="Description"
-        className="w-full border p-2 rounded"
-      />
-
-      <button className="bg-indigo-600 text-white px-4 py-2 rounded">
-        Create Product
+      <button className="bg-green-600 text-white px-4 py-2 rounded">
+        {editing ? "Update Product" : "Add Product"}
       </button>
-
     </form>
   );
 };

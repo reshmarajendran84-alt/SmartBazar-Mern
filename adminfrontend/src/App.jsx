@@ -7,68 +7,40 @@ import AdminDashboard from "./pages/Admin/AdminDashboard";
 import AdminUsers from "./pages/Admin/AdminUsers";
 
 import { CategoryProvider } from "./context/CategoryContext";
-import CategoryPage from "./pages/CategoryPage";
+import CategoryPage from "./components/Category/CategoryPage";
 
 import { ProductProvider } from "./context/ProductContext";
-import ProductList from "./components/Product/ProductList";
-import ProductEdit from "./components/Product/ProductEdit";
+import ProductPage from "./components/Product/ProductPage";
 
 function App() {
   return (
     <BrowserRouter>
-<ProductProvider>
+      <ProductProvider>
+        <CategoryProvider>
 
-      <CategoryProvider>
+          <Routes>
 
-        <Routes>
+            <Route path="/" element={<Navigate to="/admin/login" />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
 
-          {/* Default redirect */}
-          <Route path="/" element={<Navigate to="/admin/login" />} />
+            <Route element={<AdminProtectedRoute />}>
+              <Route path="/admin" element={<AdminLayout />}>
 
-          {/* Public Login */}
-          <Route path="/admin/login" element={<AdminLogin />} />
+                <Route index element={<AdminDashboard />} />
+                <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="categories" element={<CategoryPage />} />
 
-          {/* Protected Admin Routes */}
-          <Route element={<AdminProtectedRoute />}>
+                {/* ✅ ONLY THIS */}
+<Route path="/admin/products" element={<ProductPage />} />
 
-            <Route path="/admin" element={<AdminLayout />}>
-
-              <Route index element={<AdminDashboard />} />
-              <Route path="dashboard" element={<AdminDashboard />} />
-              <Route path="users" element={<AdminUsers />} />
-<Route path ="categories" element={<CategoryPage/>}/>
-           
-           <Route path="products" element={<ProductList />} />
-<Route path="products/create" element={<ProductList />} />
-<Route path="products/edit/:id" element={<ProductEdit />} />
-
+              </Route>
             </Route>
 
-          </Route>
-<Route element={<AdminProtectedRoute />}>
+          </Routes>
 
-  <Route path="/admin" element={<AdminLayout />}>
-
-<Route index element={<AdminDashboard />} />
-    <Route path="dashboard" element={<AdminDashboard />} />
-
-    <Route path="users" element={<AdminUsers />} />
-
-    <Route path="categories" element={<CategoryPage />} />
-
-    <Route path="products" element={<ProductList />} />
-    <Route path="products/create" element={<ProductList />} />
-    <Route path="products/edit/:id" element={<ProductEdit />} />
-
-  </Route>
-
-</Route>
-
-        </Routes>
-
-      </CategoryProvider>
-</ProductProvider>
-
+        </CategoryProvider>
+      </ProductProvider>
     </BrowserRouter>
   );
 }
