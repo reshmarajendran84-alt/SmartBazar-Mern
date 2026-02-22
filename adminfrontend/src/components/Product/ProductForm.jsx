@@ -8,8 +8,9 @@ const ProductForm = ({ editing, onSuccess }) => {
     price: "",
     stock: "",
     category: "",
+    
   });
-
+const [image,setImage]=useState([]);
   const [categories, setCategories] = useState([]);
 
 useEffect(()=>{
@@ -36,21 +37,32 @@ setCategories(res.data);
 const handleSubmit = async (e) => {
   e.preventDefault();
 
-  if (!form.category) {
-    return toast.error("Please select a category");
+  const formData = new FormData();
+
+  formData.append("name", form.name);
+  formData.append("price", form.price);
+  formData.append("stock", form.stock);
+  formData.append("category", form.category);
+
+ if(image.length > 0){
+  for(let i =0;i<image.length;i++){
+    formData.append("images",image[i]);
   }
+ }
 
   try {
     if (editing) {
-      await api.put(`/admin/product/${editing._id}`, form);
-      toast.success("Product updated");
+      await api.put(`/admin/product/${editing._id}`, formData);
+      toast.success("Updated");
     } else {
-      await api.post("/admin/product", form);
-      toast.success("Product added");
+      await api.post("/admin/product", formData);
+      toast.success("Created");
     }
 
     onSuccess();
+
   } catch (err) {
+    console.log(err.response?.data || err.message);
     toast.error(err.response?.data?.message || "Save failed");
   }
 };
@@ -90,6 +102,12 @@ const handleSubmit = async (e) => {
           </option>
         ))}
       </select>
+<input
+  type="file"
+  multiple
+  accept="image/*"
+  onChange={(e) => setImage(e.target.files)}
+/>
 
       <button className="bg-green-600 text-white px-4 py-2 rounded">
         {editing ? "Update Product" : "Add Product"}

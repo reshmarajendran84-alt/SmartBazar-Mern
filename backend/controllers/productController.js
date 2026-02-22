@@ -4,9 +4,10 @@ class ProductController {
 
   async create(req, res) {
     try {
-      const data = await ProductService.createProduct(req.body);
+      const data = await ProductService.createProduct(req.body, req.files);
       res.status(201).json(data);
     } catch (err) {
+       console.log(err);  
       res.status(400).json({ message: err.message });
     }
   }
@@ -14,8 +15,8 @@ class ProductController {
   async getAll(req, res) {
     try {
       const products = await ProductService.getAllProducts();
-      res.json({ products });   // ✅ ALWAYS send response
-    } catch (err) {
+      res.json({ products });
+    } catch (err) { console.log(err);  
       res.status(500).json({ message: err.message });
     }
   }
@@ -23,8 +24,8 @@ class ProductController {
   async getOne(req, res) {
     try {
       const product = await ProductService.getSingleProduct(req.params.id);
-      res.json(product);
-    } catch (err) {
+      res.json({product});
+    } catch (err) { console.log(err);  
       res.status(500).json({ message: err.message });
     }
   }
@@ -33,10 +34,11 @@ class ProductController {
     try {
       const data = await ProductService.updateProduct(
         req.params.id,
-        req.body
+        req.body,
+        req.files
       );
       res.json(data);
-    } catch (err) {
+    } catch (err) { console.log(err);  
       res.status(500).json({ message: err.message });
     }
   }
@@ -45,7 +47,7 @@ class ProductController {
     try {
       await ProductService.deleteProduct(req.params.id);
       res.json({ message: "Product deleted" });
-    } catch (err) {
+    } catch (err) { console.log(err);  
       res.status(500).json({ message: err.message });
     }
   }

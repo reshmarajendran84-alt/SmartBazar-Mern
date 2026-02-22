@@ -14,7 +14,7 @@ export const ProductProvider = ({ children }) => {
     try {
       setLoading(true);
         const res = await api.get("/admin/product");
-setProducts(res.data);
+setProducts(res.data.products)
 console.log(res.data);
 
     } catch {
@@ -25,13 +25,13 @@ console.log(res.data);
   };
 
   const createProduct = async (formData) => {
-    await api.post("/admin/products", formData);
+    await api.post("/admin/product", formData);
     toast.success("Product created");
     loadProducts();
   };
 
   const updateProduct = async (id, formData) => {
-    await api.put(`/admin/products/${id}`, formData);
+    await api.put(`/admin/product/${id}`, formData);
     toast.success("Product updated");
     setEditing(null);
     loadProducts();
@@ -39,7 +39,7 @@ console.log(res.data);
 
   const deleteProduct = async (id) => {
     if (!window.confirm("Delete this product?")) return;
-    await api.delete(`/admin/products/${id}`);
+    await api.delete(`/admin/product/${id}`);
     toast.success("Product deleted");
     loadProducts();
   };

@@ -2,6 +2,8 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import connectDB from "./config/db.js";
+import cloudinary from "./config/cloudinary.js";
+
 import authRoutes from "./routes/authRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import addressRoutes from "./routes/AddressRoutes.js";
@@ -15,6 +17,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use("/uploads", express.static("uploads"));
 
 
 app.get("/", (req, res) => {

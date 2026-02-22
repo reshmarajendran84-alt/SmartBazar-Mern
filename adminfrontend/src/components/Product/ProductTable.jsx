@@ -8,7 +8,7 @@ const ProductTable = ({ products, onEdit, onDelete }) => {
     try {
       await api.delete(`/admin/product/${id}`);
       toast.success("Deleted");
-      onDelete(); // reload products
+      onDelete();
     } catch {
       toast.error("Delete failed");
     }
@@ -22,17 +22,31 @@ const ProductTable = ({ products, onEdit, onDelete }) => {
           <th>Price</th>
           <th>Stock</th>
           <th>Category</th>
+          <th>Image</th>
           <th>Actions</th>
         </tr>
       </thead>
 
       <tbody>
-{products?.map((p) => (
+        {products?.map((p) => (
           <tr key={p._id} className="text-center border-t">
+
             <td>{p.name}</td>
             <td>{p.price}</td>
             <td>{p.stock}</td>
-<td>{p.category?.name || "No Category"}</td>
+            <td>{p.category?.name || "No Category"}</td>
+
+            {/* ✅ IMAGE TD */}
+            <td>
+             <img
+src={p.images?.[0]}
+  alt={p.name}
+  className="h-12 w-12 object-cover mx-auto rounded"
+/>
+
+            </td>
+
+            {/* ✅ ACTIONS TD */}
             <td>
               <button
                 onClick={() => onEdit(p)}
@@ -40,14 +54,14 @@ const ProductTable = ({ products, onEdit, onDelete }) => {
               >
                 Edit
               </button>
-
-              <button
+            <button
                 onClick={() => handleDelete(p._id)}
                 className="text-red-600"
               >
                 Delete
               </button>
             </td>
+
           </tr>
         ))}
       </tbody>

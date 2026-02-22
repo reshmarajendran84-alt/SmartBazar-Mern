@@ -15,7 +15,6 @@ const AdminLayout = () => {
   return (
     <div className="min-h-screen flex bg-gray-100">
 
-      {/* 🔥 MOBILE TOPBAR */}
       <header className="md:hidden fixed top-0 left-0 right-0 bg-white shadow flex items-center justify-between px-4 h-14 z-50">
         <h1 className="font-bold text-indigo-600 text-lg">SmartBazar</h1>
         <button onClick={() => setOpen(true)}>
@@ -23,7 +22,6 @@ const AdminLayout = () => {
         </button>
       </header>
 
-      {/* 🔥 SIDEBAR */}
       <aside
         className={`fixed md:static top-0 left-0 h-full w-64 bg-white shadow-lg transform 
         ${open ? "translate-x-0" : "-translate-x-full"} 
@@ -32,7 +30,6 @@ const AdminLayout = () => {
         <div className="flex items-center justify-between h-16 px-4 border-b">
           <h1 className="text-xl font-bold text-indigo-600">SmartBazar</h1>
 
-          {/* ❌ CLOSE BUTTON (MOBILE) */}
           <button className="md:hidden" onClick={() => setOpen(false)}>
             <X />
           </button>
@@ -59,7 +56,6 @@ const AdminLayout = () => {
         </nav>
       </aside>
 
-      {/* 🔥 OVERLAY FOR MOBILE */}
       {open && (
         <div
           className="fixed inset-0 bg-black/40 md:hidden"
@@ -67,7 +63,6 @@ const AdminLayout = () => {
         />
       )}
 
-      {/* 🔥 PAGE CONTENT */}
       <main className="flex-1 p-4 md:p-6 mt-14 md:mt-0 overflow-y-auto">
         <Outlet />
       </main>
