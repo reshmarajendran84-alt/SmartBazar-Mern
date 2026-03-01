@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -7,12 +7,19 @@ import {
   HiOutlineShoppingCart,
   HiOutlineSearch,
 } from "react-icons/hi";
-
+import api from "../utils/api";
 function Header() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+const [categories,setCategories] =useState([]);
 
+useEffect(() => {
+  api
+    .get("/categories")
+    .then((res) => setCategories(res.data))
+    .catch((err) => console.log(err));
+}, []);
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 lg:px-10">
@@ -23,7 +30,9 @@ function Header() {
           <Link to="/" className="text-2xl font-bold text-purple-600">
             SmartBazar
           </Link>
-
+{categories.map((c)=>(
+  <span key={c._id}>{c.name}</span>
+))}
           {/* Desktop Search */}
           <div className="hidden md:flex flex-1 mx-8 relative">
             <input

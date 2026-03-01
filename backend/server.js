@@ -7,8 +7,10 @@ import cloudinary from "./config/cloudinary.js";
 import authRoutes from "./routes/authRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import addressRoutes from "./routes/AddressRoutes.js";
-import categoryRoutes from "./routes/categoryRoutes.js";
+import cartegoryRoutes from "./routes/categoryRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
+// import productPublicRoutes from "./routes/productPublicRoutes.js";
+
 dotenv.config();
 connectDB();
 
@@ -28,9 +30,10 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 
 app.use("/api/user", addressRoutes);
+app.use("/api/admin",cartegoryRoutes);
+app.use("/api/admin",productRoutes);
 
-app.use("/api/admin/category",categoryRoutes);
-app.use("/api/admin/product",productRoutes);
+// app.use("/api/products", productPublicRoutes);
 
 const PORT = process.env.PORT || 5000;
 

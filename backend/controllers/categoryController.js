@@ -4,20 +4,25 @@ import Category from "../models/Category.js";
 class CategoryController {
 
 async addCategory(req, res) {
-  console.log(req.user);
-
   try {
-    const exists = await Category.findOne({ name: req.body.name });
+    const { name } = req.body;
+console.log("req body",req.body);
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: "Name is required" });
+    }
+
+    const exists = await Category.findOne({ name });
 
     if (exists) {
       return res.status(400).json({ message: "Category already exists" });
     }
 
-    const data = await CategoryService.addCategory(req.body);
+    const category = await CategoryService.addCategory({ name });
 
-    res.status(201).json(data);
+    res.status(201).json(category);
 
   } catch (error) {
+    console.log("ADD CATEGORY ERROR:", error);
     res.status(400).json({ message: error.message });
   }
 }
@@ -25,14 +30,20 @@ async addCategory(req, res) {
 async getCategory(req, res) {
   try {
     const data = await CategoryService.getCategory();
-    console.log("CATEGORIES:", data);
     res.json(data);
   } catch (error) {
-    console.log("GET CATEGORY ERROR:", error);
+    console.log("GET CATEGORY ERROR ", error);
     res.status(400).json({ message: error.message });
   }
 }
-
+async getSingleCategory(req, res) {
+  try {
+  const category = await CategoryService.getSingleCategory(req.params.id);
+    res.json(category);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+}
 
   async updateCategory(req, res) {
     try {
@@ -42,6 +53,8 @@ async getCategory(req, res) {
       );
       res.json(data);
     } catch (error) {
+        console.log(error);
+
       res.status(400).json({ message: error.message });
     }
   }

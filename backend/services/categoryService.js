@@ -11,7 +11,9 @@ return category;
 async getCategory() {
   return await Category.find({ isActive: true }).sort({ createdAt: -1 });
 }
-
+async getSingleCategory(id) {
+  return await Category.findById(id);
+}
 async updateCategory(id,data){
     return await Category.findByIdAndUpdate(id,data,{new:true});
 }

@@ -1,46 +1,39 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-
-import AdminLogin from "./pages/Admin/AdminLogin";
-import AdminLayout from "./Layout/AdminLayout";
+import AdminLayout from "./components/AdminLayout";
 import AdminProtectedRoute from "./routes/AdminProtectedRoute";
-import AdminDashboard from "./pages/Admin/AdminDashboard";
-import AdminUsers from "./pages/Admin/AdminUsers";
 
-import { CategoryProvider } from "./context/CategoryContext";
-import CategoryPage from "./components/Category/CategoryPage";
-
-import { ProductProvider } from "./context/ProductContext";
-import ProductPage from "./components/Product/ProductPage";
-
+import Dashboard from "./pages/AdminDashboard";
+import CategoryList from "./pages/Category/CategoryList";
+import ProductList from "./pages/Product/ProductList";
+import Login from "./pages/AdminLogin";
+import ProductDetails from "./pages/Product/ProductDetails";
 function App() {
   return (
     <BrowserRouter>
-      <ProductProvider>
-        <CategoryProvider>
+      <Routes>
 
-          <Routes>
+        {/* REDIRECT ROOT */}
+        <Route path="/" element={<Navigate to="/admin/login" />} />
 
-            <Route path="/" element={<Navigate to="/admin/login" />} />
-            <Route path="/admin/login" element={<AdminLogin />} />
+        {/* LOGIN */}
+        <Route path="/admin/login" element={<Login />} />
 
-            <Route element={<AdminProtectedRoute />}>
-              <Route path="/admin" element={<AdminLayout />}>
+        {/* ADMIN PANEL */}
+        <Route
+          path="/admin"
+          element={
+            <AdminProtectedRoute>
+              <AdminLayout />
+            </AdminProtectedRoute>
+          }
+        >
+          <Route index element={<Dashboard />} />
+          <Route path="products/:id" element={<ProductDetails/>}/>
+          <Route path="categories" element={<CategoryList />}/>
+          <Route path="products" element={<ProductList />} />
+        </Route>
 
-                <Route index element={<AdminDashboard />} />
-                <Route path="dashboard" element={<AdminDashboard />} />
-                <Route path="users" element={<AdminUsers />} />
-                <Route path="categories" element={<CategoryPage />} />
-
-                {/* ✅ ONLY THIS */}
-<Route path="/admin/products" element={<ProductPage />} />
-
-              </Route>
-            </Route>
-
-          </Routes>
-
-        </CategoryProvider>
-      </ProductProvider>
+      </Routes>
     </BrowserRouter>
   );
 }

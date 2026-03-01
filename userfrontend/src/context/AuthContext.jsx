@@ -36,14 +36,14 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
 console.log("AUTH USER:", user);
-
-    if (localStorage.getItem("token")) {
+const token =localStorage.getItem("token");
+    if (token) {
       loadProfile();
     } else {
       setLoading(false);
     }
-  }, []);
-if (loading) return <p>Loading...</p>;
+  }, [loadProfile]);
+// if (loading) return <p>Loading...</p>;
 
   return (
     <AuthContext.Provider value={{ user, login, logout, loading }}>

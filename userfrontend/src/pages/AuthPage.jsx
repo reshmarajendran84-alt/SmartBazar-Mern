@@ -47,7 +47,7 @@ if (!email || !password)
       await login(res.data.token);
       toast.success("Login successful 🎉");
 
-      navigate("/user/profile");
+      navigate("/user/profile",{replace:true});
 
       setEmail("");
       setPassword("");

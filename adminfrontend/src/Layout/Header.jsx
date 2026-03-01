@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 
-const AdminHeader = () => {
+const Header = () => {
   const navigate = useNavigate();
 
   const logout = () => {
@@ -29,4 +29,4 @@ const AdminHeader = () => {
   );
 };
 
-export default AdminHeader;
+export default Header;
