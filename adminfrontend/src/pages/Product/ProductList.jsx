@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getProducts, deleteProduct } from "../../services/productService";
 import ProductForm from "./ProductForm";
 import Table from "../../components/Table";
+import PageContainer from "../../components/PageContainer";
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
@@ -50,16 +51,21 @@ const ProductList = () => {
       label: "Category",
       render: (item) => item.category?.name || "No category",
     },
-    {
-      key: "image",
-      label: "Image",
-      render: (item) => (
-        <img
-          src={item.images?.[0]}
-          className="w-12 h-12 object-cover"
-        />
-      ),
-    },
+   {
+  key: "image",
+  label: "Image",
+  render: (item) => (
+    <img
+      src={
+        item.images?.[0]
+          ? `http://localhost:5000/${item.images[0]}`
+          : "/no-image.png"
+      }
+      className="w-12 h-12 object-cover rounded"
+      alt="product"
+    />
+  ),
+},
     {
       key: "actions",
       label: "Actions",
@@ -94,13 +100,17 @@ const ProductList = () => {
     <div>
       <div className="flex justify-between mb-5">
         <h2 className="text-xl font-bold">Products</h2>
-
-        <button
+<PageContainer>
+  <button
           onClick={() => setShowForm(true)}
           className="bg-indigo-600 text-white px-4 py-2 rounded"
         >
           + Add Product
         </button>
+</PageContainer>
+      
+ 
+
       </div>
 
       {loading ? (

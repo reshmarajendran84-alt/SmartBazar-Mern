@@ -97,9 +97,16 @@ const handleSubmit = async (e) => {
 
         <textarea name="description" value={form.description} onChange={handleChange} className="input" placeholder="Description" />
 
-        {preview && (
-          <img src={preview} className="w-20 h-20 object-cover" />
-        )}
+       {preview && (
+  <img
+    src={
+      preview.startsWith("http")
+        ? preview
+        : `http://localhost:5000/${preview}`
+    }
+    className="w-20 h-20 object-cover"
+  />
+)}
 
         <input type="file" onChange={(e) => setImage(e.target.files[0])} />
 

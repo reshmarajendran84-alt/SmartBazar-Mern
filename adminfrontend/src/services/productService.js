@@ -1,17 +1,17 @@
 import api from "../utils/api";
 
 // GET ALL PRODUCTS
-export const getProducts = () => api.get("/admin/products");
+export const getProducts = () => api.get("/products");
 export const getProductById = (id) =>
-  api.get(`/admin/products/${id}`);
+  api.get(`/products/${id}`);
 // DELETE PRODUCT
 export const deleteProduct = (id) =>
-  api.delete(`/admin/products/${id}`);
+  api.delete(`/products/${id}`);
 
 // CREATE PRODUCT
 export const createProduct = (data) =>
-  api.post("/admin/products", data);
+  api.post("/products", data);
 
 // UPDATE PRODUCT
 export const updateProduct = (id, data) =>
-  api.put(`/admin/products/${id}`, data);
+  api.put(`/products/${id}`, data);

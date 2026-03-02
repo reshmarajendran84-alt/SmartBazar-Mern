@@ -59,27 +59,31 @@ class ProductService {
 
   return product;
 }
-  async updateProduct(id, data, files) {
+async updateProduct(id, data, files) {
 
-    const updateData = {
-      name: data.name,
-      category: data.category,
-      price: data.price ?Number(data.price):0,
-      stock: data.price ? Number(data.stock):0,
-      description: data.description || "",
-    };
+  const product = await Product.findById(id);
+  if (!product) throw new Error("Product not found");
 
-    if (files && files.length > 0) {
-      updateData.images = files.map(file => file.path || file.filename);
-    }
+  product.name = data.name || product.name;
 
- const updated = await Product.findByIdAndUpdate(id, updateData, { new: true });
+  if (data.category) {
+    const categoryExists = await Category.findById(data.category);
+    if (!categoryExists) throw new Error("Category not found");
+    product.category = data.category;
+  }
 
-  if (!updated) throw new Error("Product not found");
+  product.price = data.price ? Number(data.price) : product.price;
+  product.stock = data.stock ? Number(data.stock) : product.stock;
+  product.description = data.description || product.description;
 
-  return updated;
+  if (files && files.length > 0) {
+    product.images = files.map(file => file.path);
+  }
+
+  await product.save();
+
+  return product;
 }
-
   async deleteProduct(id) {
     return await Product.findByIdAndDelete(id);
   }

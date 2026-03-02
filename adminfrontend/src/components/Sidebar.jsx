@@ -1,12 +1,95 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import {
+  LayoutDashboard,
+  List,
+  ShoppingCart,
+  X
+} from "lucide-react";
 
-const Sidebar = () => {
+const Sidebar = ({ open, setOpen }) => {
+  const { pathname } = useLocation();
+
+  const menu = [
+    { name: "Dashboard", path: "/admin", icon: LayoutDashboard },
+    { name: "Categories", path: "/admin/categories", icon: List },
+    { name: "Products", path: "/admin/products", icon: ShoppingCart },
+  ];
+
   return (
-    <div className="w-64 h-screen bg-gray-900 text-white p-5 space-y-4">
-      <Link to="/admin">Dashboard</Link>
-      <Link to="/admin/categories">Categories</Link>
-      <Link to="/admin/products">Products</Link>
-    </div>
+    <>
+      {/* OVERLAY (mobile) */}
+      {open && (
+        <div
+          onClick={() => setOpen(false)}
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
+        />
+      )}
+
+      <aside
+        className={`
+        fixed md:static top-0 left-0 z-50
+        h-screen w-64 p-5
+        bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900
+        text-white shadow-2xl
+        transform ${open ? "translate-x-0" : "-translate-x-full"}
+        md:translate-x-0
+        transition-transform duration-300
+        flex flex-col
+      `}
+      >
+        {/* TOP */}
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-2xl font-extrabold tracking-wide">
+            SmartBazar
+          </h1>
+
+          <X
+            className="md:hidden cursor-pointer"
+            onClick={() => setOpen(false)}
+          />
+        </div>
+
+        {/* MENU */}
+        <nav className="space-y-2 flex-1">
+          {menu.map((item) => {
+            const Icon = item.icon;
+            const active = pathname === item.path;
+
+            return (
+              <Link
+                key={item.name}
+                to={item.path}
+                onClick={() => setOpen(false)}
+                className={`
+                flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium
+                transition-all duration-200 group
+
+                ${
+                  active
+                    ? "bg-gradient-to-r from-indigo-500 to-purple-600 shadow-lg"
+                    : "text-gray-300 hover:bg-white/10 hover:text-white"
+                }
+              `}
+              >
+                <Icon size={18} />
+
+                {item.name}
+
+                {/* ACTIVE SIDE BAR */}
+                {active && (
+                  <span className="ml-auto w-2 h-2 bg-white rounded-full" />
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* FOOTER */}
+        <p className="text-xs text-gray-400 text-center">
+          © 2026 SmartBazar
+        </p>
+      </aside>
+    </>
   );
 };
 

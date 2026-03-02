@@ -4,9 +4,9 @@ import adminProtect from "../middlewares/adminProtect.js";
 
 const router = express.Router();
 
-router.post("/categories", adminProtect, CategoryController.addCategory);
-router.get("/categories", adminProtect, CategoryController.getCategory);
-router.put("/categories/:id", adminProtect, CategoryController.updateCategory);
-router.delete("/categories/:id", adminProtect, CategoryController.deleteCategory);
+router.post("/",  CategoryController.addCategory);
+router.get("/",  CategoryController.getCategory);
+router.put("/:id",  CategoryController.updateCategory);
+router.delete("/:id",  CategoryController.deleteCategory);
 
 export default router;

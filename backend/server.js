@@ -30,8 +30,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 
 app.use("/api/user", addressRoutes);
-app.use("/api/admin",cartegoryRoutes);
-app.use("/api/admin",productRoutes);
+app.use("/api/categories",cartegoryRoutes);
+app.use("/api/products",productRoutes);
 
 // app.use("/api/products", productPublicRoutes);
 

@@ -8,7 +8,7 @@ api.interceptors.request.use((config) => {
 
   const token = localStorage.getItem("adminToken"); 
 console.log("TOKEN FROM LS:", localStorage.getItem("adminToken"));
-  if (token) {
+  if (token && config.url !== "/login") {
     config.headers.Authorization = `Bearer ${token}`;
   }
 

@@ -7,6 +7,7 @@ import {
 
 import CategoryForm from "./CategoryForm";
 import Table from "../../components/Table";
+import PageContainer from "../../components/PageContainer"; // ✅ IMPORT
 
 const CategoryList = () => {
   const [categories, setCategories] = useState([]);
@@ -17,8 +18,10 @@ const CategoryList = () => {
     try {
       setLoading(true);
       const { data } = await getCategories();
-      console.log("API CATEGORY RESPONSE:", data);
-    setCategories(Array.isArray(data) ? data : data.categories || []);
+
+      setCategories(
+        Array.isArray(data) ? data : data.categories || []
+      );
     } catch (err) {
       console.log(err.response?.data);
     } finally {
@@ -31,14 +34,13 @@ const CategoryList = () => {
   }, [loadCategories]);
 
   const handleCreate = async (name) => {
-        console.log("categoryName",name);
-await createCategory({name});
+    await createCategory({ name });
     setShowForm(false);
     loadCategories();
   };
 
   const handleDelete = async (id) => {
-    if (confirm("Delete this category?")) {
+    if (window.confirm("Delete this category?")) {
       await deleteCategory(id);
       loadCategories();
     }
@@ -52,7 +54,7 @@ await createCategory({name});
       render: (item) => (
         <button
           onClick={() => handleDelete(item._id)}
-          className="text-red-500"
+          className="text-red-500 hover:underline"
         >
           Delete
         </button>
@@ -61,24 +63,28 @@ await createCategory({name});
   ];
 
   return (
-    <div>
-
-      <div className="flex justify-between mb-5">
-        <h2 className="text-xl font-bold">Categories</h2>
-
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-indigo-600 text-white px-4 py-2 rounded"
-        >
-          + Add Category
-        </button>
-      </div>
-
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        <Table data={categories} columns={columns} />
-      )}
+    <>
+      <PageContainer
+        title="Categories"
+        action={
+          <button
+            onClick={() => setShowForm(true)}
+            className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm"
+          >
+            + Add Category
+          </button>
+        }
+      >
+        {loading ? (
+          <p className="text-center text-gray-500 py-6">
+            Loading categories...
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table data={categories} columns={columns} />
+          </div>
+        )}
+      </PageContainer>
 
       {showForm && (
         <CategoryForm
@@ -86,7 +92,7 @@ await createCategory({name});
           onSubmit={handleCreate}
         />
       )}
-    </div>
+    </>
   );
 };
 

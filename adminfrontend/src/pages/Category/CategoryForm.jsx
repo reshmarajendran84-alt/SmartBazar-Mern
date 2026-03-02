@@ -11,31 +11,32 @@ const CategoryForm = ({ onClose, onSubmit }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center px-4">
 
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 rounded w-96 space-y-4"
-      >
-        <h2 className="text-lg font-bold">Add Category</h2>
+  <form className="bg-white w-full max-w-md p-6 rounded-2xl space-y-4 shadow-lg">
 
-        <input
-          className="w-full border p-2"
-          placeholder="Category name"
-          onChange={(e) => setName(e.target.value)}
-        />
+    <h2 className="text-xl font-bold">Add Category</h2>
 
-        <div className="flex justify-end gap-3">
-          <button type="button" onClick={onClose}>
-            Cancel
-          </button>
+    <input
+      className="w-full border px-4 py-2 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+      placeholder="Category name"
+    />
 
-          <button className="bg-indigo-600 text-white px-4 py-2 rounded">
-            Save
-          </button>
-        </div>
-      </form>
+    <div className="flex justify-end gap-3">
+      <button type="button" onClick={onClose} className="text-gray-500">
+        Cancel
+      </button>
+
+      <button className="bg-indigo-600 text-white px-5 py-2 rounded-lg">
+        Save
+      </button>
     </div>
+
+  </form>
+  <div className="text-center text-xs text-gray-500 py-4">
+  © {new Date().getFullYear()} SmartBazar Admin Panel
+</div>
+</div>
   );
 };
 
