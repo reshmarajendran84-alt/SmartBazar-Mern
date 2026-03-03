@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AdminLayout from "./components/AdminLayout";
 import AdminProtectedRoute from "./routes/AdminProtectedRoute";
-
+import {Toaster} from "react-hot-toast";
 import Dashboard from "./pages/AdminDashboard";
 import CategoryList from "./pages/Category/CategoryList";
 import ProductList from "./pages/Product/ProductList";
@@ -10,8 +10,9 @@ import ProductDetails from "./pages/Product/ProductDetails";
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
+    <Toaster position="top-right" reverseOrder={false}/>
 
+      <Routes>
         {/* REDIRECT ROOT */}
         <Route path="/" element={<Navigate to="/admin/login" />} />
 

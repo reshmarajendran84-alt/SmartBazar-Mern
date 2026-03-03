@@ -17,7 +17,9 @@ console.log("req body",req.body);
       return res.status(400).json({ message: "Category already exists" });
     }
 
-    const category = await CategoryService.addCategory({ name });
+    const category = await CategoryService.addCategory({ name :req.body.name,
+      isActive:true,
+    });
 
     res.status(201).json(category);
 

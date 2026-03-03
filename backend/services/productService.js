@@ -5,26 +5,26 @@ class ProductService {
 
   async createProduct(data, files) {
 
-    // if (!data.name || !data.price || !data.stock || !data.category) {
-    //   throw new Error("All fields are required");
-    // }
   if (!data.category) throw new Error("Category required");
 
-    const categoryExists = await Category.findById(data.category);
-    if (!categoryExists) throw new Error("Category not found");
+  const categoryExists = await Category.findById(data.category);
+  if (!categoryExists) throw new Error("Category not found");
 
-    const product = await Product.create({
-      name: data.name,
-      category: data.category,
-      price: Number(data.price),
-      stock: Number(data.stock),
-      description: data.description || "",
-      images: files?.map(file => file.path) || [],
-    });
+  const images = Array.isArray(files)
+    ? files.map(file => file.path)
+    : [];
 
-    return product;
-  }
+  const product = await Product.create({
+    name: data.name,
+    category: data.category,
+    price: Number(data.price),
+    stock: Number(data.stock),
+    description: data.description || "",
+    images,
+  });
 
+  return product;
+}
   async getAllProducts(query) {
 
   const page = Number(query.page) || 1;

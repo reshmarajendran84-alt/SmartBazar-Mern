@@ -10,8 +10,16 @@ export const deleteProduct = (id) =>
 
 // CREATE PRODUCT
 export const createProduct = (data) =>
-  api.post("/products", data);
+  api.post("/products", data,{
+    headers:{
+      "Content-Type":"multipart/form-data",
+    },
+  });
 
 // UPDATE PRODUCT
 export const updateProduct = (id, data) =>
-  api.put(`/products/${id}`, data);
+  api.put(`/products/${id}`, data,{
+    headers:{
+      "Content-Type":"multipart/form-data",
+    },
+  });

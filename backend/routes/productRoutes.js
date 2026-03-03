@@ -11,4 +11,9 @@ router.get("/", adminProtect, ProductController.getAllProducts);
 router.get("/:id", adminProtect, ProductController.getOne);
 router.put("/:id", adminProtect, upload.array("images", 5), ProductController.update);
 router.delete("/:id", adminProtect, ProductController.remove);
+
+
+
+router.get("/", ProductController.getAllProducts);
+router.post("/:id",ProductController.getOne);
 export default router;

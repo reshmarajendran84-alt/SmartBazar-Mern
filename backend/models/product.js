@@ -6,17 +6,15 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: true,
       },
-
+ price: {
+      type: Number,
+      required: true,
+    
+    },
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
       required: true,
-    },
-
-    price: {
-      type: Number,
-      required: true,
-    
     },
 
     stock: {
@@ -31,7 +29,12 @@ images: [String],
       type: String,
     },
 
-    // discount: {
+  
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+  // discount: {
     //   type: Number,
     //   default: 0,
     // },
@@ -47,11 +50,6 @@ images: [String],
     //   type: Number,
     //   default: 0,
     // },
-
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
 
   },
   { timestamps: true }
