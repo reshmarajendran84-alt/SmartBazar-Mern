@@ -31,7 +31,7 @@ console.log("req body",req.body);
 
 async getCategory(req, res) {
   try {
-    const data = await CategoryService.getCategory();
+    const data = await CategoryService.getCategoryWithCount();
     res.json(data);
   } catch (error) {
     console.log("GET CATEGORY ERROR ", error);

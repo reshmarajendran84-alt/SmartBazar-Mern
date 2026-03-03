@@ -25,5 +25,28 @@ async deleteCategory(id){
 
     );
 }
+async getCategoryWithCount(){
+    const categories =await Category.aggregate([
+        {
+            $lookup:{
+                from:"products",
+                localField:"_id",
+                foreignField:"category",
+                as:"products",
+            },
+        },
+        {
+            $addFields:{productCount:{$size:"$products"}}
+        },
+        {
+            $project:{
+                name:1,
+                isActive:1,
+                productCount:1
+            }
+        }
+    ]);
+    return categories;
+}
 }
 export default new CategoryService();

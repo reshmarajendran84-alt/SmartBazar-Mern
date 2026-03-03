@@ -11,16 +11,16 @@ import { ProductProvider } from "./context/ProductContext.jsx";
 import { CartProvider } from "./context/CartContext.jsx";
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-   <AuthProvider>
-  <AddressProvider>
-    <CategoryProvider>
-      <CartProvider>
-        <ProductProvider>
-          <App />
-        </ProductProvider>
-      </CartProvider>
-    </CategoryProvider>
-  </AddressProvider>
-</AuthProvider>
-  </StrictMode>
+    <AuthProvider>
+      <AddressProvider>
+        <CategoryProvider>
+          <CartProvider>
+            <ProductProvider>
+              <App />
+            </ProductProvider>
+          </CartProvider>
+        </CategoryProvider>
+      </AddressProvider>
+    </AuthProvider>
+  </StrictMode>,
 );

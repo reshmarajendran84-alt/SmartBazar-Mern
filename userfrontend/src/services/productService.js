@@ -1,7 +1,7 @@
 import api from "../utils/api";
 
-export const fetchProducts=(page,category)=>
-    api.get(`/product?page=${page}&category=${category}`);
+export const getProducts=(page,category)=>
+api.get(`/products?page=${page || 1}&category=${category || ""}`)
 
-export const fetchSingleProduct =(id)=>
-    api.get(`/product/${id}`);
+export const getProductById =(id)=>
+    api.get(`/products/${id}`);

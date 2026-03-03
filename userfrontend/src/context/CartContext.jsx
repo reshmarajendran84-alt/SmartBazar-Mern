@@ -1,46 +1,45 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useState } from "react";
 
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-  const [cart, setCart] = useState(
-    JSON.parse(localStorage.getItem("cart")) || []
-  );
+  const [cart, setCart] = useState([]);
 
-  useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cart));
-  }, [cart]);
+  // Add product to cart
+  const handleAddToCart = (product) => {
+    const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
+    const existing = storedCart.find((item) => item.productId === product._id);
 
-  const addToCart = (product) => {
-    const exist = cart.find((item) => item.productId === product._id);
-
-    if (exist) {
-      const updated = cart.map((item) =>
-        item.productId === product._id
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      );
-      setCart(updated);
+    if (existing) {
+      existing.quantity += 1;
     } else {
-      setCart([
-        ...cart,
-        {
-          productId: product._id,
-          name: product.name,
-          price: product.price,
-          quantity: 1,
-          image: product.images[0],
-        },
-      ]);
+      storedCart.push({
+        productId: product._id,
+        name: product.name,
+        price: product.price,
+        quantity: 1,
+      });
     }
+
+    localStorage.setItem("cart", JSON.stringify(storedCart));
+    setCart(storedCart);
+  };
+
+  // Remove product from cart
+  const removeFromCart = (productId) => {
+    const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
+    const updatedCart = storedCart.filter((item) => item.productId !== productId);
+
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
+    setCart(updatedCart);
   };
 
   return (
-    <CartContext.Provider value={{ cart, addToCart }}>
+    <CartContext.Provider value={{ cart, handleAddToCart, removeFromCart }}>
       {children}
     </CartContext.Provider>
   );
 };
 
-/* ⭐ THIS LINE IS REQUIRED */
+// Custom hook
 export const useCart = () => useContext(CartContext);

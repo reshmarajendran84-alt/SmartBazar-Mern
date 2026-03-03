@@ -51,6 +51,8 @@ const ProductList = () => {
       label: "Category",
       render: (item) => item.category?.name || "No category",
     },
+        { key: "description", label: "Description" },
+
    {
   key: "image",
   label: "Image",

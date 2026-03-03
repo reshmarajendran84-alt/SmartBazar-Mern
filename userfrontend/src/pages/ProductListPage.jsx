@@ -1,36 +1,30 @@
-import { useProduct } from "../context/ProductContext";
+import { useEffect, useState } from "react";
+import { getProducts } from "../services/productService";
 import ProductCard from "../components/ProductCard";
-import CategoryFilter from "../components/CategoryFilter";
 
 const ProductListPage = () => {
-  const { products, page, setPage, totalPages } = useProduct();
+  const [products, setProducts] = useState([]);
+const[page,setPage]=useState(1);
+const [category,setCategory] =useState("");
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  const loadProducts = async () => {
+    try {
+      const { data } = await getProducts(page,category);
+      setProducts(data.products);
+      setTotalPages(data.totalPages); 
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   return (
-    <div className="p-4">
-
-      <CategoryFilter />
-
-      <div className="grid grid-cols-4 gap-4">
-        {products.map((p) => (
-          <ProductCard key={p._id} product={p} />
-        ))}
-      </div>
-
-      <div className="mt-4 flex gap-2">
-        <button disabled={page === 1} onClick={() => setPage(page - 1)}>
-          Prev
-        </button>
-
-        <span>{page} / {totalPages}</span>
-
-        <button
-          disabled={page === totalPages}
-          onClick={() => setPage(page + 1)}
-        >
-          Next
-        </button>
-      </div>
-
+    <div className="p-6 grid grid-cols-4 gap-4">
+      {products.map((product) => (
+        <ProductCard key={product._id} product={product} />
+      ))}
     </div>
   );
 };

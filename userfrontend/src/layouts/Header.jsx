@@ -14,6 +14,10 @@ function Header() {
   const [isOpen, setIsOpen] = useState(false);
 const [categories,setCategories] =useState([]);
 
+const handleCategoryClick = (category) => {
+  console.log("Selected category:", category);
+  // You can filter products here
+};
 useEffect(() => {
   api
     .get("/categories")
@@ -30,9 +34,7 @@ useEffect(() => {
           <Link to="/" className="text-2xl font-bold text-purple-600">
             SmartBazar
           </Link>
-{categories.map((c)=>(
-  <span key={c._id}>{c.name}</span>
-))}
+{/*  */}
           {/* Desktop Search */}
           <div className="hidden md:flex flex-1 mx-8 relative">
             <input
@@ -48,9 +50,9 @@ useEffect(() => {
 
             <Link to="/cart" className="relative">
               <HiOutlineShoppingCart className="text-2xl text-gray-700 hover:text-purple-600" />
-              <span className="absolute -top-2 -right-2 bg-purple-600 text-white text-xs px-1.5 rounded-full">
+              {/* <span className="absolute -top-2 -right-2 bg-purple-600 text-white text-xs px-1.5 rounded-full">
                 2
-              </span>
+              </span> */}
             </Link>
 
             {user ? (
@@ -91,11 +93,22 @@ useEffect(() => {
         {/* Desktop Navigation */}
         <nav className="hidden md:flex justify-center gap-8 py-3 border-t text-gray-700 font-medium">
           <Link to="/" className="hover:text-purple-600">Home</Link>
-          <Link to="/shop" className="hover:text-purple-600">Shop</Link>
+          {/* <Link to="/shop" className="hover:text-purple-600">Shop</Link> */}
           <Link to="/categories" className="hover:text-purple-600">Categories</Link>
           <Link to="/about" className="hover:text-purple-600">About</Link>
         </nav>
       </div>
+
+<div className="flex overflow-x-auto gap-3 p-2 bg-gray-100">
+  {categories.map((c) => (
+    <button onClick={handleCategoryClick}
+      key={c._id}
+      className="px-4 py-2 bg-white shadow-sm rounded-lg text-gray-700 hover:bg-indigo-600 hover:text-white transition-colors duration-300 flex-shrink-0"
+    >
+      {c.name}
+    </button>
+  ))}
+</div>
 
       {/* Mobile Menu */}
       {isOpen && (
@@ -109,7 +122,7 @@ useEffect(() => {
             />
 
             <Link to="/" onClick={() => setIsOpen(false)}>Home</Link>
-            <Link to="/shop" onClick={() => setIsOpen(false)}>Shop</Link>
+            {/* <Link to="/shop" onClick={() => setIsOpen(false)}>Shop</Link> */}
             <Link to="/categories" onClick={() => setIsOpen(false)}>Categories</Link>
             <Link to="/about" onClick={() => setIsOpen(false)}>About</Link>
             <Link to="/cart" onClick={() => setIsOpen(false)}>Cart</Link>

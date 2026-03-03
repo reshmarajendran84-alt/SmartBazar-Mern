@@ -73,21 +73,29 @@ const CategoryList = () => {
 
   const columns = [
     { key: "name", label: "Category Name" },
-
-    {
-      key: "isActive",
-      label: "Status",
-      render: (item) => (
-        <span
-          className={
-            item.isActive ? "text-green-600" : "text-red-500"
-          }
-        >
-          {item.isActive ? "Active" : "Inactive"}
-        </span>
-      ),
-    },
-
+{
+  key: "isActive",
+  label: "Status",
+  render: (item) => {
+    const statusActive = item.isActive && item.productCount > 0;
+    return (
+      <span
+        className={statusActive ? "text-green-600" : "text-red-500"}
+      >
+        {statusActive ? "Active" : "Inactive"}
+      </span>
+    );
+  },
+},
+{
+  key: "stock",
+  label: "Total Products",
+  render: (item) => (
+    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+      {item.productCount || 0}
+    </span>
+  ),
+},
     {
       key: "actions",
       label: "Actions",

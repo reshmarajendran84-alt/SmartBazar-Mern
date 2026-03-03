@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { createProduct, updateProduct } from "../../services/productService";
 import { getCategories } from "../../services/categoryService";
+import toast from "react-hot-toast";
 
 const ProductForm = ({ onClose, refresh, editData }) => {
   const isEdit = !!editData;
@@ -13,8 +14,8 @@ const ProductForm = ({ onClose, refresh, editData }) => {
     description: "",
   });
 
-  const [image, setImage] = useState(null);
-  const [preview, setPreview] = useState("");
+  const [images, setImages] = useState([]); // multiple images
+  const [preview, setPreview] = useState([]);
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
@@ -30,8 +31,8 @@ const ProductForm = ({ onClose, refresh, editData }) => {
         stock: editData.stock,
         description: editData.description,
       });
-    
-      setPreview(editData?.images?.[0] || "");
+
+      setPreview(editData.images || []);
     }
   }, [editData]);
 
@@ -48,30 +49,50 @@ const ProductForm = ({ onClose, refresh, editData }) => {
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  // ✅ Handle Image Selection
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    setImages(files);
 
-  const formData = new FormData();
+    const imagePreviews = files.map((file) =>
+      URL.createObjectURL(file)
+    );
+    setPreview(imagePreviews);
+  };
 
-  formData.append("name", form.name);
-  formData.append("price", form.price);
-  formData.append("stock", form.stock);
-  formData.append("category", form.category);
-  formData.append("description", form.description);
+  // ✅ Submit
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  if (image) {
-    formData.append("images", image);
-  }
+    const formData = new FormData();
 
-  if (isEdit) {
-    await updateProduct(editData._id, formData);
-  } else {
-    await createProduct(formData);
-  }
+    formData.append("name", form.name);
+    formData.append("price", form.price);
+    formData.append("stock", form.stock);
+    formData.append("category", form.category);
+    formData.append("description", form.description);
 
-  refresh();
-  onClose();
-};
+    images.forEach((file) => {
+      formData.append("images", file);
+    });
+
+    try {
+      if (isEdit) {
+        await updateProduct(editData._id, formData);
+        toast.success("Product updated");
+      } else {
+        await createProduct(formData);
+        toast.success("Product created");
+      }
+
+      refresh();
+      onClose();
+    } catch (error) {
+      toast.error("Something went wrong");
+      console.log(error);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
       <form
@@ -82,11 +103,38 @@ const handleSubmit = async (e) => {
           {isEdit ? "Update Product" : "Add Product"}
         </h2>
 
-        <input name="name" value={form.name} onChange={handleChange} className="input" placeholder="Name" />
-        <input name="price" value={form.price} onChange={handleChange} className="input" placeholder="Price" />
-        <input name="stock" value={form.stock} onChange={handleChange} className="input" placeholder="Stock" />
+        <input
+          name="name"
+          value={form.name}
+          onChange={handleChange}
+          className="input"
+          placeholder="Name"
+        />
 
-        <select name="category" value={form.category} onChange={handleChange} className="input">
+        <input
+          name="price"
+          type="number"
+          value={form.price}
+          onChange={handleChange}
+          className="input"
+          placeholder="Price"
+        />
+
+        <input
+          name="stock"
+          type="number"
+          value={form.stock}
+          onChange={handleChange}
+          className="input"
+          placeholder="Stock"
+        />
+
+        <select
+          name="category"
+          value={form.category}
+          onChange={handleChange}
+          className="input"
+        >
           <option value="">Select Category</option>
           {categories?.map((c) => (
             <option key={c._id} value={c._id}>
@@ -95,27 +143,37 @@ const handleSubmit = async (e) => {
           ))}
         </select>
 
-        <textarea name="description" value={form.description} onChange={handleChange} className="input" placeholder="Description" />
+        <textarea
+          name="description"
+          value={form.description}
+          onChange={handleChange}
+          className="input"
+          placeholder="Description"
+        />
 
-       {preview && (
-  <img
-    src={
-      preview.startsWith("http")
-        ? preview
-        : `http://localhost:5000/${preview}`
-    }
-    className="w-20 h-20 object-cover"
-  />
-)}
+        {/* ✅ File Input */}
+        <input
+          type="file"
+          multiple
+          onChange={handleImageChange}
+        />
 
-        <input type="file" onChange={(e) => setImage(e.target.files[0])} />
+        {/* ✅ Preview Images */}
+        {preview.length > 0 && (
+          <div className="flex gap-2 flex-wrap">
+            {preview.map((img, i) => (
+              <img
+                key={i}
+                src={img}
+                className="w-20 h-20 object-cover rounded"
+              />
+            ))}
+          </div>
+        )}
 
-        <div className="flex justify-end gap-3">
-          <button type="button" onClick={onClose}>Cancel</button>
-          <button className="bg-indigo-600 text-white px-4 py-2 rounded">
-            {isEdit ? "Update" : "Save"}
-          </button>
-        </div>
+        <button className="bg-indigo-600 text-white px-4 py-2 rounded w-full">
+          {isEdit ? "Update Product" : "Add Product"}
+        </button>
       </form>
     </div>
   );

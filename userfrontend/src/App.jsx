@@ -9,35 +9,69 @@ import { ToastContainer } from "react-toastify";
 import ProductListPage from "./pages/ProductListPage";
 import SingleProduct from "./pages/SingleProduct";
 import NotFound from "./pages/NotFound";
-
+import CartPage from "./pages/Cart";
+import AboutPage from "./pages/About";
 function App() {
   return (
-    <BrowserRouter>
-      <ToastContainer position="top-right" autoClose={3000} theme="colored" />
+      <BrowserRouter>
+        <ToastContainer position="top-right" autoClose={3000} theme="colored" />
 
-      <div className="flex flex-col min-h-screen">
-        <Header />
+        <div className="flex flex-col min-h-screen">
+          <Header />
 
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/auth/login" element={<AuthPage />} />
-            <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
+          <main className="flex-grow">
+            <Routes>
+              <Route path="/auth/login" element={<AuthPage />} />
+              <Route
+                path="/auth/forgot-password"
+                element={<ForgotPasswordPage />}
+              />
 
-            <Route element={<UserProtectedRoute />}>
-              <Route path="/user/profile" element={<UserProfile />} />
-            </Route>
+              <Route element={<UserProtectedRoute />}>
+                <Route path="/user/profile" element={<UserProfile />} />
+              </Route>
 
-            <Route path="/" element={<ProductListPage />} />
-            <Route path="/product/:id" element={<SingleProduct />} />
+              <Route path="/" element={<ProductListPage />} />
+              <Route path="/products/:id" element={<SingleProduct />} />
+              <Route path="/cart" element={<CartPage />} />
+<Route path="/about" element={<AboutPage/>}/>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </main>
+
+          <Footer />
+        </div>
+      </BrowserRouter>
 
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </main>
+// function App() {
+//   return (
+//     <BrowserRouter>
+//       <ToastContainer position="top-right" autoClose={3000} theme="colored" />
+//       <div className="flex flex-col min-h-screen">
+//         <Routes>
+//           {/* About page without header/footer */}
+//           <Route path="/about" element={<AboutPage />} />
 
-        <Footer />
-      </div>
-    </BrowserRouter>
+//           {/* Pages with header/footer */}
+//           <Route element={<Layout />}>
+//             <Route path="/" element={<ProductListPage />} />
+//             <Route path="/products/:id" element={<SingleProduct />} />
+//             <Route path="/cart" element={<CartPage />} />
+//             <Route path="/auth/login" element={<AuthPage />} />
+//             <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
+
+//             <Route element={<UserProtectedRoute />}>
+//               <Route path="/user/profile" element={<UserProfile />} />
+//             </Route>
+
+//             <Route path="*" element={<NotFound />} />
+//           </Route>
+//         </Routes>
+//       </div>
+//     </BrowserRouter>
+//   );
+// }
   );
 }
 

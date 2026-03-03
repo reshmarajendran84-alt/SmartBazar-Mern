@@ -10,6 +10,7 @@ isActive:{
     type:Boolean,
     default:true,
 },
+
 },
   { timestamps: true }
 );

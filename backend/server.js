@@ -7,10 +7,10 @@ import cloudinary from "./config/cloudinary.js";
 import authRoutes from "./routes/authRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import addressRoutes from "./routes/AddressRoutes.js";
-import cartegoryRoutes from "./routes/categoryRoutes.js";
+import publicCategoryRoutes from "./routes/publicCategoryRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
-// import productPublicRoutes from "./routes/productPublicRoutes.js";
-
+import adminCartegoryRoutes from "./routes/adminCartegoryRoutes.js";
+import adminProtectedRoute from "./routes/adminProductRoutes.js"
 dotenv.config();
 connectDB();
 
@@ -30,8 +30,13 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 
 app.use("/api/user", addressRoutes);
-app.use("/api/categories",cartegoryRoutes);
+
 app.use("/api/products",productRoutes);
+app.use("/api/categories",publicCategoryRoutes);
+ 
+app.use("/api/admin/categories",adminCartegoryRoutes);
+app.use("/api/admin/products",adminProtectedRoute);
+
 
 // app.use("/api/products", productPublicRoutes);
 
