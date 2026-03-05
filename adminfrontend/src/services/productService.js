@@ -1,7 +1,8 @@
 import api from "../utils/api";
 
 // GET ALL PRODUCTS
-export const getProducts = () => api.get("/products");
+export const getProducts = (page = 1, category = "") =>
+  api.get(`/products?page=${page}&category=${category}`);
 export const getProductById = (id) =>
   api.get(`/products/${id}`);
 // DELETE PRODUCT

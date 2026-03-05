@@ -7,11 +7,15 @@ import {
   HiOutlineShoppingCart,
   HiOutlineSearch,
 } from "react-icons/hi";
+import { useCart } from "../context/CartContext";
 
 function Header() {
   const { user, logout } = useAuth();
+  const { cart } = useCart();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+
+  const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
@@ -38,8 +42,15 @@ function Header() {
           {/* Desktop Right Section */}
           <div className="hidden md:flex items-center gap-6">
 
+            {/* Cart */}
             <Link to="/cart" className="relative">
               <HiOutlineShoppingCart className="text-2xl text-gray-700 hover:text-purple-600" />
+
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                  {cartCount}
+                </span>
+              )}
             </Link>
 
             {user ? (
@@ -47,6 +58,7 @@ function Header() {
                 <span className="text-sm text-gray-600">
                   {user.name || user.email}
                 </span>
+
                 <button
                   onClick={() => {
                     logout();
@@ -67,13 +79,14 @@ function Header() {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Hamburger Button */}
           <button
             className="md:hidden text-2xl text-gray-700"
             onClick={() => setIsOpen(!isOpen)}
           >
             {isOpen ? <HiOutlineX /> : <HiOutlineMenu />}
           </button>
+
         </div>
 
         {/* Desktop Navigation */}
@@ -82,23 +95,29 @@ function Header() {
           <Link to="/categories" className="hover:text-purple-600">Categories</Link>
           <Link to="/about" className="hover:text-purple-600">About</Link>
         </nav>
+
       </div>
 
       {/* Mobile Menu */}
       {isOpen && (
         <div className="md:hidden bg-white shadow-md border-t">
-          <div className="flex flex-col px-6 py-4 space-y-4 text-gray-700">
 
-            <input
-              type="text"
-              placeholder="Search..."
-              className="border rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            />
+          <div className="flex flex-col px-6 py-4 space-y-4">
+
+            {/* Search */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search..."
+                className="w-full border rounded-lg py-2 px-3 pr-8"
+              />
+              <HiOutlineSearch className="absolute right-2 top-2.5 text-gray-500" />
+            </div>
 
             <Link to="/" onClick={() => setIsOpen(false)}>Home</Link>
             <Link to="/categories" onClick={() => setIsOpen(false)}>Categories</Link>
             <Link to="/about" onClick={() => setIsOpen(false)}>About</Link>
-            <Link to="/cart" onClick={() => setIsOpen(false)}>Cart</Link>
+            <Link to="/cart" onClick={() => setIsOpen(false)}>Cart ({cartCount})</Link>
 
             {user ? (
               <button
@@ -122,8 +141,10 @@ function Header() {
             )}
 
           </div>
+
         </div>
       )}
+
     </header>
   );
 }

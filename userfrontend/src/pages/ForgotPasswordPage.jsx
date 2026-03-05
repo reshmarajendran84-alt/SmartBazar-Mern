@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 export default function ForgotPasswordPage() {
-  const [step, setStep] = useState("EMAIL"); // EMAIL | RESET
+  const [step, setStep] = useState("EMAIL"); 
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");

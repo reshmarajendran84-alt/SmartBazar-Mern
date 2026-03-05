@@ -8,38 +8,61 @@ export const CartProvider = ({ children }) => {
   // Add product to cart
   const handleAddToCart = (product) => {
     const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
-    const existing = storedCart.find((item) => item.productId === product._id);
+    const exist = cart.find((item) => item._id === product._id);
 
-    if (existing) {
-      existing.quantity += 1;
+    if (exist) {
+      setCart(
+        cart.map((item) =>
+          item._id === product._id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        )
+      );
     } else {
-      storedCart.push({
-        productId: product._id,
-        name: product.name,
-        price: product.price,
-        quantity: 1,
-      });
+      setCart([...cart, { ...product, quantity: 1 }]);
     }
-
-    localStorage.setItem("cart", JSON.stringify(storedCart));
-    setCart(storedCart);
   };
 
-  // Remove product from cart
-  const removeFromCart = (productId) => {
-    const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
-    const updatedCart = storedCart.filter((item) => item.productId !== productId);
-
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
-    setCart(updatedCart);
+  const increaseQty = (id) => {
+    setCart(
+      cart.map((item) =>
+        item._id === id
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      )
+    );
   };
+
+  const decreaseQty = (id) => {
+    setCart(
+      cart.map((item) =>
+        item._id === id && item.quantity > 1
+          ? { ...item, quantity: item.quantity - 1 }
+          : item
+      )
+    );
+  };
+
+  const removeFromCart = (id) => {
+    setCart(cart.filter((item) => item._id !== id));
+  };
+
+  const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ cart, handleAddToCart, removeFromCart }}>
+    <CartContext.Provider
+      value={{
+        cart,
+        handleAddToCart,
+        increaseQty,
+        decreaseQty,
+        removeFromCart,
+        cartCount,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );
 };
 
-// Custom hook
 export const useCart = () => useContext(CartContext);

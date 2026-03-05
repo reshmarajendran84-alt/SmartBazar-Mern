@@ -6,13 +6,12 @@ import UserProtectedRoute from "./routes/UserProtectedRoute";
 import Footer from "./layouts/Footer";
 import Header from "./layouts/Header";
 import { ToastContainer } from "react-toastify";
-import ProductDetailPage from "./pages/SingleProduct";
+import SingleProduct from "./pages/SingleProduct";
 import NotFound from "./pages/NotFound";
 import CartPage from "./pages/Cart";
 import AboutPage from "./pages/About";
-import CategoryPage from "./pages/CategoryPage";
+import ProductListPage from "./pages/ProductListPage";
 import HomePage from "./pages/HomePage";
-// import ProductListPage from "./pages/ProductListPage";
 
 function App() {
   return (
@@ -31,11 +30,11 @@ function App() {
             <Route element={<UserProtectedRoute />}>
               <Route path="/user/profile" element={<UserProfile />} />
             </Route>
-{/* <Route path="/" element={<ProductListPage/>}/> */}
-            <Route path="/products/:id" element={<ProductDetailPage />} />
+<Route path="/" element={<ProductListPage/>}/>
+            <Route path="/products/:id" element={<SingleProduct />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/about" element={<AboutPage />} />
-            <Route path="/categories" element={<CategoryPage />} />
+            <Route path="/categories" element={<ProductListPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>

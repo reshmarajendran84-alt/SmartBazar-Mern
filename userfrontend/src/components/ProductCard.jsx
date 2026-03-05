@@ -13,14 +13,15 @@ const ProductCard = React.memo(({ product }) => {
           alt={product.name}
           className="h-40 w-full object-cover"
         />
-        <h3>{product.name}</h3>
+
+        <h3 className="mt-2 font-semibold">{product.name}</h3>
       </Link>
 
-      <p>₹ {product.price}</p>
+      <p className="text-blue-600 font-bold mt-1">₹{product.price}</p>
 
       <button
         onClick={() => handleAddToCart(product)}
-        className="bg-indigo-600 text-white px-3 py-1 mt-2"
+        className="bg-indigo-600 text-white px-3 py-1 mt-2 rounded"
       >
         Add To Cart
       </button>

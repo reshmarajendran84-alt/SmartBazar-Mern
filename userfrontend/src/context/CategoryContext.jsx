@@ -26,5 +26,4 @@ export const CategoryProvider = ({ children }) => {
   );
 };
 
-/* ⭐ THIS LINE IS MANDATORY */
 export const useCategory = () => useContext(CategoryContext);

@@ -2,19 +2,12 @@ import Product from "../models/Product.js";
 import Category from "../models/Category.js";
 
 class AdminProductService {
-async createProduct(data, files) {
+async createProduct(data, imageUrls) {
 
   if (!data.category) throw new Error("Category required");
 
   const categoryExists = await Category.findById(data.category);
   if (!categoryExists) throw new Error("Category not found");
-
-  const images = Array.isArray(files)
-    ? files.map(file => file.path)
-    : [];
-const result = await cloudinary.uploader.upload(req.file.path, {
-      folder: "products",
-    });
 
   const product = await Product.create({
     name: data.name,
@@ -22,7 +15,7 @@ const result = await cloudinary.uploader.upload(req.file.path, {
     price: Number(data.price),
     stock: Number(data.stock),
     description: data.description || "",
-    images:result.secure_url,
+    images: imageUrls || [],
   });
 
   return product;
@@ -36,7 +29,9 @@ const result = await cloudinary.uploader.upload(req.file.path, {
     if (category && category !== "") {
       filter.category = category;
     }
-
+// if(search){
+//   filter.name ={$regex:search,$options:"i"};
+// }
     const products = await Product.find(filter)
       .populate("category", "name")
       .skip((page - 1) * limit)
@@ -98,45 +93,3 @@ if (data.category && data.category.trim() !== "") {
 }
 
 export default new AdminProductService();
-// import Product from "../models/Product.js";
-
-// // CREATE PRODUCT
-// export const createProductService = async (data, files) => {
-//   const imageUrls = files?.map((file) => file.path) || [];
-
-//   const product = new Product({
-//     ...data,
-//     images: imageUrls,
-//   });
-
-//   return await product.save();
-// };
-
-// // GET ALL (Admin can see all products)
-// export const getAdminProductsService = async () => {
-//   return await Product.find()
-//     .populate("category", "name")
-//     .sort({ createdAt: -1 });
-// };
-
-// // UPDATE PRODUCT
-// export const updateProductService = async (id, data, files) => {
-//   const product = await Product.findById(id);
-//   if (!product) throw new Error("Product not found");
-
-//   if (files && files.length > 0) {
-//     product.images = files.map((file) => file.path);
-//   }
-
-//   Object.assign(product, data);
-
-//   return await product.save();
-// };
-
-// // DELETE PRODUCT
-// export const deleteProductService = async (id) => {
-//   const product = await Product.findById(id);
-//   if (!product) throw new Error("Product not found");
-
-//   await product.deleteOne();
-// };

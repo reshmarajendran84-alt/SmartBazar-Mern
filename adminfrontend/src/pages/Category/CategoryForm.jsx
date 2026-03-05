@@ -1,61 +1,84 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-const CategoryForm = ({ onClose, onSubmit,editData }) => {
+const CategoryForm = ({ onClose, onSubmit, editData }) => {
   const [name, setName] = useState("");
+
+  useEffect(() => {
+    if (editData) {
+      setName(editData.name);
+    } else {
+      setName("");
+    }
+  }, [editData]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!name.trim()) return toast.error("Category name required");
+
+    if (!name.trim()) {
+      return toast.error("Category name required");
+    }
 
     onSubmit(name);
   };
-useEffect(()=>{
-  if(editData){
-    setName(editData.name);
 
-  }else{
-    setName("");
-
-  }
-},[editData]);
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center px-4">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center px-4 z-50">
+      
+      {/* Modal Card */}
       <form
         onSubmit={handleSubmit}
-        className="bg-white w-full max-w-md p-6 rounded-2xl space-y-4 shadow-lg"
+        className="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 space-y-6 animate-fadeIn"
       >
-        <h2 className="text-xl font-bold">{editData ? "Edit Category":"Add Category"}</h2>
+        {/* Header */}
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-800">
+            {editData ? "Edit Category" : "Add Category"}
+          </h2>
+          <p className="text-sm text-gray-500">
+            {editData
+              ? "Update your category information"
+              : "Create a new product category"}
+          </p>
+        </div>
 
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full border px-4 py-2 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-          placeholder="Category name"
-        />
+        {/* Input */}
+        <div>
+          <label className="text-sm font-medium text-gray-600">
+            Category Name
+          </label>
 
-        <div className="flex justify-end gap-3">
-          <button type="button" onClick={onClose} className="text-gray-500">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter category name"
+            className="mt-2 w-full border border-gray-300 px-4 py-2 rounded-lg 
+            focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+          />
+        </div>
+
+        {/* Buttons */}
+        <div className="flex justify-end gap-3 pt-2">
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg border text-gray-600 hover:bg-gray-100 transition"
+          >
             Cancel
           </button>
 
-          {/* <button
+          <button
             type="submit"
-            className="bg-indigo-600 text-white px-5 py-2 rounded-lg"
+            className="px-5 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition shadow"
           >
-            Save
-          </button> */}
-        <button type="submit"   className="bg-indigo-600 text-white px-5 py-2 rounded-lg"
->
-          {editData ?"update":"save"}
+            {editData ? "Update" : "Save"}
           </button>
-                  </div>
+
+        </div>
 
       </form>
 
-      <div className="text-center text-xs text-gray-500 py-4">
-        © {new Date().getFullYear()} SmartBazar Admin Panel
-      </div>
     </div>
   );
 };

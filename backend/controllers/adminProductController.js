@@ -3,16 +3,22 @@ import AdminProductService from "../services/adminProductService.js";
 class AdminProductController {
 
   async createProduct(req, res) {
-    try {
-      const product = await AdminProductService.createProduct(
-        req.body,
-        req.files
-      );
-      res.status(201).json(product);
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
+  try {
+
+    const imageUrls = req.files.map(file => file.path);
+
+    const product = await AdminProductService.createProduct(
+      req.body,
+      imageUrls
+    );
+
+    res.status(201).json(product);
+
+  } catch (error) {
+    console.log("Create Product Error:", error);
+    res.status(500).json({ message: error.message });
   }
+}
 async getSingleProduct(req, res) {
   try {
     const product = await AdminProductService.getSingleProduct(
@@ -39,19 +45,24 @@ async getSingleProduct(req, res) {
     }
   }
 
-  async updateProduct(req, res) {
-    try {
-      const product = await AdminProductService.updateProduct(
-        req.params.id,
-        req.body,
-        req.files
-      );
-      res.json(product);
-    } catch (error) {
-        console.log("update error",error);
-      res.status(500).json({ message: error.message });
-    }
+async updateProduct(req, res) {
+  try {
+
+    const imageUrls = req.files?.map(file => file.path) || [];
+
+    const product = await AdminProductService.updateProduct(
+      req.params.id,
+      req.body,
+      imageUrls
+    );
+
+    res.json(product);
+
+  } catch (error) {
+    console.log("update error", error);
+    res.status(500).json({ message: error.message });
   }
+}
 
   async deleteProduct(req, res) {
     try {
