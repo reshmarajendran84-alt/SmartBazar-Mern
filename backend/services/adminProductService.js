@@ -12,6 +12,9 @@ async createProduct(data, files) {
   const images = Array.isArray(files)
     ? files.map(file => file.path)
     : [];
+const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "products",
+    });
 
   const product = await Product.create({
     name: data.name,
@@ -19,7 +22,7 @@ async createProduct(data, files) {
     price: Number(data.price),
     stock: Number(data.stock),
     description: data.description || "",
-    images,
+    images:result.secure_url,
   });
 
   return product;

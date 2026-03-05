@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { createProduct, updateProduct } from "../../services/productService";
 import { getCategories } from "../../services/categoryService";
 import toast from "react-hot-toast";
+import api from "../../utils/api";
 
 const ProductForm = ({ onClose, refresh, editData }) => {
   const isEdit = !!editData;
@@ -71,7 +72,7 @@ const ProductForm = ({ onClose, refresh, editData }) => {
     formData.append("stock", form.stock);
     formData.append("category", form.category);
     formData.append("description", form.description);
-
+await api.post("/createProduct",formData);
     images.forEach((file) => {
       formData.append("images", file);
     });

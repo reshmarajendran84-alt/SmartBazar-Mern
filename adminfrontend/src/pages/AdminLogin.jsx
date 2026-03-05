@@ -15,10 +15,10 @@ const AdminLogin = () => {
     try {
        setLoading(true);
 
-const res = await api.post("/admin/login", { email, password });
+const res = await api.post("/login", { email, password });
       localStorage.setItem("adminToken", res.data.token);
 
-      toast.success("Login successful ✅");
+      toast.success("Login successful ");
 
 navigate("/admin");
 window.location.reload();
