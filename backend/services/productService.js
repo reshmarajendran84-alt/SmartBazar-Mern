@@ -1,39 +1,58 @@
 import Product from "../models/Product.js";
+import mongoose from "mongoose";
 
 class ProductService {
-  // GET PUBLIC PRODUCTS
-  async getPublicProductsService(page=1, category="") {
-    const limit = 10;
 
-    const query = { isActive: true };
+  async getPublicProductsService(query) {
 
-    if (category) {
-      query.category = category;
+    const page = Number(query.page) || 1;
+    const limit = 8;
+
+    const category = query.category;
+    const price = query.price;
+    const sort = query.sort;
+    const search = query.search;
+
+    let filter = {};
+
+    // CATEGORY FILTER
+    if (category && mongoose.Types.ObjectId.isValid(category)) {
+      filter.category = category;
     }
-// if(search){
-//   query={$regex:search,$option:"i"};
-// }
-    const count = await Product.countDocuments(query);
 
-    const products = await Product.find(query)
-      .populate("category", "name")
+    // PRICE FILTER
+    if (price) {
+      filter.price = { $lte: Number(price) };
+    }
+
+    // SEARCH FILTER
+    if (search) {
+      filter.name = { $regex: search, $options: "i" };
+    }
+
+    let dbQuery = Product.find(filter).populate("category", "name");
+
+    // SORTING
+    if (sort === "price_asc") {
+      dbQuery = dbQuery.sort({ price: 1 });
+    }
+
+    if (sort === "price_desc") {
+      dbQuery = dbQuery.sort({ price: -1 });
+    }
+
+    const count = await Product.countDocuments(filter);
+
+    const products = await dbQuery
       .skip((page - 1) * limit)
-      .limit(limit)
-      .sort({ createdAt: -1 });
+      .limit(limit);
 
     return {
       products,
       page,
-      pages: Math.ceil(count / limit),
+      pages: Math.ceil(count / limit)
     };
-  }
-
-  // GET SINGLE PRODUCT
-  async getSingleProductService(id) {
-    return await Product.findById(id)
-      .populate("category", "name");
   }
 }
 
-// ✅ export instance
 export default new ProductService();

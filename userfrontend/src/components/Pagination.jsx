@@ -1,9 +1,15 @@
 const Pagination = ({ page, setPage, pages }) => {
   return (
     <div className="flex gap-2 mt-5">
-      {[...Array(pages).keys()].map(x => (
-        <button key={x} onClick={() => setPage(x +1)}>
-          {x +1}
+      {Array.from({ length: pages }, (_, i) => (
+        <button
+          key={i}
+          onClick={() => setPage(i + 1)}
+          className={`px-3 py-1 border ${
+            page === i + 1 ? "bg-blue-500 text-white" : ""
+          }`}
+        >
+          {i + 1}
         </button>
       ))}
     </div>

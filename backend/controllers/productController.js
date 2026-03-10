@@ -3,14 +3,10 @@ import ProductService from "../services/productService.js";
 class ProductController {
 
   async getProducts(req, res) {
-    try {
+    try { console.log(req.query);
       const page = Number(req.query.page) || 1;
       const category = req.query.category || "";
-      const data = await ProductService.getPublicProductsService(
-        page,
-        category,
-        
-      );
+      const data = await ProductService.getPublicProductsService(req.query);
 
       res.json(data);
     } catch (error) {

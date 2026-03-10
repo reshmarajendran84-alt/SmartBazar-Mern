@@ -39,24 +39,7 @@ const SingleProduct = () => {
   return (
     <div className="min-h-screen bg-gray-50">
 
-      {/* Navbar */}
-      <header className="bg-white shadow px-6 py-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold">LOGO</h1>
-
-        <div className="flex items-center gap-6">
-          <span>Categories</span>
-
-          <input
-            type="text"
-            placeholder="Search"
-            className="border rounded px-3 py-1"
-          />
-
-          <span>Cart</span>
-          <span>Profile</span>
-        </div>
-      </header>
-
+      
       {/* Product Section */}
       <div className="p-6 flex gap-8">
 
