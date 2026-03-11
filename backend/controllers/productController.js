@@ -1,18 +1,17 @@
+import Product from "../models/Product.js";
 import ProductService from "../services/productService.js";
 
 class ProductController {
 
   async getProducts(req, res) {
-    try { console.log(req.query);
-      const page = Number(req.query.page) || 1;
-      const category = req.query.category || "";
-      const data = await ProductService.getPublicProductsService(req.query);
-
-      res.json(data);
-    } catch (error) {
-      res.status(500).json({ message: "Server Error" });
-    }
+    try {
+    const data = await ProductService.getPublicProductsService(req.query);
+    res.json(data);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server Error" });
   }
+}
 
   async getSingleProduct(req, res) {
     try {

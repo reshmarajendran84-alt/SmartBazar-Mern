@@ -16,7 +16,15 @@ function Header() {
   const [isOpen, setIsOpen] = useState(false);
 
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+const [keyword,setKeyword]=useState("");
 
+const handleSearch = (e) => {
+  e.preventDefault();
+
+  if (!keyword.trim()) return;
+
+  navigate(`/products?search=${keyword}`);
+};
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 lg:px-10">
@@ -31,14 +39,20 @@ function Header() {
 
           {/* Desktop Search */}
           <div className="hidden md:flex flex-1 mx-8 relative">
-            <input
-              type="text"
-              placeholder="Search products..."
-              className="w-full border rounded-full py-2 px-4 pr-10 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            />
-            <HiOutlineSearch className="absolute right-3 top-2.5 text-gray-500 text-xl" />
-          </div>
+ <form onSubmit={handleSearch} className="relative">
+  <input
+    type="text"
+    placeholder="Search..."
+    value={keyword}
+    onChange={(e) => setKeyword(e.target.value)}
+    className="w-full border rounded-lg py-2 px-3 pr-8"
+  />
 
+  <button type="submit">
+    <HiOutlineSearch className="absolute right-2 top-2.5 text-gray-500" />
+  </button>
+</form>
+</div>
           {/* Desktop Right Section */}
           <div className="hidden md:flex items-center gap-6">
 

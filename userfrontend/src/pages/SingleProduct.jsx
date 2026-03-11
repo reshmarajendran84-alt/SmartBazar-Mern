@@ -8,8 +8,7 @@ const SingleProduct = () => {
   const { handleAddToCart } = useCart();
 
   const [product, setProduct] = useState(null);
-  const [mainImage, setMainImage] = useState("");
-
+const [mainImage, setMainImage] = useState(null);
   useEffect(() => {
     loadProduct();
   }, [id]);
@@ -31,8 +30,7 @@ const SingleProduct = () => {
     id: i,
     name: `Product ${i + 1}`,
     price: 899,
-    image: "https://via.placeholder.com/300",
-  }));
+image: "https://dummyimage.com/300x300/cccccc/000000"  }));
 
   if (!product) return <div className="p-10">Loading...</div>;
 
@@ -45,8 +43,9 @@ const SingleProduct = () => {
 
         {/* Thumbnails */}
         <div className="flex flex-col gap-3">
-          {product.images?.map((img, i) => (
-            <img
+{product.images?.length > 0 &&
+ product.images.map((img, i) => (
+              <img
               key={i}
               src={img}
               alt=""
@@ -58,11 +57,13 @@ const SingleProduct = () => {
 
         {/* Large Image */}
         <div className="flex-1">
-          <img
-            src={mainImage}
-            alt={product.name}
-            className="w-full max-w-lg object-cover rounded"
-          />
+        {mainImage && (
+  <img
+    src={mainImage}
+    alt={product.name}
+    className="w-full max-w-lg object-cover rounded"
+  />
+)}
         </div>
 
         {/* Product Info */}

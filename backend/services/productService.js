@@ -53,6 +53,12 @@ class ProductService {
       pages: Math.ceil(count / limit)
     };
   }
+
+  // ⭐ ADD THIS FUNCTION
+  async getSingleProductService(id) {
+    return await Product.findById(id).populate("category", "name");
+  }
+
 }
 
 export default new ProductService();
