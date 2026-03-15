@@ -29,6 +29,7 @@ function App() {
           }
         >
           <Route index element={<Dashboard />} />
+          <Route path="dashboard" element={<Dashboard/>}/>
           <Route path="products/:id" element={<ProductDetails/>}/>
           <Route path="categories" element={<CategoryList />}/>
           <Route path="products" element={<ProductList />} />

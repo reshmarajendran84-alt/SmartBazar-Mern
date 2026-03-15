@@ -27,8 +27,12 @@ class ProductService {
 
     // SEARCH FILTER
     if (search) {
-      filter.name = { $regex: search, $options: "i" };
-    }
+  filter.$or = [
+    { name: { $regex: search, $options: "i" } },
+    // { description: { $regex: search, $options: "i" } },
+    // { brand: { $regex: search, $options: "i" } }
+  ];
+}
 
     let dbQuery = Product.find(filter).populate("category", "name");
 

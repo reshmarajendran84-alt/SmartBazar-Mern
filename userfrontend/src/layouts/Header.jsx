@@ -8,7 +8,7 @@ import {
   HiOutlineSearch,
 } from "react-icons/hi";
 import { useCart } from "../context/CartContext";
-
+import SearchBar from "../components/SearchBar";
 function Header() {
   const { user, logout } = useAuth();
   const { cart } = useCart();
@@ -20,7 +20,6 @@ const [keyword,setKeyword]=useState("");
 
 const handleSearch = (e) => {
   e.preventDefault();
-
   if (!keyword.trim()) return;
 
   navigate(`/products?search=${keyword}`);
@@ -39,7 +38,7 @@ const handleSearch = (e) => {
 
           {/* Desktop Search */}
           <div className="hidden md:flex flex-1 mx-8 relative">
- <form onSubmit={handleSearch} className="relative">
+ {/* <form onSubmit={handleSearch} className="relative">
   <input
     type="text"
     placeholder="Search..."
@@ -51,7 +50,8 @@ const handleSearch = (e) => {
   <button type="submit">
     <HiOutlineSearch className="absolute right-2 top-2.5 text-gray-500" />
   </button>
-</form>
+</form> */}
+<SearchBar/>
 </div>
           {/* Desktop Right Section */}
           <div className="hidden md:flex items-center gap-6">

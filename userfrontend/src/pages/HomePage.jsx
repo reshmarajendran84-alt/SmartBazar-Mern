@@ -32,11 +32,18 @@ function HomePage() {
     <div className="bg-gray-50 min-h-screen">
 
       {/* Hero Banner */}
-      <section className="px-8 mt-6">
-        <div className="h-72 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white text-3xl font-semibold">
-          HERO BANNER IMAGE
-        </div>
-      </section>
+    <section className="px-8 mt-6">
+  <div className="h-72 rounded-xl overflow-hidden">
+    <img
+      src="images\download (15).jpg"
+      alt="Hero Banner"
+      className="w-full h-full object-cover"
+    />
+    {/* <div className="absolute inset-0 flex items-center justify-center text-white text-3xl font-semibold">
+      HERO BANNER IMAGE
+    </div> */}
+  </div>
+</section>
 
       {/* Categories */}
       <section className="px-8 mt-6">
