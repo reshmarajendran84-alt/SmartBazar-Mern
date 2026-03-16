@@ -1,13 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
-import {
-  LayoutDashboard,
-  List,
-  ShoppingCart,
-  X
-} from "lucide-react";
+import { LayoutDashboard, List, ShoppingCart, X, Menu } from "lucide-react";
+import { useState } from "react";
 
-const Sidebar = ({ open, setOpen }) => {
+const Sidebar = () => {
   const { pathname } = useLocation();
+  const [open, setOpen] = useState(false);
 
   const menu = [
     { name: "Dashboard", path: "/admin", icon: LayoutDashboard },
@@ -17,7 +14,15 @@ const Sidebar = ({ open, setOpen }) => {
 
   return (
     <>
-      {/* OVERLAY (mobile) */}
+      {/* HAMBURGER BUTTON (mobile) */}
+      <button
+        onClick={() => setOpen(true)}
+        className="fixed top-4 left-4 z-50 md:hidden p-2 bg-indigo-600 text-white rounded-lg shadow-lg"
+      >
+        <Menu size={20} />
+      </button>
+
+      {/* OVERLAY */}
       {open && (
         <div
           onClick={() => setOpen(false)}
@@ -25,17 +30,17 @@ const Sidebar = ({ open, setOpen }) => {
         />
       )}
 
+      {/* SIDEBAR */}
       <aside
         className={`
-        fixed md:static top-0 left-0 z-50
-        h-screen w-64 p-5
-        bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900
-        text-white shadow-2xl
-        transform ${open ? "translate-x-0" : "-translate-x-full"}
-        md:translate-x-0
-        transition-transform duration-300
-        flex flex-col
-      `}
+          fixed md:static top-0 left-0 z-50
+           w-64 p-5
+          bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900
+          text-white shadow-2xl
+          transform ${open ? "translate-x-0" : "-translate-x-full"}
+          md:translate-x-0
+          transition-transform duration-300 flex flex-col
+        `}
       >
         {/* TOP */}
         <div className="flex items-center justify-between mb-8">
@@ -43,6 +48,7 @@ const Sidebar = ({ open, setOpen }) => {
             SmartBazar
           </h1>
 
+          {/* CLOSE BUTTON MOBILE */}
           <X
             className="md:hidden cursor-pointer"
             onClick={() => setOpen(false)}
@@ -61,23 +67,21 @@ const Sidebar = ({ open, setOpen }) => {
                 to={item.path}
                 onClick={() => setOpen(false)}
                 className={`
-                flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium
-                transition-all duration-200 group
-
-                ${
-                  active
+                  flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium
+                  transition-all duration-200 group
+                  ${active
                     ? "bg-gradient-to-r from-indigo-500 to-purple-600 shadow-lg"
                     : "text-gray-300 hover:bg-white/10 hover:text-white"
-                }
-              `}
+                  }
+                `}
               >
                 <Icon size={18} />
 
                 {item.name}
 
-                {/* ACTIVE SIDE BAR */}
+                {/* ACTIVE INDICATOR */}
                 {active && (
-                  <span className="ml-auto w-2 h-2 bg-white rounded-full" />
+                  <span className="ml-auto w-2 h-6 bg-white rounded-full" />
                 )}
               </Link>
             );
@@ -85,7 +89,7 @@ const Sidebar = ({ open, setOpen }) => {
         </nav>
 
         {/* FOOTER */}
-        <p className="text-xs text-gray-400 text-center">
+        <p className="text-xs text-gray-400 text-center mt-6">
           © 2026 SmartBazar
         </p>
       </aside>

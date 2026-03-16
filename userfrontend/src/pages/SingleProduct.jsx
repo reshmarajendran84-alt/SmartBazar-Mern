@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getProductById } from "../services/productService";
 import { useCart } from "../context/CartContext";
-
+import {toast} from "react-toastify";
 const SingleProduct = () => {
   const { id } = useParams();
   const { handleAddToCart } = useCart();
@@ -22,6 +22,7 @@ const [mainImage, setMainImage] = useState(null);
         setMainImage(data.images[0]);
       }
     } catch (err) {
+      toast.error("product not found");
       console.log(err);
     }
   };

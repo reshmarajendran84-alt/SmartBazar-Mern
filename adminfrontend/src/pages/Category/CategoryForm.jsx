@@ -12,20 +12,28 @@ const CategoryForm = ({ onClose, onSubmit, editData }) => {
     }
   }, [editData]);
 
-  const handleSubmit = (e) => {
+  // ✅ Declare handleSubmit as async
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!name.trim()) {
       return toast.error("Category name required");
     }
 
-    onSubmit(name);
+    try {
+      // await the async onSubmit function
+      await onSubmit(name);
+
+      toast.success(editData ? "Category updated!" : "Category created!");
+      onClose(); // close modal after success
+    } catch (error) {
+      console.error(error.response?.data || error.message);
+      toast.error("Something went wrong. Try again!");
+    }
   };
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center px-4 z-50">
-      
-      {/* Modal Card */}
       <form
         onSubmit={handleSubmit}
         className="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 space-y-6 animate-fadeIn"
@@ -47,7 +55,6 @@ const CategoryForm = ({ onClose, onSubmit, editData }) => {
           <label className="text-sm font-medium text-gray-600">
             Category Name
           </label>
-
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -59,7 +66,6 @@ const CategoryForm = ({ onClose, onSubmit, editData }) => {
 
         {/* Buttons */}
         <div className="flex justify-end gap-3 pt-2">
-
           <button
             type="button"
             onClick={onClose}
@@ -74,11 +80,8 @@ const CategoryForm = ({ onClose, onSubmit, editData }) => {
           >
             {editData ? "Update" : "Save"}
           </button>
-
         </div>
-
       </form>
-
     </div>
   );
 };

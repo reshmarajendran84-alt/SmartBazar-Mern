@@ -83,7 +83,7 @@ const CategoryList = () => {
       label: "Status",
       render: (item) => {
         const statusActive = item.isActive && item.productCount > 0;
-
+ 
         return (
           <span
             className={`px-3 py-1 text-xs font-semibold rounded-full

@@ -51,7 +51,10 @@ const ProductForm = ({ onClose, refresh, editData }) => {
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     setImages(files);
-
+  if (files.length > 5) {
+    toast.error("Maximum 5 images allowed");
+    return;
+  }
     const previews = files.map((file) => URL.createObjectURL(file));
     setPreview(previews);
   };
@@ -70,20 +73,21 @@ const ProductForm = ({ onClose, refresh, editData }) => {
     images.forEach((file) => {
       formData.append("images", file);
     });
+  const toastId = toast.loading("Submitting...");
 
     try {
       if (isEdit) {
         await updateProduct(editData._id, formData);
-        toast.success("Product Updated");
+      toast.success("Product Updated", { id: toastId });
       } else {
         await createProduct(formData);
-        toast.success("Product Created");
+      toast.success("Product Created", { id: toastId });
       }
 
       refresh();
       onClose();
     } catch (error) {
-      toast.error("Something went wrong");
+    toast.error("Something went wrong", { id: toastId });
     }
   };
 

@@ -1,65 +1,37 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import {
-  HiOutlineMenu,
-  HiOutlineX,
-  HiOutlineShoppingCart,
-  HiOutlineSearch,
-} from "react-icons/hi";
+import { HiOutlineMenu, HiOutlineX, HiOutlineShoppingCart, HiOutlineSearch } from "react-icons/hi";
 import { useCart } from "../context/CartContext";
 import SearchBar from "../components/SearchBar";
+
 function Header() {
   const { user, logout } = useAuth();
   const { cart } = useCart();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
-const [keyword,setKeyword]=useState("");
 
-const handleSearch = (e) => {
-  e.preventDefault();
-  if (!keyword.trim()) return;
-
-  navigate(`/products?search=${keyword}`);
-};
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 lg:px-10">
-
         {/* Top Row */}
-        <div className="flex items-center justify-between h-16">
-
+        <div className="flex items-center justify-between h-16 w-full">
           {/* Logo */}
           <Link to="/" className="text-2xl font-bold text-purple-600">
             SmartBazar
           </Link>
 
           {/* Desktop Search */}
-          <div className="hidden md:flex flex-1 mx-8 relative">
- {/* <form onSubmit={handleSearch} className="relative">
-  <input
-    type="text"
-    placeholder="Search..."
-    value={keyword}
-    onChange={(e) => setKeyword(e.target.value)}
-    className="w-full border rounded-lg py-2 px-3 pr-8"
-  />
+          <div className="hidden md:flex flex-1 mx-8">
+            <SearchBar />
+          </div>
 
-  <button type="submit">
-    <HiOutlineSearch className="absolute right-2 top-2.5 text-gray-500" />
-  </button>
-</form> */}
-<SearchBar/>
-</div>
           {/* Desktop Right Section */}
           <div className="hidden md:flex items-center gap-6">
-
             {/* Cart */}
             <Link to="/cart" className="relative">
               <HiOutlineShoppingCart className="text-2xl text-gray-700 hover:text-purple-600" />
-
               {cartCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
                   {cartCount}
@@ -69,10 +41,7 @@ const handleSearch = (e) => {
 
             {user ? (
               <>
-                <span className="text-sm text-gray-600">
-                  {user.name || user.email}
-                </span>
-
+                <span className="text-sm text-gray-600">{user.name || user.email}</span>
                 <button
                   onClick={() => {
                     logout();
@@ -100,7 +69,6 @@ const handleSearch = (e) => {
           >
             {isOpen ? <HiOutlineX /> : <HiOutlineMenu />}
           </button>
-
         </div>
 
         {/* Desktop Navigation */}
@@ -109,15 +77,12 @@ const handleSearch = (e) => {
           <Link to="/categories" className="hover:text-purple-600">Categories</Link>
           <Link to="/about" className="hover:text-purple-600">About</Link>
         </nav>
-
       </div>
 
       {/* Mobile Menu */}
       {isOpen && (
         <div className="md:hidden bg-white shadow-md border-t">
-
           <div className="flex flex-col px-6 py-4 space-y-4">
-
             {/* Search */}
             <div className="relative">
               <input
@@ -153,12 +118,9 @@ const handleSearch = (e) => {
                 Login
               </Link>
             )}
-
           </div>
-
         </div>
       )}
-
     </header>
   );
 }

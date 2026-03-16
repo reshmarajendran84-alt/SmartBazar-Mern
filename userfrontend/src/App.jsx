@@ -22,21 +22,24 @@ function App() {
         <Header />
 
         <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/auth/login" element={<AuthPage />} />
-            <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
+ <Routes>
+  <Route path="/" element={<HomePage />} />
+  <Route path="/auth/login" element={<AuthPage />} />
+  <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
 
-            <Route element={<UserProtectedRoute />}>
-              <Route path="/user/profile" element={<UserProfile />} />
-            </Route>
-<Route path="/" element={<ProductListPage/>}/>
-            <Route path="/products/:id" element={<SingleProduct />} />
-            <Route path="/cart" element={<CartPage />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/categories" element={<ProductListPage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+  <Route element={<UserProtectedRoute />}>
+    <Route path="/user/profile" element={<UserProfile />} />
+  </Route>
+
+  {/* Product list page for both /products and /categories */}
+  <Route path="/products" element={<ProductListPage />} />
+  <Route path="/categories" element={<ProductListPage />} />
+
+  <Route path="/products/:id" element={<SingleProduct />} />
+  <Route path="/cart" element={<CartPage />} />
+  <Route path="/about" element={<AboutPage />} />
+  <Route path="*" element={<NotFound />} />
+</Routes>
         </main>
 
         <Footer />

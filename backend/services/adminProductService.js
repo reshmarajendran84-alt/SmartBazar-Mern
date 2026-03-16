@@ -2,7 +2,7 @@ import Product from "../models/Product.js";
 import Category from "../models/Category.js";
 
 class AdminProductService {
-async createProduct(data, imageUrls) {
+async createProduct(data, imageUrls=[]) {
 
   if (!data.category) throw new Error("Category required");
 
@@ -15,23 +15,23 @@ async createProduct(data, imageUrls) {
     price: Number(data.price),
     stock: Number(data.stock),
     description: data.description || "",
-    images: imageUrls || [],
+    images: imageUrls ,
   });
 
   return product;
 }
-  async getAllProducts(page = 1, category = "") {
+  async getAllProducts(page = 1, category = "",search="") {
 
-    const limit = 6;
+    const limit = 100;
 
     const filter = {};
 
     if (category && category !== "") {
       filter.category = category;
     }
-// if(search){
-//   filter.name ={$regex:search,$options:"i"};
-// }
+if(search){
+  filter.name ={$regex:search,$options:"i"};
+}
     const products = await Product.find(filter)
       .populate("category", "name")
       .skip((page - 1) * limit)
@@ -57,7 +57,7 @@ async createProduct(data, imageUrls) {
     return product;
   }
 
-  async updateProduct(id, data, files) {
+  async updateProduct(id, data, files,imageUrls=[]) {
 
   const product = await Product.findById(id);
   if (!product) throw new Error("Product not found");
@@ -79,9 +79,13 @@ if (data.category && data.category.trim() !== "") {
   if (!categoryExists) throw new Error("Category not found");
   product.category = data.category;
 }
-  if (files && files.length > 0) {
-    product.images = files.map(file => file.path);
-  }
+ if (files && files.length > 0) {
+   product.images = files;
+ }
+
+  // if(imageUrls.length>0){
+  //   product.images=imageUrls;
+  // }
 
   await product.save();
 

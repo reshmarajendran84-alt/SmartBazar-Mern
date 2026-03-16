@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getProductById } from "../../services/productService";
 import { useCart } from "../../context/CartContext";
-
+import toast from "react-hot-toast";
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -17,6 +17,8 @@ const ProductDetails = () => {
       setProduct(data);
     } catch (err) {
       console.log(err);
+            toast.error("Failed to load product");
+
     } finally {
       setLoading(false);
     }
@@ -57,7 +59,7 @@ const ProductDetails = () => {
         {/* Product Image */}
         <div className="flex justify-center items-center">
           <img
-            src={`http://localhost:5000/${product.images?.[0]}`}
+src={product.images?.[0]}
             alt={product.name}
             className="w-full max-w-md h-80 object-cover rounded-xl shadow-md hover:scale-105 transition"
           />

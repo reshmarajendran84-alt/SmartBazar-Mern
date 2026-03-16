@@ -1,8 +1,7 @@
 import express from "express";
 import AdminProductController from "../controllers/adminProductController.js";
 import adminProtect from "../middlewares/adminProtect.js";
-import { upload } from "../middlewares/uploads.js";
-
+import upload from "../middlewares/uploads.js";
 const router = express.Router();
 
 router.post(
