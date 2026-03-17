@@ -82,12 +82,7 @@ if (data.category && data.category.trim() !== "") {
  if (files && files.length > 0) {
    product.images = files;
  }
-
-  // if(imageUrls.length>0){
-  //   product.images=imageUrls;
-  // }
-
-  await product.save();
+ await product.save();
 
   return product;
 }

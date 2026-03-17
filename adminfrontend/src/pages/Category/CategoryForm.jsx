@@ -12,7 +12,6 @@ const CategoryForm = ({ onClose, onSubmit, editData }) => {
     }
   }, [editData]);
 
-  // ✅ Declare handleSubmit as async
   const handleSubmit = async (e) => {
     e.preventDefault();
 

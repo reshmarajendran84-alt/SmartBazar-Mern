@@ -37,9 +37,6 @@ app.use("/api/categories",publicCategoryRoutes);
 app.use("/api/admin/categories",adminCartegoryRoutes);
 app.use("/api/admin/products",adminProtectedRoute);
 
-
-// app.use("/api/products", productPublicRoutes);
-
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () =>

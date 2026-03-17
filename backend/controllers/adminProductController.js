@@ -6,30 +6,8 @@ class AdminProductController {
   try {
 
     const imageUrls = req.files?.map(file => file.path )|| [] ;
-
-  //   const product = await AdminProductService.createProduct({
-  //  ...req.body,
-  //     images:imageUrls
-  //   }
-  // );
-         const product = await AdminProductService.createProduct(req.body, imageUrls);
-
-   
-
-  // const imageUrls =[];
-  // if(
-  //   req.files &&
-  //    req.files.length > 0){
-  //     for(const file of req.files){
-  //       const result =await cloudinary.uploader.upload(file.path);
-  //       imageUrls.push(result.secure_url);
-  //     }
-  //    }
-  //    const product =await AdminProductService.createProduct(
-  //     req.body,
-  //     imageUrls
-  //    );
-    res.status(201).json(product);
+   const product = await AdminProductService.createProduct(req.body, imageUrls);   
+   res.status(201).json(product);
 
   } catch (error) {
     console.log("Create Product Error:", error);
@@ -72,19 +50,7 @@ async updateProduct(req, res) {
       req.body,
       imageUrls
     );
-
-    // let imageUrls =[];
-    // if(req.files && req.files.length > 0){
-    //   for(const file of req.files){
-    //     const result =await cloudinary.uploader.upload(file.path);
-    //     imageUrls.push(result.secure_url);
-    //   }
-    //   const product =await AdminProductService.updateProduct(req.params.id,
-    //     req.body,
-    //     imageUrls
-    //   );
-    // }
-    res.json(product);
+res.json(product);
 
   } catch (error) {
     console.log("update error", error);

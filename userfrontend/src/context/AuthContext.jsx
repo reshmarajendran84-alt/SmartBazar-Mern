@@ -43,7 +43,6 @@ const token =localStorage.getItem("token");
       setLoading(false);
     }
   }, [loadProfile]);
-// if (loading) return <p>Loading...</p>;
 
   return (
     <AuthContext.Provider value={{ user, login, logout, loading }}>

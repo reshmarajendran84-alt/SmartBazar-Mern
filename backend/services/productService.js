@@ -29,8 +29,7 @@ class ProductService {
     if (search) {
   filter.$or = [
     { name: { $regex: search, $options: "i" } },
-    // { description: { $regex: search, $options: "i" } },
-    // { brand: { $regex: search, $options: "i" } }
+   
   ];
 }
 
