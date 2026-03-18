@@ -10,9 +10,7 @@ function Header() {
   const { cart } = useCart();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
-
-  return (
+const totalItems = cart.items?.reduce((acc, item) => acc + item.quantity, 0) || 0;  return (
     <header className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 lg:px-10">
         {/* Top Row */}
@@ -32,9 +30,9 @@ function Header() {
             {/* Cart */}
             <Link to="/cart" className="relative">
               <HiOutlineShoppingCart className="text-2xl text-gray-700 hover:text-purple-600" />
-              {cartCount > 0 && (
+              {totalItems > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                  {cartCount}
+                  {totalItems}
                 </span>
               )}
             </Link>
@@ -76,6 +74,7 @@ function Header() {
           <Link to="/" className="hover:text-purple-600">Home</Link>
           <Link to="/categories" className="hover:text-purple-600">Categories</Link>
           <Link to="/about" className="hover:text-purple-600">About</Link>
+          <Link to="/user/profile" className="hover:text-purple-600">Profile</Link>
         </nav>
       </div>
 

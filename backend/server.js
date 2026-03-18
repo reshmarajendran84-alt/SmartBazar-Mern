@@ -4,6 +4,7 @@ import cors from "cors";
 import connectDB from "./config/db.js";
 import cloudinary from "./config/cloudinary.js";
 
+import cartRoutes from "./routes/cartRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import addressRoutes from "./routes/AddressRoutes.js";
@@ -36,7 +37,7 @@ app.use("/api/categories",publicCategoryRoutes);
  
 app.use("/api/admin/categories",adminCartegoryRoutes);
 app.use("/api/admin/products",adminProtectedRoute);
-
+app.use("/api/cart", cartRoutes);
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () =>

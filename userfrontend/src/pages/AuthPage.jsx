@@ -1,6 +1,6 @@
 import { useState } from "react";
 import api from "../utils/api";
-import { useNavigate } from "react-router-dom";
+import { useNavigate ,useLocation} from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
 
@@ -13,6 +13,7 @@ export default function AuthPage() {
 
   const navigate = useNavigate();
   const { login } = useAuth();
+const location =useLocation();
 
   // CHECK EMAIL
   const checkEmail = async () => {
@@ -36,6 +37,7 @@ toast.error(error.response?.data?.message || "Error checking email");
   };
 
   // LOGIN
+  const from =location.state?.from?.pathname || "/";
   const handleLogin = async () => {
 if (!email || !password)
   return toast.warning("Email and password are required ⚠️");
@@ -47,8 +49,8 @@ if (!email || !password)
       await login(res.data.token);
       toast.success("Login successful 🎉");
 
-      navigate("/user/profile",{replace:true});
-
+      // navigate("/user/profile",{replace:true});
+navigate(from, { replace: true });
       setEmail("");
       setPassword("");
     } catch (error) {

@@ -1,65 +1,49 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { getCart, addToCart, updateCart, removeFromCart } from "../services/cartService";
+import { toast } from "react-toastify";
 
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState({ items: [], totalAmount: 0 });
+  const [loading, setLoading] = useState(false);
 
-  // Add product to cart
-  const handleAddToCart = (product) => {
-    const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
-    const exist = cart.find((item) => item._id === product._id);
-
-    if (exist) {
-      setCart(
-        cart.map((item) =>
-          item._id === product._id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        )
-      );
-    } else {
-      setCart([...cart, { ...product, quantity: 1 }]);
+  const fetchCart = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return; // skip if not logged in
+    try {
+      setLoading(true);
+      const res = await getCart();
+      setCart(res.data || { items: [], totalAmount: 0 });
+    } catch (err) {
+      console.log(err);
+      toast.error("Failed to fetch cart");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const increaseQty = (id) => {
-    setCart(
-      cart.map((item) =>
-        item._id === id
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      )
-    );
+  const handleAdd = async (product) => {
+    await addToCart({ productId: product._id, quantity: 1, price: product.price });
+    fetchCart();
   };
 
-  const decreaseQty = (id) => {
-    setCart(
-      cart.map((item) =>
-        item._id === id && item.quantity > 1
-          ? { ...item, quantity: item.quantity - 1 }
-          : item
-      )
-    );
+  const handleUpdate = async (productId, quantity) => {
+    await updateCart({ productId, quantity });
+    fetchCart();
   };
 
-  const removeFromCart = (id) => {
-    setCart(cart.filter((item) => item._id !== id));
+  const handleRemove = async (productId) => {
+    await removeFromCart(productId);
+    fetchCart();
   };
 
-  const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+  useEffect(() => {
+    fetchCart();
+  }, []);
 
   return (
-    <CartContext.Provider
-      value={{
-        cart,
-        handleAddToCart,
-        increaseQty,
-        decreaseQty,
-        removeFromCart,
-        cartCount,
-      }}
-    >
+    <CartContext.Provider value={{ cart, fetchCart, loading, handleAdd, handleUpdate, handleRemove }}>
       {children}
     </CartContext.Provider>
   );

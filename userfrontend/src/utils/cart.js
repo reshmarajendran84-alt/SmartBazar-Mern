@@ -1,30 +1,32 @@
-export const addToCart = (product) => {
-  const existingCart =
-    JSON.parse(localStorage.getItem("cart")) || [];
+// import axios from "axios";
 
-  const exists = existingCart.find(
-    (item) => item.productId === product._id
-  );
+// const api = "http://localhost:5000/api/cart";
 
-  let updatedCart;
+// export const getCart = () =>
+//   axios.get(api, {
+//     headers: {
+//       Authorization: `Bearer ${localStorage.getItem("token")}`,
+//     },
+//   });
 
-  if (exists) {
-    updatedCart = existingCart.map((item) =>
-      item.productId === product._id
-        ? { ...item, quantity: item.quantity + 1 }
-        : item
-    );
-  } else {
-    updatedCart = [
-      ...existingCart,
-      {
-        productId: product._id,
-        name: product.name,
-        price: product.price,
-        quantity: 1,
-      },
-    ];
-  }
+// export const addToCart = (data) =>
+//   axios.post(`${api}/add`, data, {
+//     headers: {
+//       Authorization: `Bearer ${localStorage.getItem("token")}`,
+//     },
+//   });
 
-  localStorage.setItem("cart", JSON.stringify(updatedCart));
-};
+// export const updateCart = (data) =>
+//   axios.put(`${api}/update`, data, {
+//     headers: {
+//       Authorization: `Bearer ${localStorage.getItem("token")}`,
+//     },
+//   });
+
+// export const removeFromCart = (productId) =>
+//   axios.delete(`${api}/remove`, {
+//     data: { productId },
+//     headers: {
+//       Authorization: `Bearer ${localStorage.getItem("token")}`,
+//     },
+//   });
