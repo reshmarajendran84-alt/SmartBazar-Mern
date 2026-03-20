@@ -1,26 +1,61 @@
-import { useEffect } from "react"; 
-import { useCart } from "../context/CartContext";
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
+import { useCart } from "../context/CartContext";
+import { validateCoupon } from "../services/couponService";
 
 const CartPage = () => {
   const { cart, loading, handleUpdate, handleRemove } = useCart();
 
+  const [couponCode, setCouponCode] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+
   if (loading) return <p className="text-center mt-10">Loading...</p>;
 
-  const subtotal = cart.items?.reduce((acc, item) => acc + item.price * item.quantity, 0) || 0;
+  const subtotal =
+    cart.items?.reduce((acc, item) => acc + item.price * item.quantity, 0) || 0;
   const shipping = cart.items?.length > 0 ? 100 : 0;
   const tax = cart.items?.length > 0 ? 50 : 0;
-  const total = subtotal + shipping + tax;
+  const total = subtotal + shipping + tax - discount;
+
+  // Apply coupon
+  const handleApplyCoupon = async () => {
+    if (!couponCode) return toast.warning("Enter coupon code");
+
+    try {
+      const res = await validateCoupon({
+        code: couponCode,
+        totalAmount: subtotal, // must match backend
+      });
+
+      setDiscount(res.data.discount);
+      setAppliedCoupon(couponCode);
+      toast.success("Coupon applied successfully 🎉");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Invalid coupon");
+    }
+  };
+
+  // Remove coupon
+  const handleRemoveCoupon = () => {
+    setDiscount(0);
+    setAppliedCoupon(null);
+    setCouponCode("");
+    toast.info("Coupon removed");
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-10">
-      <h2 className="text-3xl font-bold mb-8 text-center md:text-left text-gray-800">Shopping Cart</h2>
+      <h2 className="text-3xl font-bold mb-8 text-center md:text-left text-gray-800">
+        Shopping Cart
+      </h2>
 
       {cart.items.length === 0 ? (
         <div className="flex flex-col items-center justify-center min-h-[60vh] bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 p-6 rounded-xl shadow-lg">
-          <img 
-            src="https://cdn-icons-png.flaticon.com/512/2038/2038854.png" 
-            alt="Empty Cart" 
+          <img
+            src="https://cdn-icons-png.flaticon.com/512/2038/2038854.png"
+            alt="Empty Cart"
             className="w-32 mb-6 animate-bounce"
           />
           <p className="text-gray-500 mb-6 text-lg font-medium">Your cart is empty</p>
@@ -48,10 +83,14 @@ const CartPage = () => {
 
                 <div className="flex-1 flex flex-col justify-between">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-800">{item.productId?.name}</h3>
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      {item.productId?.name}
+                    </h3>
                     {item.productId.originalPrice && (
                       <div className="flex items-center gap-2 mt-1">
-                        <p className="text-gray-400 line-through">₹{item.productId.originalPrice}</p>
+                        <p className="text-gray-400 line-through">
+                          ₹{item.productId.originalPrice}
+                        </p>
                         <p className="text-indigo-600 font-medium">₹{item.price}</p>
                       </div>
                     )}
@@ -65,14 +104,18 @@ const CartPage = () => {
                       onClick={() => handleUpdate(item.productId._id, item.quantity - 1)}
                       disabled={item.quantity <= 1}
                       className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 transition disabled:opacity-50"
-                    >-</button>
+                    >
+                      -
+                    </button>
 
                     <span className="px-2">{item.quantity}</span>
 
                     <button
                       onClick={() => handleUpdate(item.productId._id, item.quantity + 1)}
                       className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 transition"
-                    >+</button>
+                    >
+                      +
+                    </button>
 
                     <button
                       onClick={() => handleRemove(item.productId._id)}
@@ -95,6 +138,7 @@ const CartPage = () => {
           {/* Cart Summary */}
           <div className="lg:w-80 bg-white p-6 rounded-xl shadow-md flex-shrink-0 sticky top-20">
             <h3 className="text-xl font-semibold mb-4 text-gray-800">Order Summary</h3>
+
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span>Subtotal</span>
@@ -110,6 +154,51 @@ const CartPage = () => {
                 <span>Tax</span>
                 <span>₹{tax}</span>
               </div>
+
+              {/* Coupon Section */}
+              <div className="mt-4 border rounded-lg p-3 bg-gray-50">
+                {!appliedCoupon ? (
+                  <>
+                    <p className="text-sm text-gray-600 mb-2">Have a coupon?</p>
+                    <div className="flex gap-2">
+                      <input
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value)}
+                        placeholder="Enter coupon code"
+                        className="flex-1 border p-2 rounded focus:ring-2 focus:ring-indigo-500 outline-none"
+                      />
+                      <button
+                        onClick={handleApplyCoupon}
+                        className="bg-green-600 hover:bg-green-700 text-white px-4 rounded transition"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-green-600 font-medium">✔ {appliedCoupon} applied</p>
+                      <p className="text-sm text-gray-500">You saved ₹{discount}</p>
+                    </div>
+                    <button
+                      onClick={handleRemoveCoupon}
+                      className="text-red-500 text-sm hover:underline"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Discount Display */}
+              {discount > 0 && (
+                <div className="flex justify-between text-green-600">
+                  <span>Discount</span>
+                  <span>- ₹{discount}</span>
+                </div>
+              )}
+
               <hr className="my-2" />
               <div className="flex justify-between font-bold text-lg text-gray-800">
                 <span>Total</span>

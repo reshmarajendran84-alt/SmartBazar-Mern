@@ -3,7 +3,7 @@ import api from "../utils/api";
 import { useNavigate ,useLocation} from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
-
+import { useCart } from "../context/CartContext";
 export default function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -14,7 +14,7 @@ export default function AuthPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
 const location =useLocation();
-
+const {fetchCart}=useCart();
   // CHECK EMAIL
   const checkEmail = async () => {
 if (!email) return toast.warning("Email is required ⚠️");
@@ -47,6 +47,7 @@ if (!email || !password)
       const res = await api.post("/auth/login", { email, password });
 
       await login(res.data.token);
+      await fetchCart();
       toast.success("Login successful 🎉");
 
       // navigate("/user/profile",{replace:true});

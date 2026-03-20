@@ -7,6 +7,7 @@ import CategoryList from "./pages/Category/CategoryList";
 import ProductList from "./pages/Product/ProductList";
 import Login from "./pages/AdminLogin";
 import ProductDetails from "./pages/Product/ProductDetails";
+import CouponPage from "./pages/CouponPage";
 function App() {
   return (
     <BrowserRouter>
@@ -33,6 +34,7 @@ function App() {
           <Route path="products/:id" element={<ProductDetails/>}/>
           <Route path="categories" element={<CategoryList />}/>
           <Route path="products" element={<ProductList />} />
+          <Route path="coupons" element={<CouponPage/>}/>
         </Route>
 
       </Routes>

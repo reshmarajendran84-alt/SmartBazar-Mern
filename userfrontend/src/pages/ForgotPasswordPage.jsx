@@ -2,12 +2,16 @@ import { useState } from "react";
 import api  from "../utils/api";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { validateCoupon } from "../services/couponService";
 
 export default function ForgotPasswordPage() {
   const [step, setStep] = useState("EMAIL"); 
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
+
+
+
   const navigate = useNavigate();
 
   const sendOtp = async () => {
@@ -40,6 +44,7 @@ const resetPassword = async () => {
     toast.error(err.response?.data?.message || "Reset failed ❌");
   }
 };
+
 
   return (
    <div className="min-h-[calc(100vh-140px)] flex items-center justify-center 

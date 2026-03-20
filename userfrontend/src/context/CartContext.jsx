@@ -10,7 +10,10 @@ export const CartProvider = ({ children }) => {
 
   const fetchCart = async () => {
     const token = localStorage.getItem("token");
-    if (!token) return; // skip if not logged in
+    if (!token) 
+      {
+        setCart({items:[],totalAmount:0});
+          return;} 
     try {
       setLoading(true);
       const res = await getCart();
