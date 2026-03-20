@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useCart } from "../context/CartContext";
@@ -11,32 +11,43 @@ const CartPage = () => {
   const [discount, setDiscount] = useState(0);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
 
+  useEffect(()=>{
+    setDiscount(0);
+  },[cart.items]);
+
   if (loading) return <p className="text-center mt-10">Loading...</p>;
 
   const subtotal =
     cart.items?.reduce((acc, item) => acc + item.price * item.quantity, 0) || 0;
   const shipping = cart.items?.length > 0 ? 100 : 0;
   const tax = cart.items?.length > 0 ? 50 : 0;
-  const total = subtotal + shipping + tax - discount;
-
+const totalBeforeDiscount = subtotal + shipping + tax;
+const finalTotal = Math.max(totalBeforeDiscount - discount, 0);
   // Apply coupon
-  const handleApplyCoupon = async () => {
-    if (!couponCode) return toast.warning("Enter coupon code");
 
-    try {
-      const res = await validateCoupon({
-        code: couponCode,
-        totalAmount: subtotal, // must match backend
-      });
+const handleApplyCoupon = async () => {
+  if (!couponCode) return toast.warning("Enter coupon code");
 
-      setDiscount(res.data.discount);
-      setAppliedCoupon(couponCode);
-      toast.success("Coupon applied successfully 🎉");
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Invalid coupon");
-    }
-  };
+  try {
+    const res = await validateCoupon({
+      code: couponCode.toUpperCase(),
+      subtotal: subtotal, // must match backend
+    });
 
+    console.log("FULL RESPONSE:", res.data);
+
+    const discountValue = Number(res.data?.discount || 0);
+
+    setDiscount(discountValue);
+    setAppliedCoupon(couponCode);
+
+    toast.success("Coupon applied successfully 🎉");
+    toast.success(`You saved ₹${discountValue}`);
+  } catch (err) {
+    setDiscount(0);
+    toast.error(err.response?.data?.message || "Invalid coupon");
+  }
+};
   // Remove coupon
   const handleRemoveCoupon = () => {
     setDiscount(0);
@@ -45,6 +56,7 @@ const CartPage = () => {
     toast.info("Coupon removed");
   };
 
+  
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-10">
       <h2 className="text-3xl font-bold mb-8 text-center md:text-left text-gray-800">
@@ -202,7 +214,7 @@ const CartPage = () => {
               <hr className="my-2" />
               <div className="flex justify-between font-bold text-lg text-gray-800">
                 <span>Total</span>
-                <span>₹{total}</span>
+                <span>₹{finalTotal}</span>
               </div>
             </div>
 

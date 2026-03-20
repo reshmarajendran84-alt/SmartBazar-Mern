@@ -2,7 +2,6 @@ import { useState } from "react";
 import api  from "../utils/api";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { validateCoupon } from "../services/couponService";
 
 export default function ForgotPasswordPage() {
   const [step, setStep] = useState("EMAIL"); 

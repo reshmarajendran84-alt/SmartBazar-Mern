@@ -22,7 +22,10 @@ class couponService{
     if (subtotal < coupon.minOrderAmount)
       throw new Error(`Minimum order ₹${coupon.minOrderAmount}`);
     const discount = (subtotal * coupon.discountPercent) / 100;
-    return { discount, finalAmount: subtotal - discount };
+   console.log("subtotal:", subtotal);
+    console.log("discountPercent:", coupon.discountPercent);
+    console.log("discount:", discount);
+    return {valid:true, discount, finalAmount: subtotal - discount };
   }
 }
 export default new couponService();
