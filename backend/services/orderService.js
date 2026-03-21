@@ -14,6 +14,7 @@ class OrderService {
 
   // Save order in DB
   async createOnlineOrder(userId, data, razorpayOrderId) {
+    const isOnline = data.paymentMethod === "ONLINE";
     return await Order.create({
       userId,
       items: data.cartItems.map(item => ({
@@ -29,9 +30,9 @@ class OrderService {
       coupon: data.coupon || "",
       total: data.total,
       address: data.address,
-      paymentMethod: "ONLINE",
-      paymentStatus: "PENDING",
-      razorpayOrderId,
+      paymentMethod: data.paymentMethod,
+      paymentStatus: isOnline ?"PENDING" :"PAID",
+      razorpayOrderId:isOnline ? razorpayOrderId:null,
     });
   }
 

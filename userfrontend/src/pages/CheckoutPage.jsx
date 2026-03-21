@@ -68,6 +68,8 @@ const CheckoutPage = () => {
             try {
               await verifyPayment({ ...response, orderId: data.orderId });
               toast.success("Payment successful!");
+                        console.log("FRONTEND KEY:", import.meta.env.VITE_RAZORPAY_KEY_ID);
+
             } catch (err) {
               console.error("Payment verification error:", err);
               toast.error("Payment verification failed!");
