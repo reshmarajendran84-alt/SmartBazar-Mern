@@ -12,6 +12,7 @@ import CartPage from "./pages/Cart";
 import AboutPage from "./pages/About";
 import ProductListPage from "./pages/ProductListPage";
 import HomePage from "./pages/HomePage";
+import CheckoutPage from "./pages/CheckoutPage";
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
   <Route path="/cart" element={<CartPage />} />
   <Route path="/about" element={<AboutPage />} />
   <Route path="*" element={<NotFound />} />
+  <Route path="/checkout" element={<CheckoutPage/>}/>
 </Routes>
         </main>
 

@@ -1,53 +1,53 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useCart } from "../context/CartContext";
 import { validateCoupon } from "../services/couponService";
 
 const CartPage = () => {
   const { cart, loading, handleUpdate, handleRemove } = useCart();
-
   const [couponCode, setCouponCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const navigate = useNavigate();
 
-  useEffect(()=>{
+  useEffect(() => {
     setDiscount(0);
-  },[cart.items]);
+  }, [cart.items]);
 
   if (loading) return <p className="text-center mt-10">Loading...</p>;
 
+  // Calculate totals
   const subtotal =
     cart.items?.reduce((acc, item) => acc + item.price * item.quantity, 0) || 0;
   const shipping = cart.items?.length > 0 ? 100 : 0;
   const tax = cart.items?.length > 0 ? 50 : 0;
-const totalBeforeDiscount = subtotal + shipping + tax;
-const finalTotal = Math.max(totalBeforeDiscount - discount, 0);
+  const totalBeforeDiscount = subtotal + shipping + tax;
+  const finalTotal = Math.max(totalBeforeDiscount - discount, 0);
+
   // Apply coupon
+  const handleApplyCoupon = async () => {
+    if (!couponCode) return toast.warning("Enter coupon code");
 
-const handleApplyCoupon = async () => {
-  if (!couponCode) return toast.warning("Enter coupon code");
+    try {
+      const res = await validateCoupon({
+        code: couponCode.toUpperCase(),
+        subtotal: subtotal,
+      });
 
-  try {
-    const res = await validateCoupon({
-      code: couponCode.toUpperCase(),
-      subtotal: subtotal, // must match backend
-    });
+      const discountValue = Number(res.data?.discount || 0);
 
-    console.log("FULL RESPONSE:", res.data);
+      setDiscount(discountValue);
+      setAppliedCoupon(couponCode);
 
-    const discountValue = Number(res.data?.discount || 0);
+      toast.success("Coupon applied successfully 🎉");
+      toast.success(`You saved ₹${discountValue}`);
+    } catch (err) {
+      setDiscount(0);
+      toast.error(err.response?.data?.message || "Invalid coupon");
+    }
+  };
 
-    setDiscount(discountValue);
-    setAppliedCoupon(couponCode);
-
-    toast.success("Coupon applied successfully 🎉");
-    toast.success(`You saved ₹${discountValue}`);
-  } catch (err) {
-    setDiscount(0);
-    toast.error(err.response?.data?.message || "Invalid coupon");
-  }
-};
   // Remove coupon
   const handleRemoveCoupon = () => {
     setDiscount(0);
@@ -56,7 +56,26 @@ const handleApplyCoupon = async () => {
     toast.info("Coupon removed");
   };
 
-  
+  // Navigate to checkout
+  const handleProceedToCheckout = () => {
+    if (cart.items.length === 0) {
+      toast.warning("Your cart is empty");
+      return;
+    }
+
+    navigate("/checkout", {
+      state: {
+        cartItems: cart.items,
+        subtotal,
+        shipping,
+        tax,
+        discount,
+        total: finalTotal,
+        appliedCoupon,
+      },
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-10">
       <h2 className="text-3xl font-bold mb-8 text-center md:text-left text-gray-800">
@@ -98,15 +117,14 @@ const handleApplyCoupon = async () => {
                     <h3 className="text-lg font-semibold text-gray-800">
                       {item.productId?.name}
                     </h3>
-                    {item.productId.originalPrice && (
+                    {item.productId.originalPrice ? (
                       <div className="flex items-center gap-2 mt-1">
                         <p className="text-gray-400 line-through">
                           ₹{item.productId.originalPrice}
                         </p>
                         <p className="text-indigo-600 font-medium">₹{item.price}</p>
                       </div>
-                    )}
-                    {!item.productId.originalPrice && (
+                    ) : (
                       <p className="text-indigo-600 font-medium mt-1">₹{item.price}</p>
                     )}
                   </div>
@@ -136,12 +154,6 @@ const handleApplyCoupon = async () => {
                       Remove
                     </button>
                   </div>
-
-                  {/* Rating */}
-                  <div className="flex items-center mt-1 gap-1">
-                    <span className="text-yellow-400">★ ★ ★ ★ ☆</span>
-                    <span className="text-gray-400 text-sm">(120 reviews)</span>
-                  </div>
                 </div>
               </div>
             ))}
@@ -156,11 +168,9 @@ const handleApplyCoupon = async () => {
                 <span>Subtotal</span>
                 <span>₹{subtotal}</span>
               </div>
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between">
                 <span>Shipping</span>
-                <span>
-                  {shipping > 0 ? `₹${shipping}` : <span className="text-green-600 font-semibold">Free</span>}
-                </span>
+                <span>{shipping > 0 ? `₹${shipping}` : <span className="text-green-600 font-semibold">Free</span>}</span>
               </div>
               <div className="flex justify-between">
                 <span>Tax</span>
@@ -203,7 +213,6 @@ const handleApplyCoupon = async () => {
                 )}
               </div>
 
-              {/* Discount Display */}
               {discount > 0 && (
                 <div className="flex justify-between text-green-600">
                   <span>Discount</span>
@@ -219,23 +228,25 @@ const handleApplyCoupon = async () => {
             </div>
 
             {/* Desktop Checkout */}
-            <button className="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-medium transition hidden md:block">
+            <button
+              className="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-medium transition hidden md:block"
+              onClick={handleProceedToCheckout}
+            >
               Proceed to Checkout
             </button>
           </div>
 
           {/* Mobile Checkout Fixed Bottom */}
           <div className="fixed bottom-0 left-0 w-full bg-white p-4 border-t shadow md:hidden">
-            <button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-medium transition">
+            <button
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-medium transition"
+              onClick={handleProceedToCheckout}
+            >
               Proceed to Checkout
             </button>
           </div>
 
-          {/* Continue Shopping Link */}
-          <Link
-            to="/products"
-            className="inline-block mt-4 text-indigo-600 hover:underline"
-          >
+          <Link to="/products" className="inline-block mt-4 text-indigo-600 hover:underline">
             ← Continue Shopping
           </Link>
         </div>

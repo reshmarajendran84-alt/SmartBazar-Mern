@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 import cors from "cors";
 import connectDB from "./config/db.js";
 import cloudinary from "./config/cloudinary.js";
+import razorpay from "./config/razorpay.js";
+
 
 import couponRoutes from "./routes/couponRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
@@ -13,6 +15,8 @@ import publicCategoryRoutes from "./routes/publicCategoryRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import adminCartegoryRoutes from "./routes/adminCartegoryRoutes.js";
 import adminProtectedRoute from "./routes/adminProductRoutes.js"
+import orderRoutes from "./routes/orderRoutes.js";
+
 dotenv.config();
 connectDB();
 
@@ -43,8 +47,12 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/admin/coupons",couponRoutes)
 app.use("/api/coupon",couponRoutes)
 
+
+app.use("/api/order",orderRoutes);
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () =>
-  console.log(`Server running on port ${PORT}`)
-);
+app.listen(PORT, () =>{
+  console.log(`Server running on port ${PORT}`);
+  console.log("Razorpay Key ID:", process.env.RAZORPAY_KEY_ID); // debug
+
+});
