@@ -16,7 +16,7 @@ import productRoutes from "./routes/productRoutes.js";
 import adminCartegoryRoutes from "./routes/adminCartegoryRoutes.js";
 import adminProtectedRoute from "./routes/adminProductRoutes.js"
 import orderRoutes from "./routes/orderRoutes.js";
-
+import walletRoutes from "./routes/walletRoutes.js";
 dotenv.config();
 connectDB();
 
@@ -49,6 +49,7 @@ app.use("/api/coupon",couponRoutes)
 
 
 app.use("/api/order",orderRoutes);
+app.use("/api/wallet",walletRoutes);
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () =>{

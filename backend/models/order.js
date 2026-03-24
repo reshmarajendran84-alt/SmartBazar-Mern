@@ -1,49 +1,48 @@
 import mongoose from "mongoose";
 
-const orderSchema =new mongoose.Schema({
-
-    userId:{
-        type :mongoose.Schema.Types.ObjectId,
-        ref :"User" ,
-        require:true
+const orderSchema = new mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
-    items:[
-        {
-            productId :{ type:mongoose.Schema.Types.ObjectId,ref :"Product"},
-            name:String,
-            quantity :Number,
-            price:Number,
-        },
-
+    cartItems: [
+      {
+        productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
+        name: String,
+        quantity: Number,
+        price: Number,
+      },
     ],
+    subtotal: Number,
+    shipping: Number,
+    tax: Number,
+    discount: { type: Number, default: 0 },
+    total: Number,
     address: {
       fullName: String,
       phone: String,
       addressLine: String,
       city: String,
+      state: String,
       pincode: String,
     },
-    subtotal:Number,
-    shipping :Number,
-    tax:Number,
-    total:Number,
-    coupon :{type:String,default:""},
-    discount:{type:Number,default:0},
-    paymentMethod:{type:String,
-        enum :["COD","ONLINE"],
-        require:true},
-
-    paymentStatus :{type:String,
-         enum:["PENDING","PAID","FAILED"],
-         default:"PENDING"},
-
-    orderStatus: {
+    coupon: { type: String, default: "" },
+    paymentMethod: {
       type: String,
-      enum: ["PLACED", "SHIPPED", "DELIVERED"],
-      default: "PLACED",
+      enum: ["COD", "ONLINE"],
+      required: true,
     },
-    razorpayOrderId:String,
-    razorpayPaymentId:String,
-    },{timestamps:true});
+    status: {
+      type: String,
+      enum: ["Pending", "Paid", "Failed", "Cancelled"],  // ✅ added Cancelled
+      default: "Pending",
+    },
+    razorpayOrderId: String,
+    razorpayPaymentId: String,
+  },
+  { timestamps: true }
+);
 
-export default mongoose.model("Order",orderSchema);
+export default mongoose.model("Order", orderSchema);

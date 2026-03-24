@@ -13,6 +13,9 @@ import AboutPage from "./pages/About";
 import ProductListPage from "./pages/ProductListPage";
 import HomePage from "./pages/HomePage";
 import CheckoutPage from "./pages/CheckoutPage";
+import OrderSuccess from "./pages/OrderSuccess";
+import Wallet from "./pages/Wallet";
+import OrdersPage from "./pages/OrderPage";  // ✅ the page that fetches orders
 
 function App() {
   return (
@@ -23,25 +26,26 @@ function App() {
         <Header />
 
         <main className="flex-grow">
- <Routes>
-  <Route path="/" element={<HomePage />} />
-  <Route path="/auth/login" element={<AuthPage />} />
-  <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/auth/login" element={<AuthPage />} />
+            <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
 
-  <Route element={<UserProtectedRoute />}>
-    <Route path="/user/profile" element={<UserProfile />} />
-  </Route>
+            <Route element={<UserProtectedRoute />}>
+              <Route path="/user/profile" element={<UserProfile />} />
+            </Route>
 
-  {/* Product list page for both /products and /categories */}
-  <Route path="/products" element={<ProductListPage />} />
-  <Route path="/categories" element={<ProductListPage />} />
-
-  <Route path="/products/:id" element={<SingleProduct />} />
-  <Route path="/cart" element={<CartPage />} />
-  <Route path="/about" element={<AboutPage />} />
-  <Route path="*" element={<NotFound />} />
-  <Route path="/checkout" element={<CheckoutPage/>}/>
-</Routes>
+            <Route path="/products" element={<ProductListPage />} />
+            <Route path="/categories" element={<ProductListPage />} />
+            <Route path="/products/:id" element={<SingleProduct />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/order-success" element={<OrderSuccess />} />
+            <Route path="/wallet" element={<Wallet />} />
+            <Route path="/orders" element={<OrdersPage />} />  {/* ✅ */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </main>
 
         <Footer />

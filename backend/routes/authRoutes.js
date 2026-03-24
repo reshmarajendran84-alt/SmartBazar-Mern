@@ -8,8 +8,7 @@ import {
   verifyOtpSchema,
   resetPasswordSchema,
 } from "../validators/authValidator.js";
-
-const router = express.Router();
+  const router = express.Router();
 
 router.post("/check-email", validate(signupSchema), AuthController.checkEmail);
 router.post("/send-otp", otpLimiter, validate(signupSchema), AuthController.sendSignupOtp);

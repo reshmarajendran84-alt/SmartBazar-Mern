@@ -45,10 +45,10 @@ async deleteCoupon(req,res){
  async validateCoupon (req,res){
 
 const {code,subtotal} =req.body;
-
+console.log("request body :",req.body);
   try {
     const coupon = await Coupon.findOne({ code: code.toUpperCase() });
-
+console.log("coupon ",coupon);
     if (!coupon) {
       return res.status(400).json({ message: "Invalid coupon code" });
     }

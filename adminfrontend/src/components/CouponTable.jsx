@@ -22,7 +22,7 @@ const CouponTable = ({ coupons, onEdit, onDelete }) => {
               <td>{new Date(c.expiryDate).toLocaleDateString()}</td>
 
               <td>
-                {c.isActive ? (
+                {c.isActive  && new Date(c.expiryDate) >new Date() ? (
                   <span className="text-green-600">Active</span>
                 ) : (
                   <span className="text-red-500">Inactive</span>
