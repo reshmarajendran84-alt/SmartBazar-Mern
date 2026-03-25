@@ -30,16 +30,16 @@ const CartPage = () => {
     if (!couponCode) return toast.warning("Enter coupon code");
 
     try {
-      // const res = await validateCoupon({
-      //   code: couponCode.toUpperCase(),
-      //   subtotal: subtotal,
-      //   cartTotal: cart.totalAmount ,
-      // });
-      
       const res = await validateCoupon({
-  code: couponCode.toUpperCase(),
-  cartTotal: totalBeforeDiscount
-});
+        code: couponCode.toUpperCase(),
+        subtotal: subtotal,
+        cartTotal: cart.totalAmount ,
+      });
+      
+  //     const res = await validateCoupon({
+  // code: couponCode.toUpperCase(),
+  // cartTotal: totalBeforeDiscount
+// });
 
       const discountValue = Number(res.data?.discount || 0);
 

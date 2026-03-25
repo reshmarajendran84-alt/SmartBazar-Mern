@@ -39,7 +39,11 @@ const orderSchema = new mongoose.Schema(
       enum: ["Pending", "Paid", "Failed", "Cancelled"],  // ✅ added Cancelled
       default: "Pending",
     },
-    razorpayOrderId: String,
+    razorpayOrderId: {
+      type:String,
+      default:null,
+      sparse:true,
+      unique:true,},
     razorpayPaymentId: String,
   },
   { timestamps: true }

@@ -38,6 +38,8 @@ class OrderService {
         phone: data.address.phone || "",
         addressLine: data.address.addressLine,
         city: data.address.city,
+          state:       data.address.state       || "",   // ← add this
+
         pincode: data.address.pincode,
       },
       paymentMethod: data.paymentMethod,

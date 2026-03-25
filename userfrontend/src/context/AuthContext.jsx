@@ -14,12 +14,15 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const loadProfile = useCallback(async () => {
+  const loadProfile = useCallback(async (signal) => {
     try {
-      const res = await api.get("/user/profile");
+      const res = await api.get("/user/profile",{ signal });
       console.log("PROFILE:", res.data);
       setUser(res.data);
     } catch (err) {
+      if(api.isCancel(err))
+        return;
+
       console.error("PROFILE ERROR:", err.response?.data || err.message);
       logout();
     } finally {
@@ -31,17 +34,21 @@ export const AuthProvider = ({ children }) => {
     console.log("token",token);
     localStorage.setItem("token", token);
     setLoading(true);
-    await loadProfile(); 
+    const controller =new AbortController();
+    await loadProfile(controller.signal); 
   };
 
   useEffect(() => {
 console.log("AUTH USER:", user);
+const controller =new AbortController();
+
 const token =localStorage.getItem("token");
     if (token) {
-      loadProfile();
+      loadProfile(controller.signal);
     } else {
       setLoading(false);
     }
+    return()=>controller.abort();
   }, [loadProfile]);
 
   return (
