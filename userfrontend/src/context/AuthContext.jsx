@@ -20,8 +20,9 @@ export const AuthProvider = ({ children }) => {
       console.log("PROFILE:", res.data);
       setUser(res.data);
     } catch (err) {
-      if(api.isCancel(err))
-        return;
+      // if(api.isCancel(err))
+        // return;
+if (err.name === "CanceledError") return;
 
       console.error("PROFILE ERROR:", err.response?.data || err.message);
       logout();

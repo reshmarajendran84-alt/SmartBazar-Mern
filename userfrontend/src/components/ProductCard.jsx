@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { addToCart } from "../services/cartService";
 import { toast } from "react-toastify";
@@ -6,9 +6,10 @@ import { useCart } from "../context/CartContext";
 
 const ProductCard = React.memo(({ product }) => {
   const { fetchCart } = useCart();
-
+  const [adding,setAdding] =useState(false);
   const handleAdd = async () => {
     try {
+      setAdding(true);
       await addToCart({
         productId: product._id,
         quantity: 1,
@@ -19,6 +20,8 @@ const ProductCard = React.memo(({ product }) => {
     } catch (err) {
       console.log(err);
       toast.error("Failed to add to cart");
+    }finally{
+      setAdding(false);
     }
   };
 
@@ -58,9 +61,9 @@ const ProductCard = React.memo(({ product }) => {
 
         <button
           onClick={handleAdd}
-          disabled={product.stock === 0}
+          disabled={product.stock === 0 || adding}
           className="mt-auto bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white py-2 rounded-lg transition"
-        >
+        >{adding ? "Adding... " :"Add to Cart"}
           Add To Cart
         </button>
       </div>

@@ -97,7 +97,10 @@ export const placeCODOrder = async (req, res) => {
     res.status(201).json({ success: true, order });
   } catch (err) {
     console.error("COD ERROR FULL:", err); // ← full err object, not err.message
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: err.message
+      // stack: err.stack,        // ← add this
+      // name: err.name,  
+     });
   }
 };
 
