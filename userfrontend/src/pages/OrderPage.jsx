@@ -1,15 +1,20 @@
+// pages/OrderPage.jsx
 import { useState, useEffect } from "react";
 import api from "../utils/api";
-import OrderCard from "../pages/OrderCard";
+import OrderCard from "./OrderCard";
+import { useNavigate } from "react-router-dom";
 
 const OrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const { data } = await api.get("/order/my-orders"); // adjust endpoint
+        const { data } = await api.get("/order/my-orders");
+              console.log("ORDERS DATA:", data); // 👈 add this
+
         setOrders(data.orders);
       } catch (err) {
         console.error("Failed to fetch orders:", err);
@@ -26,15 +31,32 @@ const OrdersPage = () => {
     );
   };
 
-  if (loading) return <p className="p-6">Loading orders...</p>;
-  if (!orders.length) return <p className="p-6">No orders found.</p>;
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <p className="text-gray-500 text-lg">Loading orders...</p>
+    </div>
+  );
+
+  if (!orders.length) return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+      <p className="text-gray-500 text-lg">No orders found.</p>
+      <button
+        onClick={() => navigate("/")}
+        className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700"
+      >
+        Start Shopping
+      </button>
+    </div>
+  );
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">My Orders</h2>
-      {orders.map((order) => (
-        <OrderCard key={order._id} order={order} onCancel={handleCancel} />
-      ))}
+    <div className="min-h-screen bg-gray-50 py-10 px-4">
+      <div className="max-w-2xl mx-auto">
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">My Orders</h2>
+        {orders.map((order) => (
+          <OrderCard key={order._id} order={order} onCancel={handleCancel} />
+        ))}
+      </div>
     </div>
   );
 };

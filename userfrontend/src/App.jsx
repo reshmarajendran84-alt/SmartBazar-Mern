@@ -15,39 +15,37 @@ import HomePage from "./pages/HomePage";
 import CheckoutPage from "./pages/CheckoutPage";
 import OrderSuccess from "./pages/OrderSuccess";
 import Wallet from "./pages/Wallet";
-import OrdersPage from "./pages/OrderPage";  // ✅ the page that fetches orders
+import OrdersPage from "./pages/OrderPage";
 
 function App() {
   return (
     <BrowserRouter>
       <ToastContainer position="top-right" autoClose={3000} theme="colored" />
-
       <div className="flex flex-col min-h-screen">
         <Header />
-
         <main className="flex-grow">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/auth/login" element={<AuthPage />} />
             <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
-
-            <Route element={<UserProtectedRoute />}>
-              <Route path="/user/profile" element={<UserProfile />} />
-            </Route>
-
             <Route path="/products" element={<ProductListPage />} />
             <Route path="/categories" element={<ProductListPage />} />
             <Route path="/products/:id" element={<SingleProduct />} />
-            <Route path="/cart" element={<CartPage />} />
             <Route path="/about" element={<AboutPage />} />
-            <Route path="/checkout" element={<CheckoutPage />} />
-            <Route path="/order-success" element={<OrderSuccess />} />
-            <Route path="/wallet" element={<Wallet />} />
-            <Route path="/orders" element={<OrdersPage />} />  {/* ✅ */}
+
+            {/* ✅ All protected routes in one block */}
+            <Route element={<UserProtectedRoute />}>
+              <Route path="/user/profile" element={<UserProfile />} />
+              <Route path="/cart" element={<CartPage />} />
+              <Route path="/checkout" element={<CheckoutPage />} />
+              <Route path="/order-success" element={<OrderSuccess />} />
+              <Route path="/my-orders" element={<OrdersPage />} />
+              <Route path="/wallet" element={<Wallet />} />
+            </Route>
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
-
         <Footer />
       </div>
     </BrowserRouter>

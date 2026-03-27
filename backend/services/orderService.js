@@ -20,7 +20,7 @@ class OrderService {
     if (!data.address) throw new Error("Address required");
 
     return await Order.create({
-      user: userId,              // ✅ schema uses "user" not "userId"
+      userId: userId,              // ✅ schema uses "user" not "userId"
       cartItems: data.cartItems.map((item) => ({
         productId: item.productId?._id || item.productId,
         name: item.name,
@@ -72,29 +72,47 @@ class OrderService {
 
     return order;
   }
+async cancelOrder(orderId, userId) {
+  const order = await Order.findById(orderId);
+  if (!order) throw new Error("Order not found");
+  if (order.status !== "Pending") throw new Error("Only pending orders can be cancelled");
 
-  async cancelOrder(orderId) {
-    const order = await Order.findById(orderId);
-    if (!order) throw new Error("Order not found");
+  order.status = "Cancelled";
+  await order.save();
 
-    order.status = "Failed";                        // closest to cancelled in your enum
-    await order.save();
-
-    if (order.paymentMethod === "ONLINE" && order.status === "Paid") {
-      let wallet = await Wallet.findOne({ userId: order.user });
-      if (!wallet) {
-        wallet = await Wallet.create({ userId: order.user, balance: 0, transactions: [] });
-      }
-      wallet.balance += order.total;
-      wallet.transactions.push({ type: "CREDIT", amount: order.total, orderId: order._id });
-      await wallet.save();
-    }
-
-    return order;
+  // ✅ refund to wallet only for ONLINE paid orders
+  if (order.paymentMethod === "ONLINE" && order.status !== "Failed") {
+    await WalletService.creditWallet(
+      userId,
+      order.total,
+      `Refund for cancelled order #${order._id}`,
+      order._id
+    );
   }
 
+  return order;
+}
+
+async returnOrder(orderId, userId) {
+  const order = await Order.findById(orderId);
+  if (!order) throw new Error("Order not found");
+  if (order.status !== "Delivered") throw new Error("Only delivered orders can be returned");
+
+  order.status = "Cancelled"; // mark as returned/cancelled
+  await order.save();
+
+  // refund to wallet
+  await WalletService.creditWallet(
+    userId,
+    order.total,
+    `Refund for returned order #${order._id}`,
+    order._id
+  );
+
+  return order;
+}
   async getUserOrders(userId) {
-    return await Order.find({ user: userId }).sort({ createdAt: -1 }); // ✅ "user" not "userId"
+    return await Order.find({ userId: userId }).sort({ createdAt: -1 }); // ✅ "user" not "userId"
   }
 
   async getOrderById(orderId) {

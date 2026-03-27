@@ -308,7 +308,7 @@ const CheckoutPage = React.memo(() => {
         console.log("COD RESPONSE:", res.data);
         const order = res.data.order || res.data;
         toast.success("Order placed successfully!");
-        navigate("/order-success", { state: { order } });
+        navigate("/order-success", { state: { order :res.data.order } });
         return;
       }
 

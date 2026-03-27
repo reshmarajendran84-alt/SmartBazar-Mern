@@ -11,4 +11,8 @@ export const placeCODOrder = (data) => api.post("/order/cod", data);
 export const createRazorpayOrder = (data) => api.post("/order/razorpay-order", data);
 export const verifyPayment = (data) => api.post("/order/verify", data);
 
+// export const createOrder =(data) => api.post(`/create`,data);
+
+// export const getOrders=(userId) => api.get(`/user/${userId}`);
+
 export default { placeCODOrder, createRazorpayOrder, verifyPayment };
