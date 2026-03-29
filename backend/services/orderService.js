@@ -1,10 +1,15 @@
+// 
+
+
+// services/orderService.js
 import razorpay from "../config/razorpay.js";
 import Order from "../models/order.js";
-import Wallet from "../models/wallet.js";
 import crypto from "crypto";
+import WalletService from "./walletService.js"; // ✅ THIS WAS MISSING — caused the 500
 
 class OrderService {
 
+  // ─── Create Razorpay order session ───────────────────────────────────────
   async createRazorpayOrder(amount) {
     if (!amount || amount <= 0) throw new Error("Invalid amount");
     return await razorpay.orders.create({
@@ -14,13 +19,14 @@ class OrderService {
     });
   }
 
+  // ─── Save order to DB (COD or after Razorpay) ────────────────────────────
   async createOrder(userId, data, razorpayOrderId = null) {
     if (!data.cartItems || !data.cartItems.length) throw new Error("Cart is empty");
     if (!data.total || data.total <= 0) throw new Error("Invalid total");
     if (!data.address) throw new Error("Address required");
 
     return await Order.create({
-      userId: userId,              // ✅ schema uses "user" not "userId"
+      userId,
       cartItems: data.cartItems.map((item) => ({
         productId: item.productId?._id || item.productId,
         name: item.name,
@@ -34,22 +40,27 @@ class OrderService {
       coupon: data.coupon || "",
       total: data.total,
       address: {
-        fullName: data.address.fullName || "",
-        phone: data.address.phone || "",
-        addressLine: data.address.addressLine,
-        city: data.address.city,
-          state:       data.address.state       || "",   // ← add this
-
-        pincode: data.address.pincode,
+        fullName:    data.address.fullName    || "",
+        phone:       data.address.phone       || "",
+        addressLine: data.address.addressLine || "",
+        city:        data.address.city        || "",
+        state:       data.address.state       || "",
+        pincode:     data.address.pincode     || "",
       },
-      paymentMethod: data.paymentMethod,
-      status: data.paymentMethod === "ONLINE" ? "Pending" : "Pending", // ✅ schema uses "status" with "Pending/Paid/Failed"
+      paymentMethod:  data.paymentMethod,
+      status:         "Pending",
       razorpayOrderId: razorpayOrderId || null,
     });
   }
 
+  // ─── Verify Razorpay signature + save order ───────────────────────────────
   async verifyAndSaveOrder(userId, body) {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderData } = body;
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      orderData,
+    } = body;
 
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
@@ -66,55 +77,77 @@ class OrderService {
       razorpay_order_id
     );
 
-    order.status = "Paid";                          // ✅ "Paid" not "PAID"
+    order.status = "Paid";
     order.razorpayPaymentId = razorpay_payment_id;
     await order.save();
 
     return order;
   }
-async cancelOrder(orderId, userId) {
-  const order = await Order.findById(orderId);
-  if (!order) throw new Error("Order not found");
-  if (order.status !== "Pending") throw new Error("Only pending orders can be cancelled");
 
-  order.status = "Cancelled";
-  await order.save();
+  // ─── Cancel order ─────────────────────────────────────────────────────────
+  async cancelOrder(orderId, userId) {
+    const order = await Order.findById(orderId);
+    if (!order) throw new Error("Order not found");
 
-  // ✅ refund to wallet only for ONLINE paid orders
-  if (order.paymentMethod === "ONLINE" && order.status !== "Failed") {
+    // ✅ Only Pending orders can be cancelled (before shipping)
+    if (order.status !== "Pending") {
+      throw new Error("Only pending orders can be cancelled");
+    }
+
+    order.status = "Cancelled";
+    await order.save();
+
+    // ✅ Refund to wallet only for ONLINE (prepaid) orders
+    // COD — no money was taken, so no refund needed
+    if (order.paymentMethod === "ONLINE") {
+      await WalletService.creditWallet(
+        userId,
+        order.total,
+        `Refund for cancelled order #${order._id.toString().slice(-8).toUpperCase()}`,
+        order._id
+      );
+    }
+
+    return order;
+  }
+
+  // ─── Return order ─────────────────────────────────────────────────────────
+  async returnOrder(orderId, userId) {
+    const order = await Order.findById(orderId);
+    if (!order) throw new Error("Order not found");
+
+    // ✅ Only Delivered orders can be returned
+    if (order.status !== "Delivered") {
+      throw new Error("Only delivered orders can be returned");
+    }
+
+    // ✅ 7-day return window check
+    const deliveredAt = order.updatedAt; // use updatedAt since no separate deliveredAt field
+    const daysSince = (Date.now() - new Date(deliveredAt)) / (1000 * 60 * 60 * 24);
+    if (daysSince > 7) {
+      throw new Error("Return window expired. Returns accepted within 7 days of delivery.");
+    }
+
+    order.status = "Cancelled"; // your enum doesn't have "Returned" — use Cancelled
+    await order.save();
+
+    // ✅ Refund to wallet for ALL return requests (both COD and ONLINE)
     await WalletService.creditWallet(
       userId,
       order.total,
-      `Refund for cancelled order #${order._id}`,
+      `Refund for returned order #${order._id.toString().slice(-8).toUpperCase()}`,
       order._id
     );
+
+    return order;
   }
 
-  return order;
-}
-
-async returnOrder(orderId, userId) {
-  const order = await Order.findById(orderId);
-  if (!order) throw new Error("Order not found");
-  if (order.status !== "Delivered") throw new Error("Only delivered orders can be returned");
-
-  order.status = "Cancelled"; // mark as returned/cancelled
-  await order.save();
-
-  // refund to wallet
-  await WalletService.creditWallet(
-    userId,
-    order.total,
-    `Refund for returned order #${order._id}`,
-    order._id
-  );
-
-  return order;
-}
+  // ─── Get all orders for a user ────────────────────────────────────────────
   async getUserOrders(userId) {
-    return await Order.find({ userId: userId }).sort({ createdAt: -1 }); // ✅ "user" not "userId"
+    return await Order.find({ userId }).sort({ createdAt: -1 });
   }
 
+  // ─── Get single order ─────────────────────────────────────────────────────
   async getOrderById(orderId) {
     const order = await Order.findById(orderId);
     if (!order) throw new Error("Order not found");

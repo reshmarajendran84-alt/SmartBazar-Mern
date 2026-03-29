@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+// ProductListPage.jsx
+import { useEffect, useState, useCallback } from "react"; // ← add useCallback here
 import { useSearchParams } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
 import Pagination from "../components/Pagination";
@@ -9,34 +10,43 @@ import { toast } from "react-toastify";
 const ProductListPage = () => {
   const [params, setParams] = useSearchParams();
 
-  const page = Number(params.get("page")) || 1;
+  const page     = Number(params.get("page")) || 1;
   const category = params.get("category") || "";
-  const search = params.get("search") || "";
-  const sort = params.get("sort") || "";
+  const search   = params.get("search")   || "";
+  const sort     = params.get("sort")     || "";
+const [loading, setLoading] = useState(false); // ← add this
 
-  const [products, setProducts] = useState([]);
+  const [products,   setProducts]   = useState([]);
   const [totalPages, setTotalPages] = useState(1);
 
-  useEffect(() => {
-    loadProducts();
-  }, [page, category, search, sort]);
-
-  const loadProducts = async () => {
+  const loadProducts = useCallback(async () => {
     try {
+      setLoading(true);
       const { data } = await getProducts(page, category, search, sort);
       setProducts(data.products);
       setTotalPages(data.pages);
     } catch (err) {
       console.log(err);
       toast.error("Failed to load products");
+    }finally{
+      setLoading(false);
     }
-  };
+  }, [page, category, search, sort]);
+
+  useEffect(() => {        // ← only ONE useEffect
+    loadProducts();
+  }, [loadProducts]);
 
   const handleSort = (value) => {
     setParams((prev) => {
       const newParams = new URLSearchParams(prev);
-      newParams.set("sort", value);
-      newParams.set("page", 1); // reset page
+      if(value){
+        newParams.set("sort", value);
+      }else{
+        newParams.delete("sort");
+
+      }      newParams.set("page", 1);
+
       return newParams;
     });
   };
@@ -51,11 +61,9 @@ const ProductListPage = () => {
 
   return (
     <div className="min-h-screen flex bg-gray-50">
-      {/* Sidebar */}
       <aside className="w-64 bg-white p-4 shadow">
         <h2 className="font-bold mb-4">Categories</h2>
         <CategoryFilter />
-
         <h2 className="mt-4 font-bold">Sort</h2>
         <select
           value={sort}
@@ -68,18 +76,20 @@ const ProductListPage = () => {
         </select>
       </aside>
 
-      {/* Main */}
-      <main className="flex-1 p-6">
-        {products.length === 0 ? (
-          <p className="text-gray-500">No products found</p>
-        ) : (
+    <main className="flex-1 p-6">
+  {loading ? (
+    <p className="text-gray-400 animate-pulse">Loading products...</p>
+  ) : products.length === 0 ? (
+    <p className="text-gray-500">
+      {search ? `No products found for "${search}"` : "No products found"}
+    </p>
+  ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {products.map((product) => (
               <ProductCard key={product._id} product={product} />
             ))}
           </div>
         )}
-
         <Pagination page={page} setPage={handlePage} pages={totalPages} />
       </main>
     </div>

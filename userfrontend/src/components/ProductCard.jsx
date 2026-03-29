@@ -64,7 +64,7 @@ const ProductCard = React.memo(({ product }) => {
           disabled={product.stock === 0 || adding}
           className="mt-auto bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white py-2 rounded-lg transition"
         >{adding ? "Adding... " :"Add to Cart"}
-          Add To Cart
+          {/* Add To Cart */}
         </button>
       </div>
     </div>

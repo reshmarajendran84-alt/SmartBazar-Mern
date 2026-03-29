@@ -118,14 +118,15 @@ function Header() {
       {isOpen && (
         <div className="md:hidden bg-white shadow-md border-t">
           <div className="flex flex-col px-6 py-4 space-y-4">
-            <div className="relative">
+            {/* <div className="relative">
               <input
                 type="text"
                 placeholder="Search..."
                 className="w-full border rounded-lg py-2 px-3 pr-8"
               />
               <HiOutlineSearch className="absolute right-2 top-2.5 text-gray-500" />
-            </div>
+            </div> */}
+<SearchBar />
 
             <Link to="/" onClick={() => setIsOpen(false)}>Home</Link>
             <Link to="/categories" onClick={() => setIsOpen(false)}>Categories</Link>

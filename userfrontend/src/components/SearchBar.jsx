@@ -1,34 +1,51 @@
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 function SearchBar() {
-  const [keyword, setKeyword] = useState("");
   const navigate = useNavigate();
-  const location = useLocation();
+  const [params] = useSearchParams();
+
+  // Read directly from URL every render — no useEffect needed
+  const currentSearch = params.get("search") || "";
+  const [keyword, setKeyword] = useState(currentSearch);
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (!keyword.trim()) return;
+    const trimmed = keyword.trim();
+    const p = new URLSearchParams();
+    if (trimmed) p.set("search", trimmed);
+    p.set("page", "1");
+    navigate(`/products?${p.toString()}`);
+  };
 
-    // Preserve all existing query params (category, sort, page)
-    const params = new URLSearchParams(location.search);
-    params.set("search", keyword);
-    params.set("page", 1); // reset to page 1
-
-    // Navigate to current path with updated query
-    navigate(`${location.pathname}?${params.toString()}`);
+  const handleClear = () => {
+    setKeyword("");
+    navigate("/products");
   };
 
   return (
     <form onSubmit={handleSearch} className="flex gap-2 w-full">
-      <input
-        type="text"
-        placeholder="Search products..."
-        value={keyword}
-        onChange={(e) => setKeyword(e.target.value)}
-        className="border px-3 py-1 w-full rounded"
-      />
-      <button className="bg-blue-500 text-white px-3 rounded">Search</button>
+      <div className="relative flex-1">
+        <input
+          type="text"
+          placeholder="Search products..."
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+          className="border px-3 py-1 w-full rounded pr-8"
+        />
+        {keyword && (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          >
+            ✕
+          </button>
+        )}
+      </div>
+      <button type="submit" className="bg-blue-500 text-white px-3 rounded">
+        Search
+      </button>
     </form>
   );
 }

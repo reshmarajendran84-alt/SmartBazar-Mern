@@ -238,7 +238,7 @@ import {
   createRazorpayOrder,
   verifyPayment,
 } from "../services/orderService";
-
+import { useCart } from "../context/CartContext";
 const loadRazorpayScript = () =>
   new Promise((resolve) => {
     if (window.Razorpay) return resolve(true);
@@ -267,7 +267,7 @@ const CheckoutPage = React.memo(() => {
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [loading, setLoading] = useState(false);
-
+const { fetchCart } =useCart();
   // ✅ ONLY this useEffect — auto-select default address
   useEffect(() => {
     if (addresses.length > 0) {
@@ -276,7 +276,6 @@ const CheckoutPage = React.memo(() => {
     }
   }, [addresses]);
 
-  // ❌ DELETE the fetchOrders useEffect — it does NOT belong here
 
   const selectedAddress = addresses.find((a) => a._id === selectedAddressId);
 
@@ -299,12 +298,16 @@ const CheckoutPage = React.memo(() => {
 
   const handlePlaceOrder = async () => {
     if (!cartItems.length) return toast.error("Cart is empty");
-    if (!selectedAddress) return toast.error("Please select a delivery address");
-
+    if (!selectedAddress || !selectedAddress) return toast.error("Please select a delivery address");
+console.log("ORDER DATA BEING SENT:", orderData);
+  console.log("address:", orderData.address);
+  console.log("total:", orderData.total);
+  console.log("cartItems:", orderData.cartItems);
     setLoading(true);
     try {
       if (paymentMethod === "COD") {
         const res = await placeCODOrder(orderData);
+        await fetchCart();
         console.log("COD RESPONSE:", res.data);
         const order = res.data.order || res.data;
         toast.success("Order placed successfully!");
@@ -331,6 +334,7 @@ const CheckoutPage = React.memo(() => {
               razorpay_signature: response.razorpay_signature,
               orderData,
             });
+            await fetchCart();
             console.log("VERIFY RESPONSE:", verifyRes.data);
             const order = verifyRes.data.order || verifyRes.data;
             toast.success("Payment successful!");

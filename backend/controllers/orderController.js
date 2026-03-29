@@ -95,7 +95,7 @@ class OrderController {
   async placeCODOrder(req, res) {
     try {
       const userId = req.user.id; // ✅ fixed: was res.userId
-      console.log("USER ID:", userId);
+      console.log("USER ID:", req.user);
       console.log("BODY:", JSON.stringify(req.body, null, 2));
       const order = await OrderService.createOrder(userId, req.body, null);
       res.status(201).json({ success: true, order });

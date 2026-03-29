@@ -5,7 +5,7 @@ import { useCart } from "../context/CartContext";
 import {toast} from "react-toastify";
 const SingleProduct = () => {
   const { id } = useParams();
-  const { handleAddToCart } = useCart();
+  const { handleAdd } = useCart();
 
   const [product, setProduct] = useState(null);
 const [mainImage, setMainImage] = useState(null);
@@ -97,7 +97,7 @@ image: "https://dummyimage.com/300x300/cccccc/000000"  }));
           <div className="flex gap-4 mt-6">
 
             <button
-              onClick={() => handleAddToCart(product)}
+              onClick={() => handleAdd(product)}
               className="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700"
             >
               Add To Cart
