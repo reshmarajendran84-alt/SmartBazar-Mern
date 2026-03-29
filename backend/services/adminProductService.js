@@ -62,12 +62,12 @@ if(search){
   const product = await Product.findById(id);
   if (!product) throw new Error("Product not found");
 
-  product.name = data.name || product.name;
+  // product.name = data.name || product.name;
 
   if (data.category && data.category !== "") {
   const categoryExists = await Category.findById(data.category);
   if (!categoryExists) throw new Error("Category not found");
-  product.category = data.category;
+  // product.category = data.category;
 }
  product.name = data.name ?? product.name;
 product.price = data.price ? Number(data.price) : product.price;

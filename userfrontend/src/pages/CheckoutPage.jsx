@@ -227,8 +227,6 @@
 // });
 
 // export default CheckoutPage;
-
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -239,6 +237,7 @@ import {
   verifyPayment,
 } from "../services/orderService";
 import { useCart } from "../context/CartContext";
+
 const loadRazorpayScript = () =>
   new Promise((resolve) => {
     if (window.Razorpay) return resolve(true);
@@ -267,56 +266,117 @@ const CheckoutPage = React.memo(() => {
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [loading, setLoading] = useState(false);
-const { fetchCart } =useCart();
-  // ✅ ONLY this useEffect — auto-select default address
+  const { fetchCart } = useCart();
+
+  // Auto-select default address
   useEffect(() => {
-    if (addresses.length > 0) {
+    if (addresses && addresses.length > 0) {
+      console.log("=== ADDRESS FIELDS ===");
+      console.log("First address object:", addresses[0]);
+      console.log("Available fields:", Object.keys(addresses[0]));
+      console.log("Address name:", addresses[0].name);
+      
       const def = addresses.find((a) => a.isDefault) || addresses[0];
       setSelectedAddressId(def._id);
     }
   }, [addresses]);
 
+  // Safely get selected address with null check
+  const selectedAddress = addresses?.find((a) => a._id === selectedAddressId) || null;
 
-  const selectedAddress = addresses.find((a) => a._id === selectedAddressId);
+  // Validation before creating orderData
+  const validateOrderData = () => {
+    if (!cartItems.length) {
+      toast.error("Cart is empty");
+      return false;
+    }
+    
+    if (!selectedAddress) {
+      toast.error("Please select a delivery address");
+      return false;
+    }
+    
+    // Check required address fields (based on your schema)
+    const requiredFields = ['name', 'phone', 'addressLine', 'city', 'state', 'pincode'];
+    for (const field of requiredFields) {
+      if (!selectedAddress[field]) {
+        toast.error(`Address missing: ${field}`);
+        console.log(`Missing field ${field} in address:`, selectedAddress);
+        return false;
+      }
+    }
+    
+    return true;
+  };
 
-  const orderData = {
-    cartItems: cartItems.map((item) => ({
-      productId: item.productId?._id || item.productId,
-      name: item.productId?.name || item.name,
-      quantity: item.quantity,
-      price: item.price,
-    })),
-    subtotal,
-    shipping,
-    tax,
-    discount,
-    total,
-    address: selectedAddress,
-    coupon: appliedCoupon || "",
-    paymentMethod,
+  // Safely create orderData only when selectedAddress exists
+  const getOrderData = () => {
+    if (!selectedAddress) return null;
+    
+    console.log("Selected address:", selectedAddress);
+    
+    return {
+      cartItems: cartItems.map((item) => ({
+        productId: item.productId?._id || item.productId,
+        name: item.productId?.name || item.name,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+      subtotal: subtotal || 0,
+      shipping: shipping || 0,
+      tax: tax || 0,
+      discount: discount || 0,
+      total: total || 0,
+      address: {
+        // ✅ Use 'name' from your address schema
+        fullName: selectedAddress.name || "",  // Map 'name' to 'fullName' for order schema
+        phone: selectedAddress.phone || "",
+        addressLine: selectedAddress.addressLine || "",
+        city: selectedAddress.city || "",
+        state: selectedAddress.state || "",
+        pincode: selectedAddress.pincode || "",
+      },
+      coupon: appliedCoupon || "",
+      paymentMethod: paymentMethod,
+    };
   };
 
   const handlePlaceOrder = async () => {
-    if (!cartItems.length) return toast.error("Cart is empty");
-    if (!selectedAddress || !selectedAddress) return toast.error("Please select a delivery address");
-console.log("ORDER DATA BEING SENT:", orderData);
-  console.log("address:", orderData.address);
-  console.log("total:", orderData.total);
-  console.log("cartItems:", orderData.cartItems);
+    // Validate before proceeding
+    if (!validateOrderData()) {
+      return;
+    }
+    
     setLoading(true);
+    
     try {
+      const orderData = getOrderData();
+      if (!orderData) {
+        toast.error("Invalid order data");
+        setLoading(false);
+        return;
+      }
+      
+      console.log("ORDER DATA BEING SENT:", orderData);
+      
       if (paymentMethod === "COD") {
         const res = await placeCODOrder(orderData);
         await fetchCart();
+        console.log("selectedAddress:", selectedAddress);
+console.log("orderData.address:", orderData.address);
         console.log("COD RESPONSE:", res.data);
-        const order = res.data.order || res.data;
         toast.success("Order placed successfully!");
-        navigate("/order-success", { state: { order :res.data.order } });
+        navigate("/order-success", { state: { order: res.data.order } });
         return;
       }
 
+      // Online Payment
       const isLoaded = await loadRazorpayScript();
-      if (!isLoaded) return toast.error("Razorpay SDK failed to load");
+      if (!isLoaded) {
+        toast.error("Razorpay SDK failed to load");
+        setLoading(false);
+        return;
+      }
 
       const rpRes = await createRazorpayOrder({ amount: total });
       const rpOrder = rpRes.data.order;
@@ -336,18 +396,21 @@ console.log("ORDER DATA BEING SENT:", orderData);
             });
             await fetchCart();
             console.log("VERIFY RESPONSE:", verifyRes.data);
-            const order = verifyRes.data.order || verifyRes.data;
             toast.success("Payment successful!");
-            navigate("/order-success", { state: { order } });
+            navigate("/order-success", { state: { order: verifyRes.data.order } });
           } catch (err) {
             toast.error("Payment verification failed!");
           }
         },
-        prefill: { name: "", email: "" },
+        prefill: {
+          name: selectedAddress?.name || "",
+          contact: selectedAddress?.phone || "",
+        },
         theme: { color: "#4f46e5" },
       };
 
       new window.Razorpay(options).open();
+      
     } catch (err) {
       console.error("Order error:", err);
       toast.error(err.response?.data?.message || "Order failed");
@@ -361,9 +424,10 @@ console.log("ORDER DATA BEING SENT:", orderData);
       <div className="max-w-lg mx-auto bg-white rounded-2xl shadow-lg p-6">
         <h2 className="text-2xl font-bold mb-6">Checkout</h2>
 
+        {/* Address selection */}
         <div className="mb-6">
           <h3 className="font-semibold mb-3">Delivery Address</h3>
-          {addresses.length === 0 ? (
+          {!addresses || addresses.length === 0 ? (
             <p className="text-sm text-red-500">
               No address found.{" "}
               <a href="/user/profile" className="underline text-indigo-600">
@@ -387,7 +451,14 @@ console.log("ORDER DATA BEING SENT:", orderData);
                   checked={selectedAddressId === addr._id}
                   onChange={() => setSelectedAddressId(addr._id)}
                 />
-                {addr.addressLine}, {addr.city}, {addr.state} — {addr.pincode}
+                <div>
+                  <p className="font-medium">{addr.name}</p>
+                  <p className="text-sm text-gray-600">{addr.addressLine}</p>
+                  <p className="text-sm text-gray-600">
+                    {addr.city}, {addr.state} - {addr.pincode}
+                  </p>
+                  <p className="text-sm text-gray-600">Phone: {addr.phone}</p>
+                </div>
                 {addr.isDefault && (
                   <span className="ml-2 text-xs text-green-600">(Default)</span>
                 )}
@@ -396,19 +467,34 @@ console.log("ORDER DATA BEING SENT:", orderData);
           )}
         </div>
 
+        {/* Order summary */}
         <div className="mb-6 bg-gray-50 rounded-lg p-4 text-sm space-y-1">
           <h3 className="font-semibold mb-2">Order Summary</h3>
-          <div className="flex justify-between"><span>Subtotal</span><span>₹{subtotal}</span></div>
-          <div className="flex justify-between"><span>Shipping</span><span>₹{shipping}</span></div>
-          <div className="flex justify-between"><span>Tax</span><span>₹{tax}</span></div>
+          <div className="flex justify-between">
+            <span>Subtotal</span>
+            <span>₹{subtotal}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Shipping</span>
+            <span>₹{shipping}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Tax</span>
+            <span>₹{tax}</span>
+          </div>
           {discount > 0 && (
-            <div className="flex justify-between text-green-600"><span>Discount</span><span>-₹{discount}</span></div>
+            <div className="flex justify-between text-green-600">
+              <span>Discount</span>
+              <span>-₹{discount}</span>
+            </div>
           )}
           <div className="flex justify-between font-bold border-t pt-2 mt-2">
-            <span>Total</span><span>₹{total}</span>
+            <span>Total</span>
+            <span>₹{total}</span>
           </div>
         </div>
 
+        {/* Payment method */}
         <div className="mb-6">
           <h3 className="font-semibold mb-3">Payment Method</h3>
           <label className="flex items-center gap-2 mb-2 cursor-pointer">
@@ -433,9 +519,11 @@ console.log("ORDER DATA BEING SENT:", orderData);
 
         <button
           onClick={handlePlaceOrder}
-          disabled={loading || !selectedAddress}
+          disabled={loading || !selectedAddress || !addresses?.length}
           className={`w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold transition ${
-            loading || !selectedAddress ? "opacity-50 cursor-not-allowed" : ""
+            loading || !selectedAddress || !addresses?.length
+              ? "opacity-50 cursor-not-allowed"
+              : ""
           }`}
         >
           {loading ? "Processing..." : `Place Order — ₹${total}`}

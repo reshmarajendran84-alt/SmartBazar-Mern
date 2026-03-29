@@ -22,7 +22,16 @@ class UserService {
     if (addressData.isDefault) {
       user.addresses.forEach(a => a.isDefault = false);
     }
-
+const newAddress = {
+    name: addressData.name || "",
+    phone: addressData.phone || "",
+    addressLine: addressData.addressLine || "",
+    city: addressData.city || "",
+    state: addressData.state || "",
+    pincode: addressData.pincode || "",
+    country: addressData.country || "India",
+    isDefault: addressData.isDefault || false,
+  };
     user.addresses.push(addressData);
     await user.save();
     return user.addresses;

@@ -1,4 +1,4 @@
-// pages/OrderPage.jsx
+// OrderPage.jsx
 import { useState, useEffect } from "react";
 import api from "../utils/api";
 import OrderCard from "./OrderCard";
@@ -13,8 +13,6 @@ const OrdersPage = () => {
     const fetchOrders = async () => {
       try {
         const { data } = await api.get("/order/my-orders");
-              console.log("ORDERS DATA:", data); // 👈 add this
-
         setOrders(data.orders);
       } catch (err) {
         console.error("Failed to fetch orders:", err);
@@ -25,7 +23,7 @@ const OrdersPage = () => {
     fetchOrders();
   }, []);
 
-  const handleCancel = (updatedOrder) => {
+  const handleOrderUpdate = (updatedOrder) => {
     setOrders((prev) =>
       prev.map((o) => (o._id === updatedOrder._id ? updatedOrder : o))
     );
@@ -39,10 +37,16 @@ const OrdersPage = () => {
 
   if (!orders.length) return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-      <p className="text-gray-500 text-lg">No orders found.</p>
+      <div className="text-center">
+        <p className="text-6xl mb-4">📦</p>
+        <p className="text-gray-500 text-lg font-medium">No orders found</p>
+        <p className="text-gray-400 text-sm mt-1">
+          Your orders will appear here after you shop
+        </p>
+      </div>
       <button
         onClick={() => navigate("/")}
-        className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700"
+        className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition"
       >
         Start Shopping
       </button>
@@ -52,9 +56,16 @@ const OrdersPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
       <div className="max-w-2xl mx-auto">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">My Orders</h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">My Orders</h2>
+          <span className="text-sm text-gray-400">{orders.length} order(s)</span>
+        </div>
         {orders.map((order) => (
-          <OrderCard key={order._id} order={order} onCancel={handleCancel} />
+          <OrderCard
+            key={order._id}
+            order={order}
+            onCancel={handleOrderUpdate}
+          />
         ))}
       </div>
     </div>

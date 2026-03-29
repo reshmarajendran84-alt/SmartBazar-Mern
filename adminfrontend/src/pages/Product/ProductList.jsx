@@ -186,7 +186,7 @@ const ProductList = () => {
             className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm"
           />
 <div className="fixed inset-0 flex justify-center items-start sm:items-center p-4 sm:p-6 z-50 overflow-auto">
-  <div className="bg-white w-full sm:w-3/4 md:w-2/3 lg:w-1/2 rounded-xl shadow-lg p-6 relative">
+  {/* <div className="bg-white w-full sm:w-3/4 md:w-2/3 lg:w-1/2 rounded-xl shadow-lg p-6 relative"> */}
               <ProductForm
                 onClose={() => {
                   setShowForm(false);
@@ -195,7 +195,7 @@ const ProductList = () => {
                 refresh={loadProducts}
                 editData={editData}
               />
-            </div>
+            {/* </div> */}
           </div>
         </>
       )}

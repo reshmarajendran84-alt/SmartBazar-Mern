@@ -55,6 +55,7 @@ const ProductForm = ({ onClose, refresh, editData }) => {
     toast.error("Maximum 5 images allowed");
     return;
   }
+  setImages(files);
     const previews = files.map((file) => URL.createObjectURL(file));
     setPreview(previews);
   };

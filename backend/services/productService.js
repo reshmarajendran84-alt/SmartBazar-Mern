@@ -13,7 +13,7 @@ class ProductService {
     const sort = query.sort;
     const search = query.search;
 
-    let filter = {};
+    let filter = { isActive :true};
 
     // CATEGORY FILTER
     if (category && mongoose.Types.ObjectId.isValid(category)) {

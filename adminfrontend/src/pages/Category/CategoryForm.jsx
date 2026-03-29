@@ -23,7 +23,7 @@ const CategoryForm = ({ onClose, onSubmit, editData }) => {
       // await the async onSubmit function
       await onSubmit(name);
 
-      toast.success(editData ? "Category updated!" : "Category created!");
+      // toast.success(editData ? "Category updated!" : "Category created!");
       onClose(); // close modal after success
     } catch (error) {
       console.error(error.response?.data || error.message);

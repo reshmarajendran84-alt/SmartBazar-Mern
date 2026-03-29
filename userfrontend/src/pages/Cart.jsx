@@ -63,25 +63,50 @@ const CartPage = () => {
   };
 
   // Navigate to checkout
-  const handleProceedToCheckout = () => {
-    if (cart.items.length === 0) {
-      toast.warning("Your cart is empty");
-      return;
-    }
+  // const handleProceedToCheckout = () => {
+  //   if (cart.items.length === 0) {
+  //     toast.warning("Your cart is empty");
+  //     return;
+  //   }
 
-    navigate("/checkout", {
-      state: {
-        cartItems: cart.items,
-        subtotal,
-        shipping,
-        tax,
-        discount,
-        total: finalTotal,
-        appliedCoupon,
-      },
-    });
-  };
+  //   navigate("/checkout", {
+  //     state: {
+  //       cartItems: cart.items,
+  //       subtotal,
+  //       shipping,
+  //       tax,
+  //       discount,
+  //       total: finalTotal,
+  //       appliedCoupon,
+  //     },
+  //   });
+  // };
+const handleProceedToCheckout = () => {
+  if (cart.items.length === 0) {
+    toast.warning("Your cart is empty");
+    return;
+  }
 
+  // Ensure all items have proper structure
+  const formattedItems = cart.items.map(item => ({
+    productId: item.productId,
+    name: item.productId?.name || item.name,
+    quantity: item.quantity,
+    price: item.price,
+  }));
+
+  navigate("/checkout", {
+    state: {
+      cartItems: formattedItems,
+      subtotal,
+      shipping,
+      tax,
+      discount,
+      total: finalTotal,
+      appliedCoupon,
+    },
+  });
+};
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-10">
       <h2 className="text-3xl font-bold mb-8 text-center md:text-left text-gray-800">

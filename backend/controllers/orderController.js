@@ -92,18 +92,54 @@ import Order from "../models/order.js";
 class OrderController {
 
   // 1. COD order
+  // async placeCODOrder(req, res) {
+  //   try {
+      
+  //     const userId = req.user.id; // ✅ fixed: was res.userId
+  //     console.log("USER ID:", req.user);
+  //     console.log("BODY:", JSON.stringify(req.body, null, 2));
+  //     const order = await OrderService.createOrder(userId, req.body, null);
+  //     res.status(201).json({ success: true, order });
+  //   } catch (err) {
+  //     console.error("COD ERROR:", err);
+  //     res.status(500).json({ message: err.message });
+  //   }
+  // }
   async placeCODOrder(req, res) {
-    try {
-      const userId = req.user.id; // ✅ fixed: was res.userId
-      console.log("USER ID:", req.user);
-      console.log("BODY:", JSON.stringify(req.body, null, 2));
-      const order = await OrderService.createOrder(userId, req.body, null);
-      res.status(201).json({ success: true, order });
-    } catch (err) {
-      console.error("COD ERROR:", err);
-      res.status(500).json({ message: err.message });
+  try {
+    console.log("=== COD ORDER REQUEST ===");
+    console.log("User ID:", req.user?.id);
+    console.log("Request Body:", JSON.stringify(req.body, null, 2));
+    
+    const userId = req.user.id;
+    
+    // Validate required fields
+    if (!req.body.cartItems || req.body.cartItems.length === 0) {
+      console.log("ERROR: No cart items");
+      return res.status(400).json({ message: "Cart is empty" });
     }
+    
+    if (!req.body.address) {
+      console.log("ERROR: No address");
+      return res.status(400).json({ message: "Address required" });
+    }
+    
+    if (!req.body.total || req.body.total <= 0) {
+      console.log("ERROR: Invalid total");
+      return res.status(400).json({ message: "Invalid total amount" });
+    }
+    
+    console.log("Calling OrderService.createOrder...");
+    const order = await OrderService.createOrder(userId, req.body, null);
+    console.log("Order created successfully:", order._id);
+    
+    res.status(201).json({ success: true, order });
+  } catch (err) {
+    console.error("COD ERROR DETAILS:", err);
+    console.error("Error stack:", err.stack);
+    res.status(500).json({ message: err.message, stack: err.stack });
   }
+}
 
   // 2. Create Razorpay session
   async createRazorpayOrder(req, res) {
