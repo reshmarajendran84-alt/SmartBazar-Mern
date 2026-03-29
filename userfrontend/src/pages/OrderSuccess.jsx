@@ -55,7 +55,7 @@ const statusSteps = ["Pending", "Confirmed", "Shipped", "Delivered"];
 const OrderSuccess = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const order = state?.order;
+  const order = state?.order;// received form naviagte state
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {

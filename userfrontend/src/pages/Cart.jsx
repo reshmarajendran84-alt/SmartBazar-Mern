@@ -33,7 +33,7 @@ const CartPage = () => {
       const res = await validateCoupon({
         code: couponCode.toUpperCase(),
         subtotal: subtotal,
-        cartTotal: cart.totalAmount ,
+        // cartTotal: cart.totalAmount ,
       });
       
   //     const res = await validateCoupon({
@@ -53,6 +53,7 @@ const CartPage = () => {
       toast.error(err.response?.data?.message || "Invalid coupon");
     }
   };
+
 
   // Remove coupon
   const handleRemoveCoupon = () => {

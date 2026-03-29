@@ -77,16 +77,29 @@ const ProductList = () => {
       ),
     },
     {
-      key: "image",
-      label: "Image",
-      render: (item) => (
+  key: "image",
+  label: "Image",
+  render: (item) => (
+    <div className="flex gap-1">
+      {item.images?.length > 0 ? (
+        item.images.map((img, i) => (
+          <img
+            key={i}
+            src={img}
+            className="w-12 h-12 object-cover rounded-lg border"
+            alt={`product-${i}`}
+          />
+        ))
+      ) : (
         <img
-          src={item.images?.[0] || "/no-image.png"}
-          className="w-14 h-14 sm:w-20 sm:h-20 object-cover rounded-lg border"
-          alt="product"
+          src="/no-image.png"
+          className="w-12 h-12 object-cover rounded-lg border"
+          alt="no-image"
         />
-      ),
-    },
+      )}
+    </div>
+  ),
+},
     {
       key: "actions",
       label: "Actions",

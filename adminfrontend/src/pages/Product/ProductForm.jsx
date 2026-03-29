@@ -50,7 +50,10 @@ const ProductForm = ({ onClose, refresh, editData }) => {
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-    setImages(files);
+      console.log("Files selected:", files.length); // ← add this
+  console.log("Files:", files);                  // ← add this
+
+    // setImages(files);
   if (files.length > 5) {
     toast.error("Maximum 5 images allowed");
     return;
@@ -62,6 +65,8 @@ const ProductForm = ({ onClose, refresh, editData }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+  console.log("images state:", images);       // ← add this
+  console.log("images count:", images.length); // ← add this
 
     const formData = new FormData();
 
@@ -73,6 +78,8 @@ const ProductForm = ({ onClose, refresh, editData }) => {
 
     images.forEach((file) => {
       formData.append("images", file);
+          console.log("appending image:", file.name); // ← add this
+
     });
   const toastId = toast.loading("Submitting...");
 
@@ -81,7 +88,7 @@ const ProductForm = ({ onClose, refresh, editData }) => {
         await updateProduct(editData._id, formData);
       toast.success("Product Updated", { id: toastId });
       } else {
-        await createProduct(formData);
+        await createProduct(formData); // calls productSevice.js
       toast.success("Product Created", { id: toastId });
       }
 
@@ -178,6 +185,7 @@ const ProductForm = ({ onClose, refresh, editData }) => {
           <input
             type="file"
             multiple
+            accept="image/*"
             onChange={handleImageChange}
             className="cursor-pointer"
           />

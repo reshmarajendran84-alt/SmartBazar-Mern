@@ -74,7 +74,7 @@ class OrderService {
   
   const order = await Order.create(orderData);
   console.log("Order saved with ID:", order._id);
-    await Cart.findOneAndUpdate({ userId }, { items: [], totalAmount: 0 });
+    await Cart.findOneAndUpdate({ userId }, { items: [], totalAmount: 0 });//clear cart after order
 
   return order;
 
@@ -122,7 +122,7 @@ class OrderService {
     order.status = "Cancelled";
     await order.save();
 
-    if (order.paymentMethod === "ONLINE") {
+    if (order.paymentMethod === "ONLINE") { //only refund prepaid orders
       await WalletService.creditWallet(
         userId,
         order.total,

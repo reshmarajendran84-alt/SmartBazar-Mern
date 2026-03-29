@@ -7,6 +7,7 @@ import { useCart } from "../context/CartContext";
 const ProductCard = React.memo(({ product }) => {
   const { fetchCart } = useCart();
   const [adding,setAdding] =useState(false);
+  
   const handleAdd = async () => {
     try {
       setAdding(true);

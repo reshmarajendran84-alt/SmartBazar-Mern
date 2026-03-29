@@ -409,7 +409,7 @@ console.log("orderData.address:", orderData.address);
         theme: { color: "#4f46e5" },
       };
 
-      new window.Razorpay(options).open();
+new window.Razorpay(options).open(); // opens payment popup
       
     } catch (err) {
       console.error("Order error:", err);

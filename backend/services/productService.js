@@ -53,7 +53,7 @@ class ProductService {
     return {
       products,
       page,
-      pages: Math.ceil(count / limit)
+      pages: Math.ceil(count / limit)// total pages for pagination component
     };
   }
 
