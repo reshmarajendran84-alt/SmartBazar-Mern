@@ -5,7 +5,7 @@ function SearchBar() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
 
-  // Read directly from URL every render — no useEffect needed
+  // Read directly from URL every render 
   const currentSearch = params.get("search") || "";
   const [keyword, setKeyword] = useState(currentSearch);
 

@@ -1,8 +1,9 @@
 import razorpay from "../config/razorpay.js";
 import Order from "../models/order.js";
 import crypto from "crypto";
-// import WalletService from "./walletService.js";
+import WalletService from "./walletService.js"; 
 import Cart from "../models/Cart.js";
+
 class OrderService {
 
   // ─── Create Razorpay order session ───────────────────────────────────────
@@ -17,34 +18,17 @@ class OrderService {
 
   // ─── Save order to DB (COD or after Razorpay) ────────────────────────────
   async createOrder(userId, data, razorpayOrderId = null) {
-    console.log("=== createOrder called ===");
-    console.log("userId:", userId);
-    console.log("data.cartItems:", data.cartItems?.length);
-    console.log("data.address:", data.address);
-    
     if (!data.cartItems || !data.cartItems.length) throw new Error("Cart is empty");
     if (!data.total || data.total <= 0) throw new Error("Invalid total");
     if (!data.address) throw new Error("Address required");
 
-    // Check if address has required fields
-    // const requiredAddressFields = ['addressLine', 'city', 'state', 'pincode', 'phone', 'fullName'];
-    // for (const field of requiredAddressFields) {
-    //   if (!data.address[field]) {
-    //     throw new Error(`Address missing required field: ${field}`);
-    //   }
-    // }
-    
-    console.log("All validations passed, creating order...");
-    
-    // Map cart items safely
     const mappedItems = data.cartItems.map((item) => ({
       productId: item.productId?._id || item.productId,
       name: item.name || "Unknown Product",
       quantity: item.quantity || 1,
       price: item.price || 0,
     }));
-    
-    // Create order data object
+
     const orderData = {
       userId,
       cartItems: mappedItems,
@@ -55,7 +39,7 @@ class OrderService {
       coupon: data.coupon || "",
       total: data.total,
       address: {
-  fullName:    data.address.fullName || data.address.name || "",  // ← add fallback
+        fullName: data.address.fullName || data.address.name || "",
         phone: data.address.phone || "",
         addressLine: data.address.addressLine || "",
         city: data.address.city || "",
@@ -66,19 +50,12 @@ class OrderService {
       status: "Pending",
       razorpayOrderId: razorpayOrderId || null,
     };
-  //   if (razorpayOrderId) {
-  //   orderData.razorpayOrderId = razorpayOrderId;
-  // }
-  
-  console.log("Order data to save:", JSON.stringify(orderData, null, 2));
-  
-  const order = await Order.create(orderData);
-  console.log("Order saved with ID:", order._id);
-    await Cart.findOneAndUpdate({ userId }, { items: [], totalAmount: 0 });//clear cart after order
 
-  return order;
+    const order = await Order.create(orderData);
+    await Cart.findOneAndUpdate({ userId }, { items: [], totalAmount: 0 });
+    return order;
+  }
 
-}
   // ─── Verify Razorpay signature + save order ───────────────────────────────
   async verifyAndSaveOrder(userId, body) {
     const {
@@ -112,17 +89,20 @@ class OrderService {
 
   // ─── Cancel order ─────────────────────────────────────────────────────────
   async cancelOrder(orderId, userId) {
+      console.log(`=== Cancelling order ${orderId} for user ${userId} ===`);
+
     const order = await Order.findById(orderId);
     if (!order) throw new Error("Order not found");
 
-    if (order.status !== "Pending") {
-      throw new Error("Only pending orders can be cancelled");
+    if (!["Pending", "Confirmed"].includes(order.status)) {
+      throw new Error("Only pending or confirmed orders can be cancelled");
     }
 
     order.status = "Cancelled";
     await order.save();
 
-    if (order.paymentMethod === "ONLINE") { //only refund prepaid orders
+    // ✅ FIX 3 — refund both ONLINE and WALLET prepaid orders
+    if (order.paymentMethod === "ONLINE" || order.paymentMethod === "WALLET") {
       await WalletService.creditWallet(
         userId,
         order.total,
@@ -136,6 +116,8 @@ class OrderService {
 
   // ─── Return order ─────────────────────────────────────────────────────────
   async returnOrder(orderId, userId) {
+        console.log(`=== Returning order ${orderId} for user ${userId} ===`);
+
     const order = await Order.findById(orderId);
     if (!order) throw new Error("Order not found");
 
@@ -143,24 +125,48 @@ class OrderService {
       throw new Error("Only delivered orders can be returned");
     }
 
-    const deliveredAt = order.updatedAt;
-    const daysSince = (Date.now() - new Date(deliveredAt)) / (1000 * 60 * 60 * 24);
+    const daysSince =
+      (Date.now() - new Date(order.updatedAt)) / (1000 * 60 * 60 * 24);
     if (daysSince > 7) {
-      throw new Error("Return window expired. Returns accepted within 7 days of delivery.");
+      throw new Error(
+        "Return window expired. Returns accepted within 7 days of delivery."
+      );
     }
 
     order.status = "Returned";
     await order.save();
-if(order.paymentMethod === "ONLINE"){
+
+    //  refund both ONLINE and WALLET prepaid orders on return
+    if (order.paymentMethod === "ONLINE" || order.paymentMethod === "WALLET") {
+      await WalletService.creditWallet(
+        userId,
+        order.total,
+        `Refund for returned order #${order._id.toString().slice(-8).toUpperCase()}`,
+        order._id
+      );
+    }
+
+    return order;
+  }
+
+  // ─── Wallet order ─────────────────────────────────────────────────────────
+  async placeWalletOrder(userId, data) {
 
 
-    await WalletService.creditWallet(
+    const order = await this.createOrder(
       userId,
-      order.total,
-      `Refund for returned order #${order._id.toString().slice(-8).toUpperCase()}`,
+      { ...data, paymentMethod: "WALLET" },
+      null
+    );
+    // Debit wallet first — throws "Insufficient wallet balance" if not enough
+    await WalletService.debitWallet(
+      userId,
+      data.total,
+    `Payment for order #${order._id.toString().slice(-8).toUpperCase()}`,
       order._id
     );
-  }
+    order.status = "Confirmed"; // wallet = instant confirm
+    await order.save();
     return order;
   }
 
@@ -175,28 +181,6 @@ if(order.paymentMethod === "ONLINE"){
     if (!order) throw new Error("Order not found");
     return order;
   }
-
-async placeWalletOrder(userId, data) {
-  // ✅ Debit wallet — throws "Insufficient wallet balance" if not enough
-  await WalletService.debitWallet(
-    userId,
-    data.total,
-    `Payment for order`,
-    null
-  );
-
-  // Create order with WALLET as paymentMethod
-  const order = await this.createOrder(
-    userId,
-    { ...data, paymentMethod: "WALLET" },
-    null
-  );
-
-  order.status = "Confirmed"; // wallet = instant confirm
-  await order.save();
-  return order;
-}
-  
 }
 
 export default new OrderService();

@@ -50,23 +50,23 @@ const ProductForm = ({ onClose, refresh, editData }) => {
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-      console.log("Files selected:", files.length); // ← add this
-  console.log("Files:", files);                  // ← add this
+    console.log("Files selected:", files.length);
+    console.log("Files:", files);
 
     // setImages(files);
-  if (files.length > 5) {
-    toast.error("Maximum 5 images allowed");
-    return;
-  }
-  setImages(files);
+    if (files.length > 5) {
+      toast.error("Maximum 5 images allowed");
+      return;
+    }
+    setImages(files);
     const previews = files.map((file) => URL.createObjectURL(file));
     setPreview(previews);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  console.log("images state:", images);       // ← add this
-  console.log("images count:", images.length); // ← add this
+    console.log("images state:", images); 
+    console.log("images count:", images.length); 
 
     const formData = new FormData();
 
@@ -78,35 +78,32 @@ const ProductForm = ({ onClose, refresh, editData }) => {
 
     images.forEach((file) => {
       formData.append("images", file);
-          console.log("appending image:", file.name); // ← add this
-
+      console.log("appending image:", file.name);
     });
-  const toastId = toast.loading("Submitting...");
+    const toastId = toast.loading("Submitting...");
 
     try {
       if (isEdit) {
         await updateProduct(editData._id, formData);
-      toast.success("Product Updated", { id: toastId });
+        toast.success("Product Updated", { id: toastId });
       } else {
         await createProduct(formData); // calls productSevice.js
-      toast.success("Product Created", { id: toastId });
+        toast.success("Product Created", { id: toastId });
       }
 
       refresh();
       onClose();
     } catch (error) {
-    toast.error("Something went wrong", { id: toastId });
+      toast.error("Something went wrong", { id: toastId });
     }
   };
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center p-4">
-
       <form
         onSubmit={handleSubmit}
         className="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 space-y-5"
       >
-
         {/* Header */}
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-bold text-gray-800">
@@ -124,7 +121,6 @@ const ProductForm = ({ onClose, refresh, editData }) => {
 
         {/* Form Grid */}
         <div className="grid md:grid-cols-2 gap-4">
-
           <input
             name="name"
             value={form.name}
@@ -164,9 +160,7 @@ const ProductForm = ({ onClose, refresh, editData }) => {
                 {c.name}
               </option>
             ))}
-
           </select>
-
         </div>
 
         {/* Description */}
@@ -181,7 +175,6 @@ const ProductForm = ({ onClose, refresh, editData }) => {
 
         {/* Image Upload */}
         <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-
           <input
             type="file"
             multiple
@@ -190,16 +183,12 @@ const ProductForm = ({ onClose, refresh, editData }) => {
             className="cursor-pointer"
           />
 
-          <p className="text-sm text-gray-500 mt-2">
-            Upload product images
-          </p>
-
+          <p className="text-sm text-gray-500 mt-2">Upload product images</p>
         </div>
 
         {/* Image Preview */}
         {preview.length > 0 && (
           <div className="flex gap-3 flex-wrap">
-
             {preview.map((img, i) => (
               <img
                 key={i}
@@ -208,17 +197,13 @@ const ProductForm = ({ onClose, refresh, editData }) => {
                 className="w-20 h-20 object-cover rounded-lg border"
               />
             ))}
-
           </div>
         )}
 
         {/* Submit */}
-        <button
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-medium transition"
-        >
+        <button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-medium transition">
           {isEdit ? "Update Product" : "Add Product"}
         </button>
-
       </form>
     </div>
   );

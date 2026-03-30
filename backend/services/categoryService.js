@@ -18,7 +18,6 @@ async updateCategory(id,data){
     return await Category.findByIdAndUpdate(id,data,{new:true});
 }
 async deleteCategory(id){
-    // return await Category.findByIdAndDelete(
     return await Category.findByIdAndUpdate(
         id,
         {isActive:false},

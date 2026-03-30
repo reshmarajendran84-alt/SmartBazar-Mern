@@ -7,17 +7,9 @@ export default function CategoryFilter() {
   const [params, setParams] = useSearchParams();
 
   const category = params.get("category") || "";
-  // const search = params.get("search") || "";
-  // const sort = params.get("sort") || "";
-
+ 
   const handleCategory = (value) => {
-  //   setParams({
-  //     page: 1,
-  //     category: value,
-  //     search,
-  //     sort
-  //   });
-  // };
+
 setParams((prev) => {
       const next = new URLSearchParams(prev); // ← preserve ALL existing params
       next.set("page", "1");                  // ← reset to page 1 as string

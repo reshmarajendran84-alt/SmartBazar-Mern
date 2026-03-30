@@ -137,7 +137,7 @@ function Header() {
             </Link>
 
             {/* ✅ Wallet in mobile menu */}
-            {user && (
+            {/* {user && (
               <Link
                 to="/wallet"
                 onClick={() => setIsOpen(false)}
@@ -145,7 +145,7 @@ function Header() {
               >
                 💰 Wallet — ₹{walletBalance?.toFixed(2) ?? "0.00"}
               </Link>
-            )}
+            )} */}
 
             {user ? (
               <button

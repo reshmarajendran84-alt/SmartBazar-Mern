@@ -4,10 +4,10 @@ class AdminProductController {
 
   async createProduct(req, res) {
   try {
-  console.log("req.files count:", req.files?.length); // ← add this
+  console.log("req.files count:", req.files?.length); 
   console.log("req.files:", req.files);  
     const imageUrls = req.files?.map(file => file.path )|| [] ;
-     console.log("imageUrls:", imageUrls);               // ← add this
+     console.log("imageUrls:", imageUrls);               
 
     const product = await AdminProductService.createProduct(req.body, imageUrls);   
    res.status(201).json(product);
