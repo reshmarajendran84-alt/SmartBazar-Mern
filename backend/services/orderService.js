@@ -1,7 +1,7 @@
 import razorpay from "../config/razorpay.js";
 import Order from "../models/order.js";
 import crypto from "crypto";
-import WalletService from "./walletService.js";
+// import WalletService from "./walletService.js";
 import Cart from "../models/Cart.js";
 class OrderService {
 
@@ -175,6 +175,28 @@ if(order.paymentMethod === "ONLINE"){
     if (!order) throw new Error("Order not found");
     return order;
   }
+
+async placeWalletOrder(userId, data) {
+  // ✅ Debit wallet — throws "Insufficient wallet balance" if not enough
+  await WalletService.debitWallet(
+    userId,
+    data.total,
+    `Payment for order`,
+    null
+  );
+
+  // Create order with WALLET as paymentMethod
+  const order = await this.createOrder(
+    userId,
+    { ...data, paymentMethod: "WALLET" },
+    null
+  );
+
+  order.status = "Confirmed"; // wallet = instant confirm
+  await order.save();
+  return order;
+}
+  
 }
 
 export default new OrderService();

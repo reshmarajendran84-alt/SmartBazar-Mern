@@ -83,7 +83,7 @@ const CategoryList = () => {
       label: "Status",
       render: (item) => {
         // const statusActive = item.isActive && item.productCount > 0;
- const statusActive = item.isActive;
+const statusActive = item.isActive && item.productCount > 0;
 
         return (
           <span

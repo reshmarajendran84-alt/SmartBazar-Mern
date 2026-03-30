@@ -31,4 +31,11 @@ router.get("/my-orders",         protect, orderController.getUserOrders);
 router.get("/:orderId",          protect, orderController.getOrderById);
 router.patch("/status",          protect, orderController.updateOrderStatus);
 
+
+
+
+router.post("/cod",            protect, orderController.placeCODOrder);
+router.post("/razorpay-order", protect, orderController.createRazorpayOrder);
+router.post("/verify",         protect, orderController.verifyPayment);
+router.post("/wallet",         protect, orderController.placeWalletOrder); 
 export default router;

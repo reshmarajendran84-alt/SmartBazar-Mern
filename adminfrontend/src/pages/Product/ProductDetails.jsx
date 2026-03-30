@@ -145,12 +145,12 @@ const ProductDetails = () => {
           {/* Buttons */}
           <div className="flex gap-4 pt-4">
 
-            <button
+            {/* <button
               onClick={() => {
                 addToCart(product);
                 toast.success("Added to cart");
               }}
-              disabled={product.stock === 0}
+              // disabled={product.stock === 0}
               className={`px-6 py-2 rounded-lg text-white font-medium transition ${
                 product.stock > 0
                   ? "bg-indigo-600 hover:bg-indigo-700"
@@ -158,14 +158,14 @@ const ProductDetails = () => {
               }`}
             >
               Add to Cart
-            </button>
+            </button> */}
 
-            <button
+            {/* <button
               onClick={() => navigate("/cart")}
               className="px-6 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition"
             >
               Go to Cart
-            </button>
+            </button> */}
 
           </div>
 

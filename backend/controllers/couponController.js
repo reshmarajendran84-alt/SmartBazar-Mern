@@ -75,6 +75,8 @@ console.log("coupon ",coupon);
       finalAmount: subtotal - discount,
     });
   } catch (err) {
+        console.error("Create coupon error:", err.message);
+
     res.status(500).json({ message: "Error validating coupon" });
   }
 }

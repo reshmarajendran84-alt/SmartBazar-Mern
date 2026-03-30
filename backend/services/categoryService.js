@@ -29,6 +29,9 @@ async deleteCategory(id){
 async getCategoryWithCount(){
     const categories =await Category.aggregate([
         {
+            $match:{ isActive : true }
+        },
+        {
             $lookup:{
                 from:"products",
                 localField:"_id",

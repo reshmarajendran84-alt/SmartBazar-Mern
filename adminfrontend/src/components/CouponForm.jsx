@@ -17,7 +17,10 @@ const CouponForm = ({ editData, onClose, onSuccess }) => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setForm({ ...form, [name]: type === "checkbox" ? checked : value });
+    setForm({ ...form, [name]: name === "code" 
+      ? value.toUpperCase()
+      : type === "checkbox" 
+      ? checked : value });
   };
 
   const handleSubmit = async (e) => {

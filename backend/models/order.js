@@ -30,7 +30,7 @@ const orderSchema = new mongoose.Schema(
       pincode: { type: String, default: "" },
     },
     coupon: { type: String, default: "" },
-    paymentMethod: { type: String, enum: ["COD", "ONLINE"], required: true },
+    paymentMethod: { type: String, enum: ["COD", "ONLINE","WALLET"], required: true },
     status: {
       type: String,
       enum: ["Pending", "Confirmed", "Shipped", "Delivered", "Paid", "Cancelled", "Returned", "Failed"],
