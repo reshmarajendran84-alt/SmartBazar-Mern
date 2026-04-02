@@ -10,27 +10,19 @@ const AdminLogin = () => {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
-
-  const login = async () => {
-    try {
-       setLoading(true);
-
-const res = await api.post("/login", { email, password });
-      localStorage.setItem("adminToken", res.data.token);
-
-      toast.success("Login successful ");
-
-navigate("/admin");
-window.location.reload();
-    } catch (err) {
-toast.error(err.response?.data?.message || "Login failed ❌");
-
-    }finally{
-          setLoading(false);
-
-    }
-
-  };
+const login = async () => {
+  try {
+    setLoading(true);
+    const res = await api.post("/login", { email, password });
+    localStorage.setItem("adminToken", res.data.token);
+    toast.success("Login successful");
+    navigate("/admin"); // ✅ only this — no reload
+  } catch (err) {
+    toast.error(err.response?.data?.message || "Login failed ❌");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center

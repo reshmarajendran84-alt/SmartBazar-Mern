@@ -1,12 +1,14 @@
 import express from "express";
-import CategoryController from "../controllers/categoryController.js";
+import categoryController from "../controllers/categoryController.js";
 import adminProtect from "../middlewares/adminProtect.js";
 
 const router = express.Router();
 
-router.post("/", adminProtect, CategoryController.addCategory);
-router.get("/",adminProtect,  CategoryController.getCategory);
-router.put("/:id", adminProtect, CategoryController.updateCategory);
-router.delete("/:id", adminProtect, CategoryController.deleteCategory);
+// ✅ .bind() on ALL routes
+router.post("/",      adminProtect, categoryController.addCategory.bind(categoryController));
+router.get("/",       adminProtect, categoryController.getCategory.bind(categoryController));
+router.put("/:id",    adminProtect, categoryController.updateCategory.bind(categoryController));
+router.delete("/:id", adminProtect, categoryController.deleteCategory.bind(categoryController));
+router.patch("/:id/toggle-status", adminProtect, categoryController.toggleCategoryStatus.bind(categoryController)); // ✅
 
 export default router;

@@ -1,13 +1,14 @@
 import { Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { adminLogout } from "../utils/adminLogout";
 
 const Header = ({ setOpen }) => {
   const navigate = useNavigate();
 
-  const logout = () => {
-    localStorage.removeItem("adminToken");
-    navigate("/admin/login");
-  };
+  // const logout = () => {
+  //   localStorage.removeItem("adminToken");
+  //   navigate("/admin/login");
+  // };
 
   return (
     <header className="h-16 sticky top-0 z-30
@@ -29,7 +30,7 @@ const Header = ({ setOpen }) => {
       </h1>
 
       <button
-        onClick={logout}
+        onClick={adminLogout}
         className="bg-red-500 hover:bg-red-600
                    text-white px-4 py-2 rounded-lg text-sm
                    transition"

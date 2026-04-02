@@ -18,12 +18,26 @@ const CartPage = () => {
 
   if (loading)
     return <p className="text-center mt-10 text-gray-500">Loading...</p>;
+const normalizeItem = (item) => {
+  // DB item — productId is a populated object
+  if (item.productId && typeof item.productId === "object") return item;
+
+  // Guest item — productId is a plain string ID
+  return {
+    ...item,
+    productId: {
+      _id:    item.productId,
+      name:   item.name,
+      images: item.image ? [item.image] : [],
+    },
+  };
+};
 
   // 1 — Filter out cart items where product was deleted from DB
-  const validItems =
+  const validItems =(
     cart.items?.filter(
       (item) => item.productId !== null && item.productId !== undefined
-    ) || [];
+    ) || []).map(normalizeItem);
 
   // — Use validItems for all calculations
   const subtotal =

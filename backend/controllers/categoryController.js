@@ -3,60 +3,53 @@ import Category from "../models/Category.js";
 
 class CategoryController {
 
-async addCategory(req, res) {
-  try {
-    const { name } = req.body;
-console.log("req body",req.body);
-    if (!name || !name.trim()) {
-      return res.status(400).json({ message: "Name is required" });
+  async addCategory(req, res) {
+    try {
+      const { name } = req.body;
+      if (!name || !name.trim()) {
+        return res.status(400).json({ message: "Name is required" });
+      }
+      const exists = await Category.findOne({
+        name: { $regex: new RegExp(`^${name.trim()}$`, "i") } // ✅ case-insensitive
+      });
+      if (exists) {
+        return res.status(400).json({ message: "Category already exists" });
+      }
+      const category = await CategoryService.addCategory({
+        name: name.trim(),
+        isActive: true,
+      });
+      res.status(201).json(category);
+    } catch (error) {
+      console.log("ADD CATEGORY ERROR:", error);
+      res.status(400).json({ message: error.message });
     }
+  }
 
-    const exists = await Category.findOne({ name });
-
-    if (exists) {
-      return res.status(400).json({ message: "Category already exists" });
+  async getCategory(req, res) {
+    try {
+      const data = await CategoryService.getCategoryWithCount();
+      res.json(data);
+    } catch (error) {
+      console.log("GET CATEGORY ERROR", error);
+      res.status(400).json({ message: error.message });
     }
-
-    const category = await CategoryService.addCategory({ name :req.body.name,
-      isActive:true,
-    });
-
-    res.status(201).json(category);
-
-  } catch (error) {
-    console.log("ADD CATEGORY ERROR:", error);
-    res.status(400).json({ message: error.message });
   }
-}
 
-async getCategory(req, res) {
-  try {
-    const data = await CategoryService.getCategoryWithCount();
-    res.json(data);
-  } catch (error) {
-    console.log("GET CATEGORY ERROR ", error);
-    res.status(400).json({ message: error.message });
+  async getSingleCategory(req, res) {
+    try {
+      const category = await CategoryService.getSingleCategory(req.params.id);
+      res.json(category);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
   }
-}
-async getSingleCategory(req, res) {
-  try {
-  const category = await CategoryService.getSingleCategory(req.params.id);
-    res.json(category);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-}
 
   async updateCategory(req, res) {
     try {
-      const data = await CategoryService.updateCategory(
-        req.params.id,
-        req.body
-      );
+      const data = await CategoryService.updateCategory(req.params.id, req.body);
       res.json(data);
     } catch (error) {
-        console.log(error);
-
       res.status(400).json({ message: error.message });
     }
   }
@@ -67,6 +60,22 @@ async getSingleCategory(req, res) {
       res.json({ message: "Category deleted successfully" });
     } catch (error) {
       res.status(400).json({ message: error.message });
+    }
+  }
+
+  // ✅ Added back
+  async toggleCategoryStatus(req, res) {
+    try {
+      const category = await Category.findById(req.params.id);
+      if (!category) return res.status(404).json({ message: "Category not found" });
+      category.isActive = !category.isActive;
+      await category.save();
+      res.json({
+        message: `Category ${category.isActive ? "Unblocked" : "Blocked"} successfully`,
+        isActive: category.isActive,
+      });
+    } catch (err) {
+      res.status(500).json({ message: "Server error" });
     }
   }
 }
