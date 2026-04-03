@@ -181,6 +181,15 @@ class OrderService {
     if (!order) throw new Error("Order not found");
     return order;
   }
+  // In getOrderById — add this ownership check
+async getOrderById(orderId, userId) {
+  const order = await Order.findById(orderId);
+  if (!order) throw new Error("Order not found");
+  if (order.userId.toString() !== userId.toString()) {
+    throw new Error("Not authorized");
+  }
+  return order;
+}
 }
 
 export default new OrderService();

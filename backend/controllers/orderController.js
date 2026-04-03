@@ -251,6 +251,15 @@ class OrderController {
     res.status(400).json({ message: err.message });
   }
 }
+async getOrderById(req, res) {
+  try {
+    const order = await OrderService.getOrderById(req.params.orderId, req.user.id);
+    res.status(200).json({ success: true, order });
+  } catch (err) {
+    const status = err.message === "Not authorized" ? 403 : 500;
+    res.status(status).json({ message: err.message });
+  }
+}
 }
 
 export default new OrderController();

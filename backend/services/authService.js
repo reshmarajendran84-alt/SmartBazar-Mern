@@ -35,7 +35,7 @@ class AuthService {
     user.otp = otp;
     user.otpExpiry = Date.now() + 5 * 60 * 1000;
     user.otpLastSent = Date.now();
-
+console.log("otp",otp);
     await user.save();
     await sendEmail(email, otp);
 

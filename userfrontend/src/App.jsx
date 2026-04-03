@@ -16,6 +16,7 @@ import CheckoutPage from "./pages/CheckoutPage";
 import OrderSuccess from "./pages/OrderSuccess";
 import Wallet from "./pages/Wallet";
 import OrdersPage from "./pages/OrderPage";
+import OrderDetailPage from "./pages/orderDetailPage";
 
 function App() {
   return (
@@ -41,6 +42,7 @@ function App() {
               <Route path="/order-success" element={<OrderSuccess />} />
               <Route path="/my-orders" element={<OrdersPage />} />
               <Route path="/wallet" element={<Wallet />} />
+  <Route path="/orders/:orderId" element={<OrderDetailPage />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />

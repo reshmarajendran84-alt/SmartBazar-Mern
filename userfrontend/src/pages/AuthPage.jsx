@@ -62,9 +62,11 @@ const handleLogin = async () => {
   // SEND OTP
   const sendOtp = async () => {
     try {
+
       await api.post("/auth/send-otp", { email });
       toast.success("OTP sent to your email 📩");
       setStep("OTP");
+
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to send OTP");
     }
