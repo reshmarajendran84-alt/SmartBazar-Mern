@@ -16,8 +16,10 @@ import publicCategoryRoutes from "./routes/publicCategoryRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import adminCartegoryRoutes from "./routes/adminCartegoryRoutes.js";
 import adminProtectedRoute from "./routes/adminProductRoutes.js";
-import orderRoutes from "./routes/orderRoutes.js";
+import adminOrderRoutes from "./routes/adminOrderRoutes.js";
 import walletRoutes from "./routes/walletRoutes.js";
+import orderRoutes from "./routes/orderRoutes.js";
+import dashboardRoutes from "./routes/adminDashboardRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -45,10 +47,13 @@ app.use("/api/wallet",        noCache, walletRoutes);
 app.use("/api/coupon",        noCache, couponRoutes);
 
 // ✅ Admin protected routes
-app.use("/api/admin",                   noCache, adminRoutes);
-app.use("/api/admin/categories",        noCache, adminCartegoryRoutes);
-app.use("/api/admin/products",          noCache, adminProtectedRoute);
-app.use("/api/admin/coupons",           noCache, couponRoutes);
+app.use("/api/admin",            noCache, adminRoutes);
+app.use("/api/admin/categories", noCache, adminCartegoryRoutes);
+app.use("/api/admin/products", noCache, adminProtectedRoute);
+app.use("/api/admin/coupons",  noCache, couponRoutes);
+app.use("/api/admin/orders",   noCache, adminOrderRoutes);
+app.use("/api/admin/dashboard", noCache, dashboardRoutes);
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

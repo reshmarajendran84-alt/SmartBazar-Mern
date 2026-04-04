@@ -1,44 +1,121 @@
+// import { useState } from "react";
+// import api from "../utils/api";
+// import { useNavigate } from "react-router-dom";
+
+// import { toast } from "react-toastify";
+
+// const AdminLogin = () => {
+//   const [email, setEmail] = useState("");
+//   const [password, setPassword] = useState("");
+//   const [loading, setLoading] = useState(false);
+
+//   const navigate = useNavigate();
+// const login = async () => {
+//   try {
+//     // Paste this in browser console on your admin page
+// console.log("adminToken:", localStorage.getItem("adminToken"));
+// console.log("All localStorage keys:", Object.keys(localStorage));
+
+//     setLoading(true);
+//     const res = await api.post("/login", { email, password });
+//     localStorage.setItem("adminToken", res.data.token);
+//     toast.success("Login successful");
+//     navigate("/admin"); 
+//     } catch (err) {
+//     toast.error(err.response?.data?.message || "Login failed ❌");
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+
+//   return (
+//     <div className="min-h-screen flex items-center justify-center
+//                     bg-linear-to-br from-indigo-600 via-violet-600 to-purple-600 px-4">
+
+//       <div className="w-full max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 space-y-6">
+
+//         <div className="text-center">
+          
+//           <h2 className="text-2xl font-bold text-gray-800">SmartBazar Admin</h2>
+//           <p className="text-sm text-gray-500">Secure admin access 🔐</p>
+//         </div>
+
+//         <input
+//           className="w-full px-4 py-3 rounded-lg border border-gray-300
+//                      focus:ring-2 focus:ring-indigo-500 outline-none"
+//           placeholder="Admin Email"
+//           value={email}
+//           onChange={(e) => setEmail(e.target.value)}
+//         />
+
+//         <input
+//           type="password"
+//           placeholder="Password"
+//           className="w-full px-4 py-3 rounded-lg border border-gray-300
+//                      focus:ring-2 focus:ring-indigo-500 outline-none"
+//           value={password}
+//           onChange={(e) => setPassword(e.target.value)}
+//         />
+
+//         <button disabled={loading}
+//           onClick={login}
+//           className="w-full py-3 rounded-lg font-semibold text-white
+//                      bg-indigo-600 hover:bg-indigo-700 transition-all shadow-md"
+//         >
+//   {loading ? "Logging in..." : "Admin Login"}
+//         </button>
+
+//         <p className="text-center text-xs text-gray-400 pt-4">
+//           © 2026 SmartBazar
+//         </p>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default AdminLogin;
+
+
 import { useState } from "react";
 import api from "../utils/api";
 import { useNavigate } from "react-router-dom";
-
 import { toast } from "react-toastify";
 
 const AdminLogin = () => {
-  const [email, setEmail] = useState("");
+  const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]   = useState(false);
 
   const navigate = useNavigate();
-const login = async () => {
-  try {
-    setLoading(true);
-    const res = await api.post("/login", { email, password });
-    localStorage.setItem("adminToken", res.data.token);
-    toast.success("Login successful");
-    navigate("/admin"); // ✅ only this — no reload
-  } catch (err) {
-    toast.error(err.response?.data?.message || "Login failed ❌");
-  } finally {
-    setLoading(false);
-  }
-};
+
+  const login = async () => {
+    try {
+      setLoading(true);
+      const res = await api.post("/login", { email, password });
+
+      // Saves token as "adminToken" — OrderContext reads this same key
+      localStorage.setItem("adminToken", res.data.token);
+
+      toast.success("Login successful");
+      navigate("/admin");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Login failed ❌");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center
-                    bg-linear-to-br from-indigo-600 via-violet-600 to-purple-600 px-4">
-
-      <div className="w-full max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 space-y-6">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-indigo-600 via-violet-600 to-purple-600 px-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 space-y-6">
 
         <div className="text-center">
-          
           <h2 className="text-2xl font-bold text-gray-800">SmartBazar Admin</h2>
           <p className="text-sm text-gray-500">Secure admin access 🔐</p>
         </div>
 
         <input
-          className="w-full px-4 py-3 rounded-lg border border-gray-300
-                     focus:ring-2 focus:ring-indigo-500 outline-none"
+          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none"
           placeholder="Admin Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -47,23 +124,20 @@ const login = async () => {
         <input
           type="password"
           placeholder="Password"
-          className="w-full px-4 py-3 rounded-lg border border-gray-300
-                     focus:ring-2 focus:ring-indigo-500 outline-none"
+          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        <button disabled={loading}
+        <button
+          disabled={loading}
           onClick={login}
-          className="w-full py-3 rounded-lg font-semibold text-white
-                     bg-indigo-600 hover:bg-indigo-700 transition-all shadow-md"
+          className="w-full py-3 rounded-lg font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition-all shadow-md"
         >
-  {loading ? "Logging in..." : "Admin Login"}
+          {loading ? "Logging in..." : "Admin Login"}
         </button>
 
-        <p className="text-center text-xs text-gray-400 pt-4">
-          © 2026 SmartBazar
-        </p>
+        <p className="text-center text-xs text-gray-400 pt-4">© 2026 SmartBazar</p>
       </div>
     </div>
   );

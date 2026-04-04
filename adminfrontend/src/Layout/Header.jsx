@@ -5,11 +5,6 @@ import { adminLogout } from "../utils/adminLogout";
 const Header = ({ setOpen }) => {
   const navigate = useNavigate();
 
-  // const logout = () => {
-  //   localStorage.removeItem("adminToken");
-  //   navigate("/admin/login");
-  // };
-
   return (
     <header className="h-16 sticky top-0 z-30
                        bg-white/70 backdrop-blur-lg
