@@ -2,3 +2,20 @@
 .input {
   @apply w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500;
 }
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+ 
+  body {
+    background: white !important;
+    padding: 12px !important;
+  }
+ 
+  /* Make borders print clearly */
+  div[style*="border"] {
+    border-color: #ccc !important;
+  }
+}
+ 

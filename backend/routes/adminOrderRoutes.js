@@ -4,9 +4,8 @@ import adminProtect from "../middlewares/adminProtect.js";
 
 const router = express.Router();
 
-router.get("/stats",      adminProtect, (req, res) => AdminOrderController.getOrderStats(req, res));
-router.get("/",           adminProtect, (req, res) => AdminOrderController.getAllOrders(req, res));
-router.get("/:id",        adminProtect, (req, res) => AdminOrderController.getOrderById(req, res));
-router.put("/:id/status", adminProtect, (req, res) => AdminOrderController.updateOrderStatus(req, res));
-
+router.get("/stats",      adminProtect,  AdminOrderController.getOrderStats);
+router.get("/",           adminProtect,  AdminOrderController.getAllOrders);
+router.get("/:id",        adminProtect,  AdminOrderController.getOrderById);
+router.put("/:id/status", adminProtect,  AdminOrderController.updateOrderStatus);
 export default router;

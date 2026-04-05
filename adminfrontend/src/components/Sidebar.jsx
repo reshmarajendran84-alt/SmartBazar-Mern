@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, List, ShoppingCart, X, Menu ,Percent, PackageSearch  } from "lucide-react";
+import { LayoutDashboard, List, ShoppingCart, X, Menu ,Percent, PackageSearch  ,BarChart2} from "lucide-react";
 import { useState } from "react";
 
 const Sidebar = () => {
@@ -12,6 +12,7 @@ const Sidebar = () => {
     { name: "Products", path: "/admin/products", icon: ShoppingCart },
     { name: "Coupons", path: "/admin/coupons", icon:Percent},
     { name: "Orders", path: "/admin/orders", icon:PackageSearch},
+  { name: "Sales Report", path: "/admin/sales-report", icon: BarChart2 },
   ];
 
   return (

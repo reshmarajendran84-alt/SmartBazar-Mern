@@ -10,6 +10,7 @@ import ProductDetails from "./pages/Product/ProductDetails";
 import CouponPage from "./pages/CouponPage";
 import AdminOrdersPage from "./pages/AdminOrdersPage";
 import { AdminOrderProvider } from "./context/OrderContext";
+import SalesReport from "./pages/SalesReportPage";
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
             <Route path="products" element={<ProductList />} />
             <Route path="coupons" element={<CouponPage />} />
             <Route path="orders" element={<AdminOrdersPage />} />
+            <Route path="sales-report" element={< SalesReport/>}/>
           </Route>
         </Routes>
       </AdminOrderProvider>
