@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useAdminOrders } from "../context/OrderContext";
-import FilterBar from "../components/FilterBar"; // Fixed: was FillterBar
+import FilterBar from "../components/FilterBar"; 
 import OrderRow from "../components/OrderRow";
 
 const StatCard = ({ label, value, color }) => (

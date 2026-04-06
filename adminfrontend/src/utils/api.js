@@ -4,7 +4,6 @@ const api = axios.create({
   baseURL: "http://localhost:5000/api/admin",
 });
 
-// ✅ Attach token
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("adminToken");
   if (token && config.url !== "/login") {
@@ -13,7 +12,6 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// ✅ Auto redirect on expired token (401)
 api.interceptors.response.use(
   (response) => response,
   (error) => {

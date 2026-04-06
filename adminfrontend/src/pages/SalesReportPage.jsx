@@ -19,7 +19,6 @@ export default function SalesReport() {
     handlePrint,
   } = useSalesReport();
 
-  // SAFE: fallback for summary data
   const summary = reportData?.summary || {};
   const revenueByDate = reportData?.revenueByDate || [];
   const topProducts = reportData?.topProducts || [];

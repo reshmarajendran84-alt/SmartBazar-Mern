@@ -18,4 +18,7 @@ export const placeWalletOrder = (data) => api.post("/order/wallet", data); // âœ
 
 // export const getOrders=(userId) => api.get(`/user/${userId}`);
 
+export const getUserOrders = () =>
+  api.get("/api/orders/my-orders").then(r => r.data.data);
+
 export default { placeCODOrder, createRazorpayOrder, verifyPayment ,placeWalletOrder};

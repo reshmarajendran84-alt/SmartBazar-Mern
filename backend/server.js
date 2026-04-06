@@ -21,6 +21,7 @@ import walletRoutes from "./routes/walletRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import dashboardRoutes from "./routes/adminDashboardRoutes.js";
 import adminReportRoutes from "./routes/adminReportRoutes.js";
+import reviewRoutes from "./routes/reviewRoutes.js";
 dotenv.config();
 connectDB();
 
@@ -45,7 +46,7 @@ app.use("/api/cart",          noCache, cartRoutes);
 app.use("/api/order",         noCache, orderRoutes);
 app.use("/api/wallet",        noCache, walletRoutes);
 app.use("/api/coupon",        noCache, couponRoutes);
-
+app.use("/api/reviews" ,noCache,reviewRoutes);
 // ✅ Admin protected routes
 app.use("/api/admin",            noCache, adminRoutes);
 app.use("/api/admin/categories", noCache, adminCartegoryRoutes);

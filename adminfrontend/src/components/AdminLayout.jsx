@@ -3,7 +3,6 @@ import Sidebar from "../components/Sidebar";
 import Header from "../Layout/Header";
 import { Outlet } from "react-router-dom";
 import { AdminOrderProvider } from "../context/OrderContext";
-// ↑ import the context provider you created
 
 const AdminLayout = () => {
   const [open, setOpen] = useState(false);

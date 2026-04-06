@@ -4,7 +4,6 @@ import { useAdminOrders } from "../context/OrderContext";
 
 const STATUS_OPTIONS = ["Pending", "Confirmed", "Shipped", "Delivered", "Cancelled"];
 
-// Status badge colors — same pattern as user-side
 const STATUS_COLORS = {
   Pending:   "bg-yellow-100 text-yellow-700",
   Confirmed: "bg-blue-100 text-blue-700",

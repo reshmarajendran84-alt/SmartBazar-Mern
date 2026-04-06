@@ -34,7 +34,6 @@ export const AdminOrderProvider = ({ children }) => {
 
       const params = new URLSearchParams();
 
-      // ✅ Send "Pending" not "pending" — matches how MongoDB stores it
       if (status && status !== "All") params.set("status", status);
       if (searchTerm) params.set("search", searchTerm);
 

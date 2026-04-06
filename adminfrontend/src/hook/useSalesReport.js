@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { fetchSalesReport } from "../services/reportService";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 
 export default function useSalesReport() {
   const [startDate, setStartDate] = useState("");
@@ -33,40 +33,90 @@ export default function useSalesReport() {
   };
 
   // ── DOWNLOAD PDF ────────────────────────────────────────────────
-  const downloadPDF = () => {
-    if (!reportData) return;
+const downloadPDF = () => {
+  if (!reportData) return;
 
-    const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text("Sales Report", 14, 20);
+  const doc = new jsPDF();
+  const { summary } = reportData;
 
-    // SUMMARY
+  // ── HEADER ─────────────────────────────────────────────────
+  doc.setFillColor(79, 70, 229); // indigo
+  doc.rect(0, 0, 210, 28, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  doc.text("Sales Report", 14, 18);
+
+  // ── DATE RANGE ──────────────────────────────────────────────
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Period: ${startDate}  to  ${endDate}`, 14, 25);
+
+  // ── SUMMARY BOX ─────────────────────────────────────────────
+  doc.setTextColor(30, 30, 30);
+  doc.setFillColor(238, 242, 255);
+  doc.roundedRect(14, 34, 182, 28, 3, 3, "F");
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.text(`Total Revenue: Rs. ${(summary?.totalRevenue ?? 0).toFixed(2)}`, 20, 44);
+  doc.text(`Total Orders: ${summary?.totalOrders ?? 0}`, 20, 52);
+  doc.text(`Avg Order Value: Rs. ${(summary?.averageOrderValue ?? 0).toFixed(2)}`, 100, 44);
+
+  // ── TOP PRODUCTS TABLE ───────────────────────────────────────
+  if (reportData.topProducts.length > 0) {
+    doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
-    const { summary } = reportData;
-    doc.text(`Total Revenue: ₹${summary?.totalRevenue?.toFixed(2) || 0}`, 14, 30);
-    doc.text(`Total Orders: ${summary?.totalOrders || 0}`, 14, 36);
-    doc.text(`Avg Order Value: ₹${summary?.averageOrderValue?.toFixed(2) || 0}`, 14, 42);
+    doc.setTextColor(30, 30, 30);
+    doc.text("Top Selling Products", 14, 74);
 
-    // TOP PRODUCTS
-    if (reportData.topProducts.length > 0) {
-      const tableColumn = ["#", "Product", "Qty Sold", "Revenue"];
-      const tableRows = reportData.topProducts.map((p, index) => [
-        index + 1,
-        p.productName,
-        p.totalQuantitySold,
-        `₹${p.totalRevenue.toFixed(2)}`
-      ]);
+    autoTable(doc, {
+      startY: 78,
+      head: [["#", "Product", "Qty Sold", "Revenue (Rs.)"]],
+      body: reportData.topProducts.map((p, i) => [
+        i + 1,
+        p.productName ?? "N/A",
+        p.totalQuantitySold ?? 0,
+        `Rs. ${(p.totalRevenue ?? 0).toFixed(2)}`,
+      ]),
+      styles: {
+        font: "helvetica",
+        fontSize: 10,
+        cellPadding: 4,
+      },
+      headStyles: {
+        fillColor: [79, 70, 229],
+        textColor: 255,
+        fontStyle: "bold",
+      },
+      alternateRowStyles: {
+        fillColor: [238, 242, 255],
+      },
+    });
+  }
 
-      doc.autoTable({
-        head: [tableColumn],
-        body: tableRows,
-        startY: 50
-      });
-    }
+  // ── REVENUE BY DATE TABLE ────────────────────────────────────
+  if (reportData.revenueByDate.length > 0) {
+    const finalY = doc.lastAutoTable?.finalY || 140;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text("Revenue by Date", 14, finalY + 12);
 
-    doc.save(`sales-report-${startDate}-to-${endDate}.pdf`);
-  };
+    autoTable(doc, {
+      startY: finalY + 16,
+      head: [["Date", "Revenue (Rs.)"]],
+      body: reportData.revenueByDate.map((d) => [
+        d._id,
+        `Rs. ${(d.revenue ?? 0).toFixed(2)}`,
+      ]),
+      styles: { font: "helvetica", fontSize: 10, cellPadding: 4 },
+      headStyles: { fillColor: [5, 150, 105], textColor: 255, fontStyle: "bold" },
+      alternateRowStyles: { fillColor: [236, 253, 245] },
+    });
+  }
 
+  doc.save(`sales-report-${startDate}-to-${endDate}.pdf`);
+};
   // ── PRINT REPORT ───────────────────────────────────────────────
   const handlePrint = () => {
     if (!reportData) return;

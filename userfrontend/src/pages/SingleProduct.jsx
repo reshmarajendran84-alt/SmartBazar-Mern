@@ -3,6 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getProductById, getProducts } from "../services/productService";
 import { useCart } from "../context/CartContext";
 import { toast } from "react-toastify";
+import useReview from "../hook/useReview";
+import ReviewForm from "../components/ReviewForm";
+import ReviewList from "../components/ReviewList";
 
 const SingleProduct = () => {
   const { id } = useParams();
@@ -14,7 +17,12 @@ const SingleProduct = () => {
   const [loading, setLoading]           = useState(true);
   const [relatedProducts, setRelated]   = useState([]);
   const [addingToCart, setAddingToCart] = useState(false);
+  const [deliveredOrderId, setDeliveredOrderId] = useState(null);
 
+  const { userReview } = useReview(id);
+  const isLoggedIn = !!localStorage.getItem("token");
+
+  // ── LOAD PRODUCT ──────────────────────────────────────────────
   useEffect(() => {
     loadProduct();
   }, [id]);
@@ -26,10 +34,11 @@ const SingleProduct = () => {
       setProduct(data);
       setMainImage(data.images?.[0] || null);
 
-      // ✅ Fetch real related products by same category
       if (data.category?._id) {
         const rel = await getProducts(1, data.category._id, "", "");
-        const others = rel.data.products.filter((p) => p._id !== id).slice(0, 4);
+        const others = rel.data.products
+          .filter((p) => p._id !== id)
+          .slice(0, 4);
         setRelated(others);
       }
     } catch (err) {
@@ -40,6 +49,32 @@ const SingleProduct = () => {
     }
   };
 
+  // ── CHECK DELIVERED ORDER FOR THIS PRODUCT ────────────────────
+  useEffect(() => {
+    if (!isLoggedIn || !id) return;
+
+    import("../services/orderService").then(({ getUserOrders }) => {
+      getUserOrders()
+        .then((orders) => {
+          console.log("ALL ORDERS:", orders);
+          console.log("PRODUCT ID:", id);
+
+          const delivered = orders?.find((o) => {
+            if (o.status !== "Delivered") return false;
+            return o.cartItems?.some((item) => {
+              console.log("cartItem.productId:", item.productId, "id:", id);
+              return item.productId?.toString() === id;
+            });
+          });
+
+          console.log("DELIVERED ORDER:", delivered);
+          if (delivered) setDeliveredOrderId(delivered._id);
+        })
+        .catch((err) => console.error("ORDER FETCH ERROR:", err));
+    });
+  }, [id, isLoggedIn]);
+
+  // ── CART HANDLERS ─────────────────────────────────────────────
   const handleAddToCart = async () => {
     setAddingToCart(true);
     await handleAdd(product);
@@ -51,7 +86,7 @@ const SingleProduct = () => {
     navigate("/cart");
   };
 
-  // ✅ Skeleton while loading
+  // ── SKELETON LOADER ───────────────────────────────────────────
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 p-6">
@@ -81,14 +116,15 @@ const SingleProduct = () => {
 
   if (!product) return null;
 
+  // ── RENDER ────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-gray-50">
 
-      {/* Product Section */}
+      {/* ── PRODUCT SECTION ── */}
       <div className="max-w-6xl mx-auto p-4 md:p-6">
         <div className="flex flex-col md:flex-row gap-6 bg-white rounded-2xl shadow-md p-6">
 
-          {/* Thumbnails — horizontal on mobile, vertical on desktop */}
+          {/* Thumbnails */}
           <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-visible">
             {product.images?.map((img, i) => (
               <img
@@ -97,7 +133,10 @@ const SingleProduct = () => {
                 alt={`thumb-${i}`}
                 onClick={() => setMainImage(img)}
                 className={`w-16 h-16 md:w-20 md:h-20 object-cover rounded-lg cursor-pointer border-2 flex-shrink-0 transition
-                  ${mainImage === img ? "border-indigo-500" : "border-transparent hover:border-gray-300"}`}
+                  ${mainImage === img
+                    ? "border-indigo-500"
+                    : "border-transparent hover:border-gray-300"
+                  }`}
               />
             ))}
           </div>
@@ -117,12 +156,7 @@ const SingleProduct = () => {
 
           {/* Product Info */}
           <div className="w-full md:w-96 space-y-3">
-
             <h1 className="text-2xl font-bold text-gray-800">{product.name}</h1>
-
-            <p className="text-yellow-500 text-lg">⭐⭐⭐⭐☆
-              <span className="text-gray-400 text-sm ml-2">(4.0)</span>
-            </p>
 
             <p className="text-sm text-gray-500">
               Category:{" "}
@@ -131,29 +165,39 @@ const SingleProduct = () => {
               </span>
             </p>
 
-            {/* Price block */}
+            {/* Price */}
             <div className="flex items-center gap-3">
-              <span className="text-3xl font-bold text-indigo-600">₹{product.price}</span>
+              <span className="text-3xl font-bold text-indigo-600">
+                ₹{product.price}
+              </span>
               {product.originalPrice && (
                 <>
                   <span className="text-gray-400 line-through text-lg">
                     ₹{product.originalPrice}
                   </span>
                   <span className="text-green-600 text-sm font-medium">
-                    {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% off
+                    {Math.round(
+                      ((product.originalPrice - product.price) /
+                        product.originalPrice) *
+                        100
+                    )}% off
                   </span>
                 </>
               )}
             </div>
 
-            {/* Stock badge */}
+            {/* Stock */}
             <p className={`text-sm font-medium ${product.stock > 0 ? "text-green-600" : "text-red-500"}`}>
-              {product.stock > 0 ? `✔ In Stock (${product.stock} left)` : "✖ Out of Stock"}
+              {product.stock > 0
+                ? `✔ In Stock (${product.stock} left)`
+                : "✖ Out of Stock"}
             </p>
 
-            <p className="text-gray-600 text-sm leading-relaxed">{product.description}</p>
+            <p className="text-gray-600 text-sm leading-relaxed">
+              {product.description}
+            </p>
 
-            {/* Action buttons */}
+            {/* Action Buttons */}
             <div className="flex gap-3 pt-2">
               <button
                 onClick={handleAddToCart}
@@ -163,7 +207,6 @@ const SingleProduct = () => {
               >
                 {addingToCart ? "Adding..." : "Add to Cart"}
               </button>
-
               <button
                 onClick={handleBuyNow}
                 disabled={product.stock === 0}
@@ -173,15 +216,52 @@ const SingleProduct = () => {
                 Buy Now
               </button>
             </div>
-
           </div>
         </div>
       </div>
 
-      {/* Related Products */}
+      {/* ── RATINGS & REVIEWS SECTION ── */}
+      <div className="max-w-6xl mx-auto px-4 md:px-6 pb-10">
+        <div style={{ marginTop: 32 }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>
+            Ratings & Reviews
+          </h2>
+
+          {/* Show form only if user has a delivered order for this product */}
+          {isLoggedIn && deliveredOrderId && (
+            <ReviewForm productId={product._id} orderId={deliveredOrderId} />
+          )}
+
+          {/* Show message if logged in but no delivered order */}
+          {isLoggedIn && !deliveredOrderId && (
+            <p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 16 }}>
+              Purchase and receive this product to leave a review.
+            </p>
+          )}
+
+          {/* Show message if not logged in */}
+          {!isLoggedIn && (
+            <p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 16 }}>
+              <span
+                onClick={() => navigate("/auth/login")}
+                style={{ color: "#4f46e5", cursor: "pointer", fontWeight: 600 }}
+              >
+                Login
+              </span>{" "}
+              to write a review.
+            </p>
+          )}
+
+          <ReviewList />
+        </div>
+      </div>
+
+      {/* ── RELATED PRODUCTS ── */}
       {relatedProducts.length > 0 && (
         <div className="max-w-6xl mx-auto px-4 md:px-6 pb-10">
-          <h2 className="text-xl font-bold mb-4 text-gray-800">Related Products</h2>
+          <h2 className="text-xl font-bold mb-4 text-gray-800">
+            Related Products
+          </h2>
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
             {relatedProducts.map((item) => (
               <div
@@ -198,7 +278,9 @@ const SingleProduct = () => {
                   {item.name}
                 </h3>
                 {item.originalPrice && (
-                  <p className="text-gray-400 line-through text-xs">₹{item.originalPrice}</p>
+                  <p className="text-gray-400 line-through text-xs">
+                    ₹{item.originalPrice}
+                  </p>
                 )}
                 <p className="text-indigo-600 font-bold">₹{item.price}</p>
               </div>

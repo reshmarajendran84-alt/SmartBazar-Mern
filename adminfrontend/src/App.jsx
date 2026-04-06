@@ -11,6 +11,7 @@ import CouponPage from "./pages/CouponPage";
 import AdminOrdersPage from "./pages/AdminOrdersPage";
 import { AdminOrderProvider } from "./context/OrderContext";
 import SalesReport from "./pages/SalesReportPage";
+import ReviewsPage from "./pages/ReviewPage";
 
 function App() {
   return (
@@ -41,6 +42,8 @@ function App() {
             <Route path="coupons" element={<CouponPage />} />
             <Route path="orders" element={<AdminOrdersPage />} />
             <Route path="sales-report" element={< SalesReport/>}/>
+            <Route path="review" element={< ReviewsPage/>}/>
+            
           </Route>
         </Routes>
       </AdminOrderProvider>
