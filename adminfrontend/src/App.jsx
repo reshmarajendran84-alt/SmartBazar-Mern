@@ -42,7 +42,7 @@ function App() {
             <Route path="coupons" element={<CouponPage />} />
             <Route path="orders" element={<AdminOrdersPage />} />
             <Route path="sales-report" element={< SalesReport/>}/>
-            <Route path="review" element={< ReviewsPage/>}/>
+            <Route path="reviews" element={< ReviewsPage/>}/>
             
           </Route>
         </Routes>

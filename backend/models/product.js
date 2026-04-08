@@ -34,6 +34,15 @@ images: [String],
       type: Boolean,
       default: true,
     },
+    avgRating: {
+  type: Number,
+  default: 0,
+},
+totalReviews: {
+  type: Number,
+  default: 0,
+},
+
   // discount: {
     //   type: Number,
     //   default: 0,
@@ -55,4 +64,4 @@ images: [String],
   { timestamps: true }
 );
 
-export default mongoose.model("Product", productSchema);
+export default mongoose.models.Product || mongoose.model("Product", productSchema);

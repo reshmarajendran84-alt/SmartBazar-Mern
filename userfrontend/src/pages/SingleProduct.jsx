@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getProductById, getProducts } from "../services/productService";
 import { useCart } from "../context/CartContext";
 import { toast } from "react-toastify";
-import useReview from "../hook/useReview";
 import ReviewForm from "../components/ReviewForm";
 import ReviewList from "../components/ReviewList";
 
@@ -19,7 +18,7 @@ const SingleProduct = () => {
   const [addingToCart, setAddingToCart] = useState(false);
   const [deliveredOrderId, setDeliveredOrderId] = useState(null);
 
-  const { userReview } = useReview(id);
+  // ✅ Removed useReview(id) from here — ReviewForm handles it internally
   const isLoggedIn = !!localStorage.getItem("token");
 
   // ── LOAD PRODUCT ──────────────────────────────────────────────
@@ -50,24 +49,21 @@ const SingleProduct = () => {
   };
 
   // ── CHECK DELIVERED ORDER FOR THIS PRODUCT ────────────────────
+  // ✅ Only ONE useEffect — duplicate removed
   useEffect(() => {
     if (!isLoggedIn || !id) return;
 
     import("../services/orderService").then(({ getUserOrders }) => {
       getUserOrders()
         .then((orders) => {
-          console.log("ALL ORDERS:", orders);
-          console.log("PRODUCT ID:", id);
-
           const delivered = orders?.find((o) => {
             if (o.status !== "Delivered") return false;
             return o.cartItems?.some((item) => {
-              console.log("cartItem.productId:", item.productId, "id:", id);
-              return item.productId?.toString() === id;
+              const itemProductId = item.productId?._id ?? item.productId;
+              return itemProductId?.toString() === id;
             });
           });
 
-          console.log("DELIVERED ORDER:", delivered);
           if (delivered) setDeliveredOrderId(delivered._id);
         })
         .catch((err) => console.error("ORDER FETCH ERROR:", err));
@@ -165,7 +161,6 @@ const SingleProduct = () => {
               </span>
             </p>
 
-            {/* Price */}
             <div className="flex items-center gap-3">
               <span className="text-3xl font-bold text-indigo-600">
                 ₹{product.price}
@@ -178,15 +173,13 @@ const SingleProduct = () => {
                   <span className="text-green-600 text-sm font-medium">
                     {Math.round(
                       ((product.originalPrice - product.price) /
-                        product.originalPrice) *
-                        100
+                        product.originalPrice) * 100
                     )}% off
                   </span>
                 </>
               )}
             </div>
 
-            {/* Stock */}
             <p className={`text-sm font-medium ${product.stock > 0 ? "text-green-600" : "text-red-500"}`}>
               {product.stock > 0
                 ? `✔ In Stock (${product.stock} left)`
@@ -197,7 +190,6 @@ const SingleProduct = () => {
               {product.description}
             </p>
 
-            {/* Action Buttons */}
             <div className="flex gap-3 pt-2">
               <button
                 onClick={handleAddToCart}
@@ -227,19 +219,16 @@ const SingleProduct = () => {
             Ratings & Reviews
           </h2>
 
-          {/* Show form only if user has a delivered order for this product */}
           {isLoggedIn && deliveredOrderId && (
             <ReviewForm productId={product._id} orderId={deliveredOrderId} />
           )}
 
-          {/* Show message if logged in but no delivered order */}
           {isLoggedIn && !deliveredOrderId && (
             <p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 16 }}>
               Purchase and receive this product to leave a review.
             </p>
           )}
 
-          {/* Show message if not logged in */}
           {!isLoggedIn && (
             <p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 16 }}>
               <span
@@ -252,7 +241,7 @@ const SingleProduct = () => {
             </p>
           )}
 
-          <ReviewList />
+          <ReviewList productId={product._id} />
         </div>
       </div>
 
@@ -288,7 +277,6 @@ const SingleProduct = () => {
           </div>
         </div>
       )}
-
     </div>
   );
 };

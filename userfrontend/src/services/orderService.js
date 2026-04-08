@@ -19,6 +19,11 @@ export const placeWalletOrder = (data) => api.post("/order/wallet", data); // âœ
 // export const getOrders=(userId) => api.get(`/user/${userId}`);
 
 export const getUserOrders = () =>
-  api.get("/api/orders/my-orders").then(r => r.data.data);
+  api.get("/order/my-orders").then(r => {
+    console.log("ORDERS RECEIVED:", r.data);
+    return r.data.orders;  // âœ… the actual array
+  });
+
+
 
 export default { placeCODOrder, createRazorpayOrder, verifyPayment ,placeWalletOrder};

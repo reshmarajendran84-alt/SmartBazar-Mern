@@ -22,6 +22,7 @@ import orderRoutes from "./routes/orderRoutes.js";
 import dashboardRoutes from "./routes/adminDashboardRoutes.js";
 import adminReportRoutes from "./routes/adminReportRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
+import adminReviewsRoutes from "./routes/adminReviewRoutes.js";
 dotenv.config();
 connectDB();
 
@@ -55,6 +56,7 @@ app.use("/api/admin/coupons",  noCache, couponRoutes);
 app.use("/api/admin/orders",   noCache, adminOrderRoutes);
 app.use("/api/admin/dashboard", noCache, dashboardRoutes);
 app.use("/api/admin/reports" ,noCache, adminReportRoutes)
+app.use("/api/admin/reviews" ,noCache, adminReviewsRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

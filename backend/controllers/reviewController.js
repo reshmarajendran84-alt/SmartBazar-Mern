@@ -1,57 +1,78 @@
 import ReviewService from "../services/reviewService.js";
-
 class ReviewController {
 
-  // POST /api/reviews
-  static async submitReview(req, res) {
+  // ── GET /review/:productId ─────────────────────────────────────────────
+  async getReviews(req, res) {
     try {
+      const { productId } = req.params;
+      const currentUserId = req.user?._id ?? null;
+
+      const result = await ReviewService.getReviewsByProduct(
+        productId,
+        currentUserId
+      );
+
+      res.status(200).json(result);
+    } catch (err) {
+      console.error("ReviewController.getReviews:", err.message);
+      res.status(err.statusCode || 500).json({ message: err.message || "Server error" });
+    }
+  }
+
+  // ── POST /review ───────────────────────────────────────────────────────
+  async createReview(req, res) {
+    try {
+      const { productId, orderId, rating, comment } = req.body;
       const userId = req.user._id;
-      const review = await ReviewService.submitReview(userId, req.body);
-      res.status(201).json({ success: true, data: review });
-    } catch (error) {
-      res.status(400).json({ success: false, message: error.message });
+
+      const review = await ReviewService.createReview({
+        productId,
+        orderId,
+        rating,
+        comment,
+        userId,
+      });
+
+      res.status(201).json({ message: "Review submitted successfully", review });
+    } catch (err) {
+      if (err.code === 11000) {
+        return res.status(400).json({ message: "You already reviewed this product" });
+      }
+      console.error("ReviewController.createReview:", err.message);
+      res.status(err.statusCode || 500).json({ message: err.message || "Server error" });
     }
   }
 
-  // GET /api/reviews/product/:productId
-  static async getProductReviews(req, res) {
+  // ── PUT /review/:reviewId ──────────────────────────────────────────────
+  async updateReview(req, res) {
     try {
-      const data = await ReviewService.getProductReviews(req.params.productId);
-      res.status(200).json({ success: true, data });
-    } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
+      const { reviewId }        = req.params;
+      const { rating, comment } = req.body;
+      const userId              = req.user._id;
+
+      const review = await ReviewService.updateReview({ reviewId, rating, comment, userId });
+
+      res.status(200).json({ message: "Review updated successfully", review });
+    } catch (err) {
+      console.error("ReviewController.updateReview:", err.message);
+      res.status(err.statusCode || 500).json({ message: err.message || "Server error" });
     }
   }
 
-  // GET /api/reviews/my/:productId
-  static async getUserReview(req, res) {
+  // ── DELETE /review/:reviewId ───────────────────────────────────────────
+  async deleteReview(req, res) {
     try {
-      const review = await ReviewService.getUserReview(req.user._id, req.params.productId);
-      res.status(200).json({ success: true, data: review });
-    } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
-    }
-  }
+      const { reviewId } = req.params;
+      const userId       = req.user._id;
 
-  // Admin: GET /api/admin/reviews
-  static async getAllReviews(req, res) {
-    try {
-      const reviews = await ReviewService.getAllReviews();
-      res.status(200).json({ success: true, data: reviews });
-    } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
-    }
-  }
+      await ReviewService.deleteReview({ reviewId, userId });
 
-  // Admin: DELETE /api/admin/reviews/:reviewId
-  static async deleteReview(req, res) {
-    try {
-      await ReviewService.deleteReview(req.params.reviewId);
-      res.status(200).json({ success: true, message: "Review deleted." });
-    } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
+      res.status(200).json({ message: "Review deleted successfully" });
+    } catch (err) {
+      console.error("ReviewController.deleteReview:", err.message);
+      res.status(err.statusCode || 500).json({ message: err.message || "Server error" });
     }
   }
 }
 
-export default ReviewController;
+export default new ReviewController();
