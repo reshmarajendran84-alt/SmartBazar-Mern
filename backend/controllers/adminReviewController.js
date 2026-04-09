@@ -1,18 +1,26 @@
-import adminReviewService from "../services/adminReviewService.js"; // <-- include .js extension!
+// backend/controllers/adminReviewController.js
+import adminReviewService from "../services/adminReviewService.js";
 
 class AdminReviewController {
-  async getAllReview(req, res) {
+
+  async getAllReviews(req, res) {
     try {
-      const review = await adminReviewService.getAllReview();
-      res.status(200).json({
-        success: true,
-        data: review,
-      });
+      const { status } = req.query; // ?status=pending|approved|rejected
+      const reviews = await adminReviewService.getAllReviews({ status });
+      res.status(200).json({ success: true, data: reviews });
     } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: error.message,
-      });
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  async updateStatus(req, res) {
+    try {
+      const { reviewId } = req.params;
+      const { status }   = req.body;
+      const review = await adminReviewService.updateStatus(reviewId, status);
+      res.status(200).json({ success: true, data: review });
+    } catch (error) {
+      res.status(400).json({ success: false, message: error.message });
     }
   }
 
@@ -20,15 +28,9 @@ class AdminReviewController {
     try {
       const { reviewId } = req.params;
       const result = await adminReviewService.deleteReview(reviewId);
-      res.status(200).json({
-        success: true,
-        message: result.message,
-      });
+      res.status(200).json({ success: true, message: result.message });
     } catch (error) {
-      res.status(400).json({
-        success: false,
-        message: error.message,
-      });
+      res.status(400).json({ success: false, message: error.message });
     }
   }
 }

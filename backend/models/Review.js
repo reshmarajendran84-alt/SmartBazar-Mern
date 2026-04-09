@@ -1,40 +1,22 @@
+// backend/models/Review.js
 import mongoose from "mongoose";
 
 const reviewSchema = new mongoose.Schema(
   {
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    productId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Product",
-      required: true,
-    },
-    orderId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Order",
-      required: true,
-    },
-    rating: {
-      type: Number,
-      required: true,
-      min: 1,
-      max: 5,
-    },
-    comment: {
+    userId:    { type: mongoose.Schema.Types.ObjectId, ref: "User",    required: true },
+    productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
+    orderId:   { type: mongoose.Schema.Types.ObjectId, ref: "Order",   required: true },
+    rating:    { type: Number, required: true, min: 1, max: 5 },
+    comment:   { type: String, required: true, trim: true, maxlength: 500 },
+    status: {
       type: String,
-      required: true,
-      trim: true,
-      maxlength: 500,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",   // ← NEW: every review starts as pending
     },
   },
   { timestamps: true }
 );
 
-// One review per user per product — no duplicates
-reviewSchema.index({ userId: 1, productId: 1 }, 
-    { unique: true });
+reviewSchema.index({ userId: 1, productId: 1 }, { unique: true });
 
 export default mongoose.model("Review", reviewSchema);
