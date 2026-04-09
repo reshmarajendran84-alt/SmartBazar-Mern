@@ -10,19 +10,23 @@ import noCache from "./middlewares/noCache.js";
 import couponRoutes from "./routes/couponRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
-import adminRoutes from "./routes/adminRoutes.js";
 import addressRoutes from "./routes/AddressRoutes.js";
 import publicCategoryRoutes from "./routes/publicCategoryRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
+import walletRoutes from "./routes/walletRoutes.js";
+import orderRoutes from "./routes/orderRoutes.js";
+import reviewRoutes from "./routes/reviewRoutes.js";
+import chatRoutes from "./routes/chatRoutes.js";
+
+
+import adminRoutes from "./routes/adminRoutes.js";
 import adminCartegoryRoutes from "./routes/adminCartegoryRoutes.js";
 import adminProtectedRoute from "./routes/adminProductRoutes.js";
 import adminOrderRoutes from "./routes/adminOrderRoutes.js";
-import walletRoutes from "./routes/walletRoutes.js";
-import orderRoutes from "./routes/orderRoutes.js";
 import dashboardRoutes from "./routes/adminDashboardRoutes.js";
 import adminReportRoutes from "./routes/adminReportRoutes.js";
-import reviewRoutes from "./routes/reviewRoutes.js";
 import adminReviewsRoutes from "./routes/adminReviewRoutes.js";
+
 dotenv.config();
 connectDB();
 
@@ -48,6 +52,9 @@ app.use("/api/order",         noCache, orderRoutes);
 app.use("/api/wallet",        noCache, walletRoutes);
 app.use("/api/coupon",        noCache, couponRoutes);
 app.use("/api/reviews" ,noCache,reviewRoutes);
+app.use("/api/chat",noCache, chatRoutes);
+
+
 //  Admin protected routes
 app.use("/api/admin",            noCache, adminRoutes);
 app.use("/api/admin/categories", noCache, adminCartegoryRoutes);

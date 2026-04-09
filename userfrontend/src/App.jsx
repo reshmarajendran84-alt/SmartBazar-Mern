@@ -18,7 +18,7 @@ import Wallet from "./pages/Wallet";
 import OrdersPage from "./pages/OrderPage";
 import OrderDetailPage from "./pages/orderDetailPage";
 import { ReviewProvider } from "./context/ReviewContext";
-
+import ChatBot from "./components/ChatBot/ChatBot";
 function App() {
   return (
     <BrowserRouter>
@@ -53,6 +53,8 @@ function App() {
           <Footer />
         </div>
       </ReviewProvider>
+    <ChatBot/>
+
     </BrowserRouter>
   );
 }
