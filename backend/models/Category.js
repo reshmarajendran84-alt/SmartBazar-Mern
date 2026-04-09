@@ -10,7 +10,7 @@ isActive:{
     type:Boolean,
     default:true,
 },
-  isDeleted: { type: Boolean, default: false }, // ✅ new field
+  isDeleted: { type: Boolean, default: false }, 
 
 },
   { timestamps: true }

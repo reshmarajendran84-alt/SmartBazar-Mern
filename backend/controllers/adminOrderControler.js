@@ -93,6 +93,5 @@ class AdminOrderController {
     }
   }
 
-} // ✅ class closes here
-
+} 
 export default new AdminOrderController(); 

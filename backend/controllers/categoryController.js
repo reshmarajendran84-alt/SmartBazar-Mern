@@ -10,7 +10,7 @@ class CategoryController {
         return res.status(400).json({ message: "Name is required" });
       }
       const exists = await Category.findOne({
-        name: { $regex: new RegExp(`^${name.trim()}$`, "i") } // ✅ case-insensitive
+        name: { $regex: new RegExp(`^${name.trim()}$`, "i") } 
       });
       if (exists) {
         return res.status(400).json({ message: "Category already exists" });
@@ -63,7 +63,6 @@ class CategoryController {
     }
   }
 
-  // ✅ Added back
   async toggleCategoryStatus(req, res) {
     try {
       const category = await Category.findById(req.params.id);

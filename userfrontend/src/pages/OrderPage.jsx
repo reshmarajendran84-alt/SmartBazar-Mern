@@ -20,7 +20,6 @@ const OrdersPage = () => {
     }
   };
 
-  // ✅ Function to refresh wallet balance
   const refreshWallet = async () => {
     try {
       const { data } = await api.get("/wallet");
@@ -85,7 +84,7 @@ const OrdersPage = () => {
               key={order._id} 
               order={order} 
               onCancel={handleOrderUpdate}
-              onWalletUpdate={refreshWallet}  // ✅ Pass wallet refresh function
+              onWalletUpdate={refreshWallet}  
             />
           ))}
         </div>

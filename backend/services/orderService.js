@@ -101,7 +101,7 @@ class OrderService {
     order.status = "Cancelled";
     await order.save();
 
-    // ✅ FIX 3 — refund both ONLINE and WALLET prepaid orders
+    // FIX 3 — refund both ONLINE and WALLET prepaid orders
     if (order.paymentMethod === "ONLINE" || order.paymentMethod === "WALLET") {
       await WalletService.creditWallet(
         userId,
@@ -165,7 +165,7 @@ class OrderService {
     `Payment for order #${order._id.toString().slice(-8).toUpperCase()}`,
       order._id
     );
-    order.status = "Confirmed"; // wallet = instant confirm
+    order.status = "Confirmed";
     await order.save();
     return order;
   }

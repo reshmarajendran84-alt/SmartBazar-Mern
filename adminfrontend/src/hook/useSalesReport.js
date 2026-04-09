@@ -40,7 +40,7 @@ const downloadPDF = () => {
   const { summary } = reportData;
 
   // ── HEADER ─────────────────────────────────────────────────
-  doc.setFillColor(79, 70, 229); // indigo
+  doc.setFillColor(79, 70, 229); 
   doc.rect(0, 0, 210, 28, "F");
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");

@@ -1,4 +1,3 @@
-// src/utils/adminLogout.js
 export const adminLogout = () => {
   localStorage.removeItem("adminToken");
   sessionStorage.clear();

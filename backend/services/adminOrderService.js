@@ -1,5 +1,5 @@
 import Order from "../models/Order.js";
-import User from "../models/User.js"; // ✅ needed for searching by name/email
+import User from "../models/User.js"; 
 
 class AdminOrderService {
 
@@ -10,8 +10,6 @@ class AdminOrderService {
       query.status = { $regex: new RegExp(`^${status}$`, "i") };
     }
 
-    // ✅ Do NOT do { _id: { $regex: ... } } — ObjectId can't be regex matched in MongoDB
-    // Instead: find matching user IDs first, then filter order IDs in JS after fetch
     let userIds = [];
     if (search) {
       const matchingUsers = await User.find({
@@ -27,7 +25,6 @@ class AdminOrderService {
       .populate("userId", "name email")
       .sort({ createdAt: -1 });
 
-    // Filter in JavaScript — safe way to search by order ID string
     if (search) {
       return orders.filter(order => {
         const idMatch   = order._id.toString().toLowerCase().includes(search.toLowerCase());

@@ -1,4 +1,3 @@
-// backend/models/Review.js
 import mongoose from "mongoose";
 
 const reviewSchema = new mongoose.Schema(
@@ -11,7 +10,7 @@ const reviewSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ["pending", "approved", "rejected"],
-      default: "pending",   // ← NEW: every review starts as pending
+      default: "pending",   
     },
   },
   { timestamps: true }

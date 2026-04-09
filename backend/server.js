@@ -36,19 +36,19 @@ app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
-// ✅ Public routes — no cache blocking needed
+//  Public routes — no cache blocking needed
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/categories", publicCategoryRoutes);
 
-// ✅ Protected routes — noCache applied to ALL
+//  Protected routes — noCache applied to ALL
 app.use("/api/user",          noCache, addressRoutes);
 app.use("/api/cart",          noCache, cartRoutes);
 app.use("/api/order",         noCache, orderRoutes);
 app.use("/api/wallet",        noCache, walletRoutes);
 app.use("/api/coupon",        noCache, couponRoutes);
 app.use("/api/reviews" ,noCache,reviewRoutes);
-// ✅ Admin protected routes
+//  Admin protected routes
 app.use("/api/admin",            noCache, adminRoutes);
 app.use("/api/admin/categories", noCache, adminCartegoryRoutes);
 app.use("/api/admin/products", noCache, adminProtectedRoute);

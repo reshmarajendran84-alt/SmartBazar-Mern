@@ -1,4 +1,3 @@
-// backend/controllers/adminReviewController.js
 import adminReviewService from "../services/adminReviewService.js";
 
 class AdminReviewController {

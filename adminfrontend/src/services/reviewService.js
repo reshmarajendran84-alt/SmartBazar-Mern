@@ -1,4 +1,3 @@
-// admin-frontend/src/services/reviewService.js
 import api from "../utils/api";
 
 // GET /api/admin/reviews?status=pending

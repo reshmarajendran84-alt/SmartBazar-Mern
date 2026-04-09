@@ -1,4 +1,3 @@
-// backend/controllers/adminReportController.js
 import ReportService from "../services/adminReportService.js";
 
 class ReportController {

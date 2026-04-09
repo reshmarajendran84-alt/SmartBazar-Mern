@@ -11,11 +11,10 @@ function Header() {
   const { cart } = useCart();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const [walletBalance, setWalletBalance] = useState(null); // ✅ moved here
+  const [walletBalance, setWalletBalance] = useState(null); 
 
   const totalItems = cart.items?.reduce((acc, item) => acc + item.quantity, 0) || 0;
 
-  // ✅ useEffect outside return
   useEffect(() => {
     if (!user) return;
     const fetchBalance = async () => {
@@ -118,14 +117,7 @@ function Header() {
       {isOpen && (
         <div className="md:hidden bg-white shadow-md border-t">
           <div className="flex flex-col px-6 py-4 space-y-4">
-            {/* <div className="relative">
-              <input
-                type="text"
-                placeholder="Search..."
-                className="w-full border rounded-lg py-2 px-3 pr-8"
-              />
-              <HiOutlineSearch className="absolute right-2 top-2.5 text-gray-500" />
-            </div> */}
+            
 <SearchBar />
 
             <Link to="/" onClick={() => setIsOpen(false)}>Home</Link>
@@ -136,16 +128,7 @@ function Header() {
               Cart ({totalItems})
             </Link>
 
-            {/* ✅ Wallet in mobile menu */}
-            {/* {user && (
-              <Link
-                to="/wallet"
-                onClick={() => setIsOpen(false)}
-                className="text-indigo-600 font-medium"
-              >
-                💰 Wallet — ₹{walletBalance?.toFixed(2) ?? "0.00"}
-              </Link>
-            )} */}
+          
 
             {user ? (
               <button

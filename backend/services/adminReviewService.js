@@ -1,4 +1,3 @@
-// backend/services/adminReviewService.js
 import Review  from "../models/Review.js";
 import Product from "../models/product.js";
 
@@ -23,7 +22,6 @@ class AdminReviewService {
 
     if (!review) throw new Error("Review not found");
 
-    // Recalculate product avgRating based on approved reviews only
     const approved = await Review.find({ productId: review.productId, status: "approved" });
     const avg = approved.length
       ? approved.reduce((s, r) => s + r.rating, 0) / approved.length

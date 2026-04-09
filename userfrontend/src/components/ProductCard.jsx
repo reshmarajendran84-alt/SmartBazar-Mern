@@ -10,7 +10,7 @@ const ProductCard = React.memo(({ product }) => {
     if (product.stock === 0) return;
     try {
       setAdding(true);
-      await handleAdd(product);   // ✅ toast already fires inside handleAdd
+      await handleAdd(product);   
     } catch (err) {
       console.error(err);
     } finally {

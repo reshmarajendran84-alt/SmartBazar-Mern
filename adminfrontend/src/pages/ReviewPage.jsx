@@ -1,4 +1,3 @@
-// admin-frontend/src/pages/ReviewPage.jsx
 import { useEffect, useState } from "react";
 import { getAllReviews, updateReviewStatus, deleteReview } from "../services/reviewService";
 import { toast } from "react-hot-toast";
@@ -15,9 +14,8 @@ const FILTERS = ["all", "pending", "approved", "rejected"];
 export default function ReviewsPage() {
   const [reviews, setReviews]   = useState([]);
   const [loading, setLoading]   = useState(true);
-  const [filter, setFilter]     = useState("pending"); // default: show pending first
-  const [updating, setUpdating] = useState(null);      // reviewId being updated
-
+  const [filter, setFilter]     = useState("pending"); 
+  const [updating, setUpdating] = useState(null);      
   const load = async (status) => {
     setLoading(true);
     try {
@@ -40,7 +38,7 @@ export default function ReviewsPage() {
       setReviews(prev =>
         filter === "all"
           ? prev.map(r => r._id === id ? { ...r, status } : r)
-          : prev.filter(r => r._id !== id)   // remove from current filtered view
+          : prev.filter(r => r._id !== id)   
       );
     } catch {
       toast.error("Failed to update status");

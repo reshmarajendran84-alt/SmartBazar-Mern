@@ -1,4 +1,3 @@
-// user-frontend/src/components/ReviewList.jsx
 import useReview from "../hook/useReview";
 
 const Stars = ({ rating, size = "text-base" }) => (
@@ -73,7 +72,6 @@ const ReviewCard = ({ review }) => {
   );
 };
 
-// ✅ Accepts productId as prop — does NOT use useParams
 const ReviewList = ({ productId }) => {
   const { reviews, avgRating, loading } = useReview(productId);
 

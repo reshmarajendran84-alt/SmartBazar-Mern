@@ -1,4 +1,3 @@
-// user-frontend/src/hook/useReview.js
 import { useState, useEffect, useCallback } from "react";
 import api from "../utils/api";
 
@@ -15,7 +14,6 @@ const useReview = (productId) => {
       const { data } = await api.get(`/reviews/${productId}`);
       setReviews(data.reviews || []);
       setAvgRating(data.avgRating || 0);
-      // Find the current user's review (backend sets isOwner: true)
       const mine = (data.reviews || []).find(r => r.isOwner === true);
       setUserReview(mine || null);
     } catch (err) {

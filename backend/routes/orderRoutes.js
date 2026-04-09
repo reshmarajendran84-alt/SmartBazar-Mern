@@ -1,23 +1,5 @@
-// // routes/orderRoutes.js
-// import express from "express";
-// import orderController from "../controllers/orderController.js";
-// // import protect from "../middlewares/authMiddleware.js";
-
-// const router = express.Router();
-
-// // router.post("/create-order", protect, orderController.createOrder);
-// // router.post("/cancel/:orderId", protect, orderController.cancelOrder);
-// // router.post("/verify", protect, orderController.verifyPayment);
-
-
-
-// export default router;
-
-// routes/orderRoutes.js
-
-// routes/orderRoutes.js
 import express from "express";
-import protect from "../middlewares/authMiddleware.js"; // only one import
+import protect from "../middlewares/authMiddleware.js"; 
 import orderController from "../controllers/orderController.js";
 
 const router = express.Router();

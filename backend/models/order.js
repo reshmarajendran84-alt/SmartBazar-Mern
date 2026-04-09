@@ -1,4 +1,3 @@
-// models/order.js
 import mongoose from "mongoose";
 
 const orderSchema = new mongoose.Schema(
@@ -38,20 +37,16 @@ const orderSchema = new mongoose.Schema(
       enum: ["Pending", "Confirmed", "Shipped", "Delivered", "Paid", "Cancelled", "Returned", "Failed"],
       default: "Pending",
     },
-    // ✅ FIX: Remove unique constraint or use conditional unique
     razorpayOrderId: { 
       type: String, 
       default: null,
       sparse:true
-      // Remove 'unique: true' or use partial filter expression
     },
     razorpayPaymentId: { type: String, default: null },
   },
   { timestamps: true }
 );
 
-// ✅ Better approach: Create a partial unique index (MongoDB 3.2+)
-// This allows multiple null values but enforces uniqueness for non-null values
 orderSchema.index(
   { razorpayOrderId: 1 },
   { 

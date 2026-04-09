@@ -12,7 +12,7 @@ class ReportService {
         createdAt: { $gte: start, $lte: end },
       });
 
-      const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0); // ✅ total
+      const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0); 
       const totalOrders = orders.length;
       const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
@@ -22,7 +22,7 @@ class ReportService {
         {
           $group: {
             _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-            revenue: { $sum: "$total" }, // ✅ total
+            revenue: { $sum: "$total" }, 
           },
         },
         { $sort: { _id: 1 } },
@@ -31,13 +31,13 @@ class ReportService {
       // ── TOP PRODUCTS ───────────────────────────────────────
       const topProducts = await Order.aggregate([
         { $match: { createdAt: { $gte: start, $lte: end } } },
-        { $unwind: "$cartItems" }, // ✅ cartItems
+        { $unwind: "$cartItems" }, 
         {
           $group: {
-            _id: "$cartItems.productId", // ✅ productId
-            productName: { $first: "$cartItems.name" }, // ✅ name
-            totalQuantitySold: { $sum: "$cartItems.quantity" }, // ✅ quantity
-            totalRevenue: { $sum: { $multiply: ["$cartItems.quantity", "$cartItems.price"] } }, // ✅ price
+            _id: "$cartItems.productId", 
+            productName: { $first: "$cartItems.name" }, 
+            totalQuantitySold: { $sum: "$cartItems.quantity" }, 
+            totalRevenue: { $sum: { $multiply: ["$cartItems.quantity", "$cartItems.price"] } }, 
           },
         },
         { $sort: { totalRevenue: -1 } },

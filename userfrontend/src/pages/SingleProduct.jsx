@@ -18,7 +18,6 @@ const SingleProduct = () => {
   const [addingToCart, setAddingToCart] = useState(false);
   const [deliveredOrderId, setDeliveredOrderId] = useState(null);
 
-  // ✅ Removed useReview(id) from here — ReviewForm handles it internally
   const isLoggedIn = !!localStorage.getItem("token");
 
   // ── LOAD PRODUCT ──────────────────────────────────────────────
@@ -49,7 +48,6 @@ const SingleProduct = () => {
   };
 
   // ── CHECK DELIVERED ORDER FOR THIS PRODUCT ────────────────────
-  // ✅ Only ONE useEffect — duplicate removed
   useEffect(() => {
     if (!isLoggedIn || !id) return;
 

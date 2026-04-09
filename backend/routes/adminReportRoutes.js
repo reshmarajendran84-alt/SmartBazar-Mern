@@ -1,4 +1,3 @@
-// routes/adminReportRoutes.js
 import express from "express";
 import adminProtect from "../middlewares/adminProtect.js";
 import ReportController from "../controllers/adminReportController.js";

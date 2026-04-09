@@ -1,12 +1,3 @@
-//   The summary section has 3 cards that look identical but show
-//   different data. Instead of copying the same JSX 3 times,
-//   we extract it into one reusable component with props.
-//
-// PROPS = parameters you pass into a component (like function arguments).
-//   label  → the small text above (e.g. "Total Revenue")
-//   value  → the big number (e.g. "₹50,000")
-//   color  → the color of the big number (green, blue, purple)
-
 const StatCard = ({ label, value, color = "#1a1a2e" }) => (
   <div style={{
     background: "white",
@@ -29,7 +20,7 @@ const StatCard = ({ label, value, color = "#1a1a2e" }) => (
     <span style={{
       fontSize: 28,
       fontWeight: 700,
-      color,              // uses the color prop
+      color,              
     }}>
       {value}
     </span>

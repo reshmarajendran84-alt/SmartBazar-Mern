@@ -8,6 +8,6 @@ router.post("/add", protect, cartController.addToCart);
 router.get("/", protect, cartController.getCart);
 router.put("/update", protect, cartController.updateCart);
 router.delete("/remove", protect, cartController.removeFromCart);
-router.post("/merge",  protect, cartController.mergeCart.bind(cartController)); // ✅ new
+router.post("/merge",  protect, cartController.mergeCart.bind(cartController)); 
 
 export default router;

@@ -9,7 +9,7 @@ class CategoryService {
   }
 
   async getCategory() {
-    return await Category.find().sort({ createdAt: -1 }); // ✅ removed isActive filter
+    return await Category.find().sort({ createdAt: -1 }); 
   }
 
   async getSingleCategory(id) {
@@ -21,13 +21,12 @@ class CategoryService {
   }
 
   async deleteCategory(id) {
-    // return await Category.findByIdAndUpdate(id, { isActive: false }, { new: true });
   return await Category.findByIdAndUpdate(id, { isDeleted: true }, { new: true });
   }
 
   async getCategoryWithCount() {
   const categories = await Category.aggregate([
-    { $match: { isDeleted: { $ne: true } } }, // ✅ hide deleted, show blocked
+    { $match: { isDeleted: { $ne: true } } }, 
     {
       $lookup: {
         from: "products",

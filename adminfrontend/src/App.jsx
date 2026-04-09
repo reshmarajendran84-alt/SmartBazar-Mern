@@ -17,7 +17,7 @@ function App() {
   return (
     <BrowserRouter>
       <Toaster position="top-right" reverseOrder={false} />
-      <AdminOrderProvider> {/* Now this will work */}
+      <AdminOrderProvider> 
         <Routes>
           {/* REDIRECT ROOT */}
           <Route path="/" element={<Navigate to="/admin/login" />} />

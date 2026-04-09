@@ -7,7 +7,6 @@ const AdminLayout = () => {
           can access orders state without passing props */}
       <div className="flex min-h-screen">
 
-        {/* Your existing sidebar */}
         <aside className="w-56 bg-gray-900 ...">
           ...
           <NavLink to="/admin/orders">Orders</NavLink>

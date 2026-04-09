@@ -1,5 +1,4 @@
-// src/components/ReviewForm.jsx
-import { useState, useEffect } from "react";   // ✅ useEffect added
+import { useState, useEffect } from "react";   
 import { toast } from "react-toastify";
 import useReview from "../hook/useReview";
 
@@ -45,7 +44,7 @@ const ReviewForm = ({ productId, orderId }) => {
   const [submitting, setSubmit] = useState(false);
   const [isEditing, setEditing] = useState(false);
 
-  // ✅ Sync form when userReview loads from API
+  // Sync form when userReview loads from API
   useEffect(() => {
     if (userReview) {
       setRating(userReview.rating);

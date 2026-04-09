@@ -1,13 +1,3 @@
-// import api from "../utils/api";
-
-// export const addToCart = (data) => api.post("/cart/add", data);
-// export const getCart = () => api.get("/cart");
-// export const updateCart = (data) => api.put("/cart/update", data);
-// export const removeFromCart = (productId) =>
-//   api.delete("/cart/remove", { data: { productId } });
-
-
-
 import api from "../utils/api";
 
 // ─── DB Cart (logged in) ───────────────────────────────
@@ -15,7 +5,7 @@ export const addToCart    = (data)       => api.post("/cart/add", data);
 export const getCart      = ()           => api.get("/cart");
 export const updateCart   = (data)       => api.put("/cart/update", data);
 export const removeFromCart = (productId) => api.delete("/cart/remove", { data: { productId } });
-export const mergeCart    = (items)      => api.post("/cart/merge", { items }); // ✅ new
+export const mergeCart    = (items)      => api.post("/cart/merge", { items }); 
 
 // ─── Guest Cart (localStorage) ────────────────────────
 export const getGuestCart = () => {
