@@ -1,61 +1,127 @@
-// user-frontend/src/components/ChatBot/ChatWindow.jsx
+// ChatWindow.jsx - Fixed Version
 import { useEffect, useRef } from "react";
 
-// Each message is: { role: "user" | "bot", text: "..." }
 const ChatWindow = ({ messages, loading }) => {
   const bottomRef = useRef(null);
 
-  // Auto scroll to latest message
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  return (
-    <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+  // Helper to format bot messages with emojis and line breaks
+  const formatBotMessage = (text) => {
+    // Split by newlines and render each line
+    const lines = text.split('\n');
+    return lines.map((line, i) => {
+      // Check if line starts with common emoji/icon patterns
+      const hasEmoji = /^[😀-😎🔒⚠️✅❌🔄👤👋🚀📦🎉💳💰🏷️📋🛍️]/u.test(line) || 
+                       /^[A-Za-z]\uFE0F?[\u20E3]?/.test(line) ||
+                       /^[\u2600-\u26FF\u2700-\u27BF]/.test(line);
+      
+      return (
+        <div key={i} className={hasEmoji ? "flex items-start gap-1" : ""}>
+          {line}
+          {i < lines.length - 1 && <br />}
+        </div>
+      );
+    });
+  };
 
+  // Helper to render message with formatting
+  const renderMessage = (text, role) => {
+    if (role !== "bot") return text;
+    
+    // Handle bullet points and formatting
+    let formattedText = text;
+    
+    // Convert markdown-style bullet points
+    formattedText = formattedText.replace(/^[•·-]\s/gm, '• ');
+    
+    // Highlight order IDs (hex codes)
+    formattedText = formattedText.replace(/([0-9a-f]{24})/gi, (match) => {
+      return `<span class="font-mono text-xs bg-gray-100 px-1 rounded">${match}</span>`;
+    });
+    
+    // Highlight prices
+    formattedText = formattedText.replace(/₹(\d+(?:,\d+)*(?:\.\d+)?)/g, (match) => {
+      return `<span class="font-semibold text-green-600">${match}</span>`;
+    });
+    
+    return <span dangerouslySetInnerHTML={{ __html: formattedText }} />;
+  };
+
+  return (
+    <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 bg-gray-50">
       {messages.map((msg, i) => (
         <div
           key={i}
-          className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+          className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"} animate-fade-in`}
         >
-          {/* Bot avatar */}
-          {msg.role === "bot" && (
-            <div className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-600
-                            flex items-center justify-center text-xs font-bold mr-2 flex-shrink-0 mt-1">
-              🤖
-            </div>
-          )}
+          <div className={`flex items-end gap-2 max-w-[85%] ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
+            
+            {msg.role === "bot" && (
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100
+                           flex items-center justify-center flex-shrink-0 shadow-sm">
+                <span className="text-base">🤖</span>
+              </div>
+            )}
 
-          <div
-            className={`max-w-[75%] px-3 py-2 rounded-2xl text-sm whitespace-pre-line
-              ${msg.role === "user"
-                ? "bg-indigo-600 text-white rounded-br-sm"
-                : "bg-gray-100 text-gray-800 rounded-bl-sm"
-              }`}
-          >
-            {msg.text}
+            <div
+              className={`px-3 py-2 rounded-2xl text-sm whitespace-pre-wrap break-words
+                ${msg.role === "user"
+                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-br-sm"
+                  : "bg-white text-gray-800 rounded-bl-sm shadow-sm border border-gray-100"
+                }`}
+            >
+              {msg.role === "bot" ? formatBotMessage(msg.text) : msg.text}
+            </div>
           </div>
+
+          {msg.time && (
+            <span className="text-gray-400 mt-0.5 px-1 text-[10px]">
+              {msg.time}
+            </span>
+          )}
         </div>
       ))}
 
-      {/* Typing indicator while waiting for bot reply */}
       {loading && (
-        <div className="flex justify-start">
-          <div className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-600
-                          flex items-center justify-center text-xs mr-2 flex-shrink-0">
-            🤖
+        <div className="flex justify-start items-end gap-2 animate-fade-in">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100
+                       flex items-center justify-center flex-shrink-0 shadow-sm">
+            <span className="text-base">🤖</span>
           </div>
-          <div className="bg-gray-100 px-4 py-3 rounded-2xl rounded-bl-sm">
+          <div className="bg-white px-4 py-3 rounded-2xl rounded-bl-sm shadow-sm">
             <div className="flex gap-1 items-center h-4">
-              <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}/>
-              <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}/>
-              <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}/>
+              <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"
+                    style={{ animationDelay: "0ms" }} />
+              <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"
+                    style={{ animationDelay: "150ms" }} />
+              <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"
+                    style={{ animationDelay: "300ms" }} />
             </div>
           </div>
         </div>
       )}
 
       <div ref={bottomRef} />
+      
+      <style>{`
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes bounce {
+          0%, 60%, 100% { transform: translateY(0); }
+          30% { transform: translateY(-4px); }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out;
+        }
+        .animate-bounce {
+          animation: bounce 1.4s infinite;
+        }
+      `}</style>
     </div>
   );
 };

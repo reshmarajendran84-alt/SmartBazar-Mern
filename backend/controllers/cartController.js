@@ -11,7 +11,7 @@ class CartController {
     }
   }
 
-  // ✅ New merge endpoint
+  // New merge endpoint
   async mergeCart(req, res) {
     try {
       const cart = await cartService.mergeCart(req.user.id, req.body.items);
