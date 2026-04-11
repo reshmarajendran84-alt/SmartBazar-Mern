@@ -43,7 +43,7 @@ const CheckoutPage = React.memo(() => {
   const [checkingBalance, setCheckingBalance] = useState(false);
   const { fetchCart } = useCart();
 
-  // ✅ Fetch wallet balance on component mount
+  //  Fetch wallet balance on component mount
   useEffect(() => {
     const fetchWalletBalance = async () => {
       try {
@@ -67,14 +67,14 @@ const CheckoutPage = React.memo(() => {
 
   const selectedAddress = addresses?.find((a) => a._id === selectedAddressId) || null;
 
-  // ✅ Check if wallet has sufficient balance
+  //  Check if wallet has sufficient balance
   const hasSufficientWalletBalance = () => {
     if (paymentMethod !== "WALLET") return true;
     if (walletBalance >= total) return true;
     return false;
   };
 
-  // ✅ Get wallet balance warning message
+  //  Get wallet balance warning message
   const getWalletWarning = () => {
     if (paymentMethod !== "WALLET") return null;
     if (walletBalance < total) {
@@ -94,7 +94,7 @@ const CheckoutPage = React.memo(() => {
       return false;
     }
     
-    // ✅ Check wallet balance for WALLET payment
+    //  Check wallet balance for WALLET payment
     if (paymentMethod === "WALLET" && walletBalance < total) {
       toast.error(`Insufficient wallet balance! Available: ₹${walletBalance.toFixed(2)}`);
       return false;
@@ -157,7 +157,7 @@ const CheckoutPage = React.memo(() => {
       
       console.log("ORDER DATA BEING SENT:", orderData);
       
-      // ✅ Handle WALLET payment
+      //  Handle WALLET payment
       if (paymentMethod === "WALLET") {
         // Double-check balance before sending
         if (walletBalance < total) {
@@ -225,7 +225,7 @@ const CheckoutPage = React.memo(() => {
     } catch (err) {
       console.error("Order error:", err);
       
-      // ✅ Better error message for wallet insufficient balance
+      //  Better error message for wallet insufficient balance
       if (err.response?.data?.message?.includes("Insufficient wallet balance")) {
         toast.error(`Insufficient wallet balance! Please add funds or choose another payment method.`);
         // Refresh wallet balance

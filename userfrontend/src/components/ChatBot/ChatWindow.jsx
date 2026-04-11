@@ -1,4 +1,3 @@
-// ChatWindow.jsx - Fixed Version
 import { useEffect, useRef } from "react";
 
 const ChatWindow = ({ messages, loading }) => {
@@ -106,22 +105,7 @@ const ChatWindow = ({ messages, loading }) => {
 
       <div ref={bottomRef} />
       
-      <style>{`
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes bounce {
-          0%, 60%, 100% { transform: translateY(0); }
-          30% { transform: translateY(-4px); }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.3s ease-out;
-        }
-        .animate-bounce {
-          animation: bounce 1.4s infinite;
-        }
-      `}</style>
+    
     </div>
   );
 };

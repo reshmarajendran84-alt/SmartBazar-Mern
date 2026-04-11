@@ -15,7 +15,7 @@ const STATUS_COLORS = {
 
 const OrderRow = ({ order }) => {
   const { updateOrderStatus } = useAdminOrders();
-  // Gets the update function from context — no prop drilling
+  // Gets the update function from context 
 
   const [updating, setUpdating] = useState(false);
   // Local loading state just for this row's dropdown

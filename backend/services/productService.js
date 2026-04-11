@@ -57,7 +57,6 @@ class ProductService {
     };
   }
 
-  // ⭐ ADD THIS FUNCTION
   async getSingleProductService(id) {
     return await Product.findById(id).populate("category", "name");
   }
