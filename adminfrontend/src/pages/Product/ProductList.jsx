@@ -52,7 +52,9 @@ const ProductList = () => {
     {
       key: "price",
       label: "Price",
-      render: (item) => <span className="font-semibold text-indigo-600">₹ {item.price}</span>,
+      render: (item) => (
+        <span className="font-semibold text-indigo-600">₹ {item.price}</span>
+      ),
     },
     {
       key: "stock",
@@ -77,29 +79,29 @@ const ProductList = () => {
       ),
     },
     {
-  key: "image",
-  label: "Image",
-  render: (item) => (
-    <div className="flex gap-1">
-      {item.images?.length > 0 ? (
-        item.images.map((img, i) => (
-          <img
-            key={i}
-            src={img}
-            className="w-12 h-12 object-cover rounded-lg border"
-            alt={`product-${i}`}
-          />
-        ))
-      ) : (
-        <img
-          src="/no-image.png"
-          className="w-12 h-12 object-cover rounded-lg border"
-          alt="no-image"
-        />
-      )}
-    </div>
-  ),
-},
+      key: "image",
+      label: "Image",
+      render: (item) => (
+        <div className="flex gap-1">
+          {item.images?.length > 0 ? (
+            item.images.map((img, i) => (
+              <img
+                key={i}
+                src={img}
+                className="w-12 h-12 object-cover rounded-lg border"
+                alt={`product-${i}`}
+              />
+            ))
+          ) : (
+            <img
+              src="/no-image.png"
+              className="w-12 h-12 object-cover rounded-lg border"
+              alt="no-image"
+            />
+          )}
+        </div>
+      ),
+    },
     {
       key: "actions",
       label: "Actions",
@@ -190,7 +192,6 @@ const ProductList = () => {
       {/* Product Form Modal */}
       {showForm && (
         <>
-          {/* Overlay */}
           <div
             onClick={() => {
               setShowForm(false);
@@ -198,17 +199,15 @@ const ProductList = () => {
             }}
             className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm"
           />
-<div className="fixed inset-0 flex justify-center items-start sm:items-center p-4 sm:p-6 z-50 overflow-auto">
-  {/* <div className="bg-white w-full sm:w-3/4 md:w-2/3 lg:w-1/2 rounded-xl shadow-lg p-6 relative"> */}
-              <ProductForm
-                onClose={() => {
-                  setShowForm(false);
-                  setEditData(null);
-                }}
-                refresh={loadProducts}
-                editData={editData}
-              />
-            {/* </div> */}
+          <div className="fixed inset-0 flex justify-center items-start sm:items-center p-4 sm:p-6 z-50 overflow-auto">
+            <ProductForm
+              onClose={() => {
+                setShowForm(false);
+                setEditData(null);
+              }}
+              refresh={loadProducts}
+              editData={editData}
+            />
           </div>
         </>
       )}

@@ -1,47 +1,52 @@
-import { useEffect, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useEffect, useState, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import api from "../utils/api";
+import { toast } from "react-toastify";
+import ReturnRequestModal from "../components/ReturnRequestModel";
 
 const statusSteps = ["Pending", "Confirmed", "Shipped", "Delivered"];
 
 const OrderDetailPage = () => {
   const { orderId } = useParams();
-  /*
-    useParams() reads the dynamic segment from the URL.
-    If the URL is /orders/abc123def456  →  orderId = "abc123def456"
-    This is the full MongoDB _id of the order.
-  */
-
-  const navigate              = useNavigate();
-  const [order, setOrder]     = useState(null);
+  const navigate = useNavigate();
+  const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [refundProcessed, setRefundProcessed] = useState(false);
+  const [showReturnModal, setShowReturnModal] = useState(false);
 
+  // ── Fetch order ───────────────────────────────────────────────────────
   useEffect(() => {
-    /*
-      Every time orderId changes (user navigates to a different order),
-      this effect runs again and fetches fresh data.
-    */
     if (!orderId) return;
-
     setLoading(true);
     setError("");
 
     api.get(`/order/${orderId}`)
-      .then(res => {
-        /*
-          Your backend sends:  { success: true, order: {...} }
-          So we read res.data.order — not res.data directly
-        */
-        setOrder(res.data.order);
-      })
+      .then(res => setOrder(res.data.order))
       .catch(err => {
         const msg = err?.response?.data?.message || "Could not load order";
         setError(msg);
       })
       .finally(() => setLoading(false));
-
   }, [orderId]);
+
+  // ── Cancel order ──────────────────────────────────────────────────────
+  const handleCancel = useCallback(async () => {
+    setActionLoading(true);
+    try {
+      const { data } = await api.patch(`/order/cancel/${order._id}`);
+      toast.success("Order cancelled! Refund credited to wallet if applicable.");
+      setOrder(data.order);
+      if (order.paymentMethod === "ONLINE" || order.paymentMethod === "WALLET") {
+        setRefundProcessed(true);
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Cancel failed!");
+    } finally {
+      setActionLoading(false);
+    }
+  }, [order?._id, order?.paymentMethod]);
 
   // ── Loading state ─────────────────────────────────────────────────────
   if (loading) {
@@ -67,19 +72,29 @@ const OrderDetailPage = () => {
     );
   }
 
-  // ── No order guard ────────────────────────────────────────────────────
   if (!order) return null;
 
   // ── Derived values ────────────────────────────────────────────────────
-  const currentStep           = statusSteps.indexOf(order.status);
-  const isCancelledOrReturned = ["Cancelled", "Returned", "Failed"].includes(order.status);
+  const currentStep = statusSteps.indexOf(order.status);
+  const isCancelledOrReturned = 
+  ["Cancelled",
+     "Returned",
+      "Failed",
+       "Return_requested",
+       "Return_rejected" 
+      ].includes(order.status);
+
+  const showRefundNote =
+    (isCancelledOrReturned &&
+      (order.paymentMethod === "ONLINE" || order.paymentMethod === "WALLET")) ||
+    refundProcessed;
 
   const getPaymentLabel = () => {
     switch (order.paymentMethod) {
-      case "COD":    return "Cash on Delivery";
+      case "COD": return "Cash on Delivery";
       case "WALLET": return "Wallet";
       case "ONLINE": return "Online (Razorpay)";
-      default:       return order.paymentMethod;
+      default: return order.paymentMethod;
     }
   };
 
@@ -97,6 +112,17 @@ const OrderDetailPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto">
+        {/* Return Request Modal */}
+        {showReturnModal && (
+          <ReturnRequestModal
+            order={order}
+            onClose={() => setShowReturnModal(false)}
+            onSuccess={() => {
+              setOrder(prev => ({ ...prev, returnRequested: true, status: "Return_requested" }));
+              setShowReturnModal(false);
+            }}
+          />
+        )}
 
         {/* Back navigation */}
         <button
@@ -133,9 +159,7 @@ const OrderDetailPage = () => {
 
           {!isCancelledOrReturned ? (
             <div className="flex items-center justify-between relative">
-              {/* Grey background track */}
               <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200 z-0" />
-              {/* Filled progress track */}
               <div
                 className="absolute top-4 left-0 h-0.5 bg-indigo-500 z-0 transition-all duration-500"
                 style={{
@@ -170,14 +194,10 @@ const OrderDetailPage = () => {
             <div className="bg-red-50 rounded-xl p-4 text-center">
               <p className="text-sm text-red-500 font-medium">
                 {order.status === "Cancelled" && "This order was cancelled"}
-                {order.status === "Returned"  && "Return requested — refund credited to wallet"}
-                {order.status === "Failed"    && "This order failed"}
+                {order.status === "Returned" && "Return approved — refund credited to wallet"}
+                {order.status === "Failed" && "This order failed"}
+                {order.status === "Return_rejected" && "Return request was rejected"}
               </p>
-              {(order.paymentMethod === "ONLINE" || order.paymentMethod === "WALLET") && (
-                <p className="text-xs text-red-400 mt-1">
-                  Refund of ₹{order.total} has been credited to your wallet
-                </p>
-              )}
             </div>
           )}
         </div>
@@ -195,7 +215,6 @@ const OrderDetailPage = () => {
                     border-b pb-3 last:border-0 last:pb-0"
                 >
                   <div className="flex items-center gap-3">
-                    {/* Product image if available */}
                     {item.image && (
                       <img
                         src={item.image}
@@ -268,7 +287,7 @@ const OrderDetailPage = () => {
         </div>
 
         {/* ── Section 5: Delivery Address ── */}
-        <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
+        <div className="bg-white rounded-2xl shadow-sm p-6 mb-4">
           <h2 className="font-semibold text-gray-700 mb-3">Delivery Address</h2>
           {order.address ? (
             <div className="text-sm text-gray-600 space-y-1">
@@ -290,7 +309,76 @@ const OrderDetailPage = () => {
           )}
         </div>
 
-        {/* ── Bottom action buttons ── */}
+        {/* ── Section 6: Cancel / Return actions ── */}
+        {order.status === "Pending" && (
+          <button
+            onClick={handleCancel}
+            disabled={actionLoading}
+            className={`w-full mb-4 bg-red-500 text-white py-3 rounded-xl
+              text-sm font-semibold transition
+              ${actionLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-red-600"}`}
+          >
+            {actionLoading ? "Cancelling..." : "Cancel Order"}
+          </button>
+        )}
+
+        {order.status === "Delivered" && !order.returnRequested && (
+          <button
+            onClick={() => setShowReturnModal(true)}
+            className="w-full mb-4 bg-orange-600 text-white py-3 rounded-xl text-sm font-semibold hover:bg-orange-700 transition"
+          >
+            Request Return
+          </button>
+        )}
+        {order.status === "Return_rejected" && (
+  <div className="bg-red-100 text-red-700 p-4 rounded-xl mb-4 text-center">
+    <p className="font-semibold">❌ Return Request Rejected</p>
+
+    {order.returnRejectionReason && (
+      <p className="text-sm mt-2">
+        Reason: <span className="font-medium">{order.returnRejectionReason}</span>
+      </p>
+    )}
+
+    <p className="text-xs text-red-600 mt-1">
+      Please contact support if you need help
+    </p>
+  </div>
+)}
+
+        {order.returnRequested && order.status === "Return_requested" && (
+          <div className="bg-yellow-100 text-yellow-800 p-4 rounded-xl mb-4 text-center">
+            <p className="font-semibold">Return request pending admin approval</p>
+            <p className="text-sm mt-1">You'll be notified once processed</p>
+          </div>
+        )}
+        {order.returnRejectedAt && (
+  <div className="bg-red-100 text-red-800 p-4 rounded-xl mb-4">
+    <p className="font-semibold">✗ Return Request Rejected</p>
+    <p className="text-sm mt-1">Reason: {order.returnRejectionReason}</p>
+  </div>
+)}
+
+        {order.status === "Returned" && (
+          <div className="bg-green-100 text-green-800 p-4 rounded-xl mb-4 text-center">
+            <p className="font-semibold">✓ Return approved!</p>
+            <p className="text-sm mt-1">Refund of ₹{order.refundAmount || order.total} has been processed to your wallet</p>
+          </div>
+        )}
+
+        {/* Refund note — shown after cancel/return for prepaid orders */}
+        {showRefundNote && (
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4 text-sm text-green-700 text-center">
+            <p className="font-semibold">
+              Refund of ₹{order.total} has been credited to your wallet
+            </p>
+            <p className="text-xs text-green-600 mt-1">
+              Check your wallet balance to see the updated amount
+            </p>
+          </div>
+        )}
+
+        {/* ── Bottom navigation buttons ── */}
         <div className="flex flex-col sm:flex-row gap-3">
           <button
             onClick={() => navigate("/")}
@@ -307,7 +395,6 @@ const OrderDetailPage = () => {
             My Orders
           </button>
         </div>
-
       </div>
     </div>
   );

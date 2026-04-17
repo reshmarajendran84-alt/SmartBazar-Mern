@@ -1,33 +1,26 @@
+// backend/controllers/adminDashboardController.js
 import Order from "../models/Order.js";
-import Product from "../models/Product.js";
 import User from "../models/User.js";
+import Product from "../models/Product.js";
 
 export const getDashboardStats = async (req, res) => {
   try {
+    console.log("Fetching dashboard stats...");
+    
     const [
       totalOrders,
       totalUsers,
       totalProducts,
       activeProducts,
       outOfStockProducts,
-
-      // Order status counts
       pendingOrders,
       confirmedOrders,
       shippedOrders,
       deliveredOrders,
       cancelledOrders,
-
-      // Revenue from delivered orders only
       revenueData,
-
-      // Recent 5 orders
       recentOrders,
-
-      // Top 5 selling products
       topProducts,
-
-      // New users this month
       newUsersThisMonth,
     ] = await Promise.all([
       Order.countDocuments(),
@@ -35,28 +28,24 @@ export const getDashboardStats = async (req, res) => {
       Product.countDocuments(),
       Product.countDocuments({ isActive: true }),
       Product.countDocuments({ stock: 0 }),
-
-      Order.countDocuments({ status: { $regex: /^pending$/i } }),
-      Order.countDocuments({ status: { $regex: /^confirmed$/i } }),
-      Order.countDocuments({ status: { $regex: /^shipped$/i } }),
-      Order.countDocuments({ status: { $regex: /^delivered$/i } }),
-      Order.countDocuments({ status: { $regex: /^cancelled$/i } }),
-
-      // Sum total of all delivered orders
+      Order.countDocuments({ status: "Pending" }),
+      Order.countDocuments({ status: "Confirmed" }),
+      Order.countDocuments({ status: "Shipped" }),
+      Order.countDocuments({ status: "Delivered" }),
+      Order.countDocuments({ status: "Cancelled" }),
       Order.aggregate([
-        { $match: { status: { $regex: /^delivered$/i } } },
+        { $match: { status: "Delivered" } },
         { $group: { _id: null, total: { $sum: "$total" } } },
       ]),
-
-      // Recent orders with user info
+      // ✅ FIX: Include address field in the query
       Order.find()
-        .populate("userId", "name email")
+        .populate("userId", "name email phone")
+        .select("_id userId address total status createdAt") // Add address field
         .sort({ createdAt: -1 })
-        .limit(5),
-
-      // Top selling products by quantity sold
+        .limit(5)
+        .lean(),
       Order.aggregate([
-        { $match: { status: { $not: /^cancelled$/i } } },
+        { $match: { status: { $nin: ["Cancelled", "Returned"] } } },
         { $unwind: "$cartItems" },
         {
           $group: {
@@ -68,9 +57,23 @@ export const getDashboardStats = async (req, res) => {
         },
         { $sort: { totalSold: -1 } },
         { $limit: 5 },
+        {
+          $lookup: {
+            from: "products",
+            localField: "_id",
+            foreignField: "_id",
+            as: "productInfo"
+          }
+        },
+        {
+          $project: {
+            _id: 1,
+            name: { $ifNull: [{ $arrayElemAt: ["$productInfo.name", 0] }, "$name"] },
+            totalSold: 1,
+            revenue: 1,
+          }
+        }
       ]),
-
-      // Users registered this calendar month
       User.countDocuments({
         role: "user",
         createdAt: {
@@ -81,26 +84,58 @@ export const getDashboardStats = async (req, res) => {
 
     const totalRevenue = revenueData[0]?.total ?? 0;
 
-    res.json({
-      totalOrders,
-      totalUsers,
-      totalProducts,
-      activeProducts,
-      outOfStockProducts,
-      totalRevenue,
-      newUsersThisMonth,
+    // ✅ FIX: Format recent orders to include address data
+    const formattedRecentOrders = recentOrders.map(order => ({
+      _id: order._id,
+      userId: order.userId || null,
+      address: order.address || null, // ✅ Include the full address object
+      total: order.total || 0,
+      status: order.status || "Pending",
+      createdAt: order.createdAt,
+    }));
+
+    // Format top products
+    const formattedTopProducts = topProducts.map(product => ({
+      _id: product._id,
+      name: product.name || "Unknown Product",
+      totalSold: product.totalSold || 0,
+      revenue: product.revenue || 0,
+    }));
+
+    const responseData = {
+      totalOrders: totalOrders || 0,
+      totalUsers: totalUsers || 0,
+      totalProducts: totalProducts || 0,
+      activeProducts: activeProducts || 0,
+      outOfStockProducts: outOfStockProducts || 0,
+      totalRevenue: totalRevenue || 0,
+      newUsersThisMonth: newUsersThisMonth || 0,
       orderStats: {
-        pending: pendingOrders,
-        confirmed: confirmedOrders,
-        shipped: shippedOrders,
-        delivered: deliveredOrders,
-        cancelled: cancelledOrders,
+        pending: pendingOrders || 0,
+        confirmed: confirmedOrders || 0,
+        shipped: shippedOrders || 0,
+        delivered: deliveredOrders || 0,
+        cancelled: cancelledOrders || 0,
       },
-      recentOrders,
-      topProducts,
+      recentOrders: formattedRecentOrders,
+      topProducts: formattedTopProducts,
+    };
+
+    console.log("Dashboard stats prepared:", {
+      totalOrders: responseData.totalOrders,
+      orderStats: responseData.orderStats,
+      topProductsCount: responseData.topProducts.length,
+      recentOrdersCount: responseData.recentOrders.length,
+      sampleOrderAddress: responseData.recentOrders[0]?.address // Debug log
     });
+
+    res.json(responseData);
   } catch (err) {
     console.error("getDashboardStats error:", err.message);
-    res.status(500).json({ message: err.message });
+    console.error("Stack trace:", err.stack);
+    res.status(500).json({ 
+      message: "Failed to fetch dashboard statistics",
+      error: err.message 
+    });
   }
 };

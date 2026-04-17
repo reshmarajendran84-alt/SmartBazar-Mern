@@ -17,10 +17,10 @@ import walletRoutes from "./routes/walletRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
-
+import returnRoutes from"./routes/returnRoutes.js";
 
 import adminRoutes from "./routes/adminRoutes.js";
-import adminCartegoryRoutes from "./routes/adminCartegoryRoutes.js";
+import adminCartegoryRoutes from "./routes/adminCategoryRoutes.js";
 import adminProtectedRoute from "./routes/adminProductRoutes.js";
 import adminOrderRoutes from "./routes/adminOrderRoutes.js";
 import dashboardRoutes from "./routes/adminDashboardRoutes.js";
@@ -36,9 +36,9 @@ app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 
-app.get("/", (req, res) => {
-  res.send("API is running...");
-});
+// app.get("/", (req, res) => {
+//   res.send("API is running...");
+// });
 
 //  Public routes — no cache blocking needed
 app.use("/api/auth", authRoutes);
@@ -53,7 +53,7 @@ app.use("/api/wallet",        noCache, walletRoutes);
 app.use("/api/coupon",        noCache, couponRoutes);
 app.use("/api/reviews" ,noCache,reviewRoutes);
 app.use("/api/chat",noCache, chatRoutes);
-
+app.use("/api/return", noCache, returnRoutes);
 
 //  Admin protected routes
 app.use("/api/admin",            noCache, adminRoutes);
@@ -64,6 +64,7 @@ app.use("/api/admin/orders",   noCache, adminOrderRoutes);
 app.use("/api/admin/dashboard", noCache, dashboardRoutes);
 app.use("/api/admin/reports" ,noCache, adminReportRoutes)
 app.use("/api/admin/reviews" ,noCache, adminReviewsRoutes);
+app.use("/api/admin/returns", noCache, returnRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

@@ -3,9 +3,41 @@ import Order from "../models/order.js";
 import crypto from "crypto";
 import WalletService from "./walletService.js"; 
 import Cart from "../models/Cart.js";
-
+import Product from "../models/Product.js";
 class OrderService {
+// ─── Helper: Deduct stock for all items in cart ───────────────────────────
+  async deductStockForItems(cartItems) {
+    for (const item of cartItems) {
+      const productId = item.productId?._id || item.productId;
+      const product = await Product.findById(productId);
+      
+      if (!product) {
+        throw new Error(`Product ${item.name} not found`);
+      }
+      
+      if (product.stock < item.quantity) {
+        throw new Error(`${product.name} has insufficient stock. Available: ${product.stock}`);
+      }
+      
+      // Deduct stock
+      await Product.findByIdAndUpdate(
+        productId,
+        { $inc: { stock: -item.quantity } },
+        { new: true }
+      );
+    }
+  }
 
+  // ─── Helper: Restore stock for cancelled/returned orders ───────────────────
+  async restoreStockForItems(cartItems) {
+    for (const item of cartItems) {
+      await Product.findByIdAndUpdate(
+        item.productId,
+        { $inc: { stock: item.quantity } },
+        { new: true }
+      );
+    }
+  }
   // ─── Create Razorpay order session ───────────────────────────────────────
   async createRazorpayOrder(amount) {
     if (!amount || amount <= 0) throw new Error("Invalid amount");
@@ -21,6 +53,8 @@ class OrderService {
     if (!data.cartItems || !data.cartItems.length) throw new Error("Cart is empty");
     if (!data.total || data.total <= 0) throw new Error("Invalid total");
     if (!data.address) throw new Error("Address required");
+
+      await this.deductStockForItems(data.cartItems);
 
     const mappedItems = data.cartItems.map((item) => ({
       productId: item.productId?._id || item.productId,
@@ -93,10 +127,15 @@ class OrderService {
 
     const order = await Order.findById(orderId);
     if (!order) throw new Error("Order not found");
-
+   
+    if (order.userId.toString() !== userId.toString()) {
+      throw new Error("Not authorized to cancel this order");
+    }
     if (!["Pending", "Confirmed"].includes(order.status)) {
       throw new Error("Only pending or confirmed orders can be cancelled");
     }
+        await this.restoreStockForItems(order.cartItems);
+
 
     order.status = "Cancelled";
     await order.save();
@@ -121,6 +160,9 @@ class OrderService {
     const order = await Order.findById(orderId);
     if (!order) throw new Error("Order not found");
 
+    if (order.userId.toString() !== userId.toString()) {
+      throw new Error("Not authorized to return this order");
+    }
     if (order.status !== "Delivered") {
       throw new Error("Only delivered orders can be returned");
     }
@@ -132,6 +174,7 @@ class OrderService {
         "Return window expired. Returns accepted within 7 days of delivery."
       );
     }
+    await this.restoreStockForItems(order.cartItems);
 
     order.status = "Returned";
     await order.save();
@@ -152,6 +195,7 @@ class OrderService {
   // ─── Wallet order ─────────────────────────────────────────────────────────
   async placeWalletOrder(userId, data) {
 
+    // await this.deductStockForItems(data.cartItems);
 
     const order = await this.createOrder(
       userId,

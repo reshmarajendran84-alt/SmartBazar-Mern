@@ -1,6 +1,6 @@
 import express from "express";
-import ReviewController from "../controllers/reviewController.js";
-import protect from "../middlewares/authMiddleware.js";
+import ReviewController from "../controllers/reviewController.js"; 
+import {protect} from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 

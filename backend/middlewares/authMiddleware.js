@@ -1,7 +1,8 @@
+// middlewares/authMiddleware.js
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
-const protect = async (req, res, next) => {
+export const protect = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -24,4 +25,10 @@ const protect = async (req, res, next) => {
   }
 };
 
-export default protect;
+export const admin = async (req, res, next) => {
+  if (req.user && req.user.role === "admin") {
+    next();
+  } else {
+    res.status(403).json({ message: "Admin access required" });
+  }
+};

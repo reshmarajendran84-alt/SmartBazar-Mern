@@ -11,7 +11,7 @@ class ReviewService {
       : { productId, status: "approved" };
 
     const reviews = await Review.find(query)
-      .populate("userId", "name")
+      .populate("userId", "name email")
       .sort({ createdAt: -1 });
 
     const approvedOnly = reviews.filter(r => r.status === "approved");
@@ -29,7 +29,9 @@ class ReviewService {
       isOwner:   currentUserId
                    ? r.userId._id.toString() === currentUserId.toString()
                    : false,
-      user: { name: r.userId.name },
+      // user: { name: r.userId.name },
+      user: { name: r.userId.name || r.userId.email?.split("@")[0] },
+
     }));
 
     return { reviews: shaped, avgRating: parseFloat(avgRating.toFixed(1)) };

@@ -12,6 +12,7 @@ const Sidebar = () => {
     { name: "Products", path: "/admin/products", icon: ShoppingCart },
     { name: "Coupons", path: "/admin/coupons", icon:Percent},
     { name: "Orders", path: "/admin/orders", icon:PackageSearch},
+      { name: "Returns", path: "/admin/returns", icon: PackageSearch },
   { name: "Sales Report", path: "/admin/sales-report", icon: BarChart2 },
 { name: "Reviews", path: "/admin/reviews", icon: Star },
   ];

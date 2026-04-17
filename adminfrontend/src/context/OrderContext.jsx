@@ -25,32 +25,42 @@ export const AdminOrderProvider = ({ children }) => {
   const [filter, setFilter]   = useState("All");
   const [search, setSearch]   = useState("");
 
-  const fetchOrders = useCallback(async (status, searchTerm) => {
-    try {
-      setLoading(true);
-      setError(null);
+// context/OrderContext.jsx - Update fetchOrders function
+const fetchOrders = useCallback(async (status, searchTerm) => {
+  try {
+    setLoading(true);
+    setError(null);
 
-      if (!BASE_URL) throw new Error("VITE_API_URL is not defined in .env");
+    if (!BASE_URL) throw new Error("VITE_API_URL is not defined in .env");
 
-      const params = new URLSearchParams();
+    const params = new URLSearchParams();
+    if (status && status !== "All") params.set("status", status);
+    if (searchTerm) params.set("search", searchTerm);
 
-      if (status && status !== "All") params.set("status", status);
-      if (searchTerm) params.set("search", searchTerm);
+    const url = `${BASE_URL}/api/admin/orders${params.size ? `?${params}` : ""}`;
 
-      const url = `${BASE_URL}/api/admin/orders${params.size ? `?${params}` : ""}`;
+    const response = await fetch(url, { headers: getAuthHeaders() });
+    if (!response.ok) throw new Error(`Server error: ${response.status}`);
 
-      const response = await fetch(url, { headers: getAuthHeaders() });
-      if (!response.ok) throw new Error(`Server error: ${response.status}`);
-
-      const data = await response.json();
-      setOrders(data.orders ?? data ?? []);
-    } catch (err) {
-      console.error("Fetch orders error:", err);
-      setError(err.message || "Failed to fetch orders");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    const data = await response.json();
+    
+    // Process orders to ensure customer name is available
+    const processedOrders = (data.orders ?? data ?? []).map(order => ({
+      ...order,
+      // Ensure customer name is accessible
+      customerName: order.userId?.name || order.address?.fullName || order.address?.name || "Guest",
+      customerEmail: order.userId?.email || order.address?.email || "No email",
+      customerPhone: order.userId?.phone || order.address?.phone || "",
+    }));
+    
+    setOrders(processedOrders);
+  } catch (err) {
+    console.error("Fetch orders error:", err);
+    setError(err.message || "Failed to fetch orders");
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
   const fetchStats = useCallback(async () => {
     try {

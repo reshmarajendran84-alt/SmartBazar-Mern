@@ -66,8 +66,8 @@ const wallet = await Wallet.findOne({ userId })
       const order = await Order.findById(idMatch[1])
       if (!order) return "❌ Order not found."
       if (order.status !== "pending" && order.status !== "Pending")
-        return `⚠️ Cannot cancel. Order is already: ${order.status}`
-      order.status = "cancelled"
+      return `⚠️ Cannot cancel. Order is already: ${order.status}`
+      order.status = "Cancelled"
       await order.save()
       return ` Order ${order._id} cancelled successfully.`
     }

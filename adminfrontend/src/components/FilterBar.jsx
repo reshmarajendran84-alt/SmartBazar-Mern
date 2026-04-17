@@ -1,3 +1,4 @@
+// components/FilterBar.jsx
 import { useAdminOrders } from "../context/OrderContext";
 import { useRef } from "react";
 
@@ -43,7 +44,7 @@ const FilterBar = () => {
           type="text"
           value={search}
           onChange={handleSearchChange}
-          placeholder="Search by order ID or customer name..."
+          placeholder="Search by order ID, customer name, email, or phone..."
           className="w-full border border-gray-200 rounded-lg px-4 py-2
             text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
         />

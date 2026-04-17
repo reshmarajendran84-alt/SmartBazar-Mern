@@ -4,46 +4,50 @@ import api from "../utils/api";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser]       = useState(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const logout = useCallback(() => {
     localStorage.removeItem("token");
     setUser(null);
-    setLoading(false);
   }, []);
 
-  const loadProfile = useCallback(async (signal) => {
+  const loadProfile = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    
+    if (!token) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
     try {
-      const res = await api.get("/user/profile", { signal });
+      const res = await api.get("/user/profile");
       setUser(res.data);
     } catch (err) {
-      if (err.name === "CanceledError") return;
-      logout();
+      console.error("Profile load failed:", err.response?.status);
+      // If token is invalid, clear it
+      if (err.response?.status === 401 || err.response?.status === 404) {
+        localStorage.removeItem("token");
+        setUser(null);
+      }
     } finally {
       setLoading(false);
     }
-  }, [logout]);
+  }, []);
 
-  //  login() ONLY saves token + loads profile — cart merge is CartContext's job
   const login = async (token) => {
     localStorage.setItem("token", token);
     setLoading(true);
-    const controller = new AbortController();
-    await loadProfile(controller.signal);
-    // ❌ NO cart merge here — AuthPage calls mergeOnLogin() after this
+    await loadProfile();
   };
 
   useEffect(() => {
-    const controller = new AbortController();
-    const token = localStorage.getItem("token");
-    if (token) loadProfile(controller.signal);
-    else setLoading(false);
-    return () => controller.abort();
+    loadProfile();
   }, [loadProfile]);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading, token: localStorage.getItem("token") }}>
       {children}
     </AuthContext.Provider>
   );

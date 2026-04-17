@@ -1,3 +1,4 @@
+// components/OrderRow.jsx
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { useAdminOrders } from "../context/OrderContext";
@@ -10,25 +11,19 @@ const STATUS_COLORS = {
   Shipped:   "bg-purple-100 text-purple-700",
   Delivered: "bg-green-100 text-green-700",
   Cancelled: "bg-red-100 text-red-600",
-  Failed:    "bg-red-100 text-red-600",
 };
 
 const OrderRow = ({ order }) => {
   const { updateOrderStatus } = useAdminOrders();
-  // Gets the update function from context 
-
   const [updating, setUpdating] = useState(false);
-  // Local loading state just for this row's dropdown
 
   const handleStatusChange = async (e) => {
     const newStatus = e.target.value;
-    if (newStatus === order.status) return; // no change, do nothing
+    if (newStatus === order.status) return;
 
     setUpdating(true);
     try {
       await updateOrderStatus(order._id, newStatus);
-      // Context automatically updates the orders array in state
-      // This row re-renders with the new status — no page refresh
       toast.success(`Order status updated to ${newStatus}`);
     } catch (err) {
       toast.error(err.message || "Update failed");
@@ -37,9 +32,37 @@ const OrderRow = ({ order }) => {
     }
   };
 
+  // ✅ FIX: Get customer name from multiple sources
+  const getCustomerName = () => {
+    // Priority 1: From populated userId
+    if (order.userId?.name) return order.userId.name;
+    
+    // Priority 2: From address.fullName (guest checkout or address field)
+    if (order.address?.fullName) return order.address.fullName;
+    
+    // Priority 3: From address.name (alternative field)
+    if (order.address?.name) return order.address.name;
+    
+    // Priority 4: Fallback
+    return "Guest User";
+  };
+
+  // ✅ FIX: Get customer email
+  const getCustomerEmail = () => {
+    if (order.userId?.email) return order.userId.email;
+    if (order.address?.email) return order.address.email;
+    return "No email";
+  };
+
+  // ✅ FIX: Get customer phone
+  const getCustomerPhone = () => {
+    if (order.userId?.phone) return order.userId.phone;
+    if (order.address?.phone) return order.address.phone;
+    return "";
+  };
+
   return (
     <tr className="border-b hover:bg-gray-50 transition">
-
       {/* Order ID */}
       <td className="px-4 py-3">
         <span className="font-mono text-xs text-gray-500">
@@ -47,45 +70,52 @@ const OrderRow = ({ order }) => {
         </span>
       </td>
 
-      {/* Customer name + email — populated from User model */}
+      {/* Customer name + email + phone */}
       <td className="px-4 py-3">
         <p className="text-sm font-medium text-gray-800">
-          {order.userId?.name || "Unknown"}
+          {getCustomerName()}
         </p>
         <p className="text-xs text-gray-400">
-          {order.userId?.email || ""}
+          {getCustomerEmail()}
         </p>
+        {getCustomerPhone() && (
+          <p className="text-xs text-gray-400">
+            📞 {getCustomerPhone()}
+          </p>
+        )}
       </td>
 
       {/* Order date */}
       <td className="px-4 py-3 text-sm text-gray-500">
         {new Date(order.createdAt).toLocaleDateString("en-IN", {
-          day: "numeric", month: "short", year: "numeric",
+          day: "numeric", 
+          month: "short", 
+          year: "numeric",
         })}
       </td>
 
       {/* Total amount */}
       <td className="px-4 py-3 text-sm font-semibold text-gray-800">
-        ₹{order.total}
+        ₹{(order.total || 0).toLocaleString("en-IN")}
       </td>
 
       {/* Payment method */}
       <td className="px-4 py-3 text-sm text-gray-500">
-        {order.paymentMethod}
+        {order.paymentMethod || "N/A"}
       </td>
 
       {/* Current status badge */}
       <td className="px-4 py-3">
         <span className={`text-xs px-2 py-1 rounded-full font-medium
           ${STATUS_COLORS[order.status] || "bg-gray-100 text-gray-600"}`}>
-          {order.status}
+          {order.status || "Pending"}
         </span>
       </td>
 
-      {/* Status dropdown — admin changes status here */}
+      {/* Status dropdown */}
       <td className="px-4 py-3">
         <select
-          value={order.status}
+          value={order.status || "Pending"}
           onChange={handleStatusChange}
           disabled={updating}
           className={`text-xs border border-gray-200 rounded-lg px-2 py-1.5
@@ -102,7 +132,6 @@ const OrderRow = ({ order }) => {
           </span>
         )}
       </td>
-
     </tr>
   );
 };
