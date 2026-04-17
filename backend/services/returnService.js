@@ -95,7 +95,7 @@ class ReturnService {
       throw new Error("Order is not in return requested state");
     }
     
-    order.status = "Delivered";
+order.status = "Return_rejected";
     order.returnRequested = false;
     order.returnRejectedAt = new Date();
     order.returnRejectionReason = rejectionReason;
@@ -116,8 +116,13 @@ class ReturnService {
     } else if (status === "approved") {
       query = { status: "Returned" };
     } else if (status === "rejected") {
-      query = { returnRejectedAt: { $ne: null } };
-    } else {
+  query = {
+    $or: [
+      { status: "Return_rejected" },
+      { returnRejectedAt: { $ne: null } }
+    ]
+  };
+} else {
       // For "all", get all orders with return requests
       query = { returnRequested: true };
     }
@@ -126,6 +131,7 @@ class ReturnService {
     
     const returns = await Order.find(query)
       .populate("userId", "name email phone")
+      .select("_id userId address total status returnReason returnDescription returnRequestedAt returnRejectedAt returnRejectionReason refundAmount")
       .sort({ returnRequestedAt: -1 });
     
     console.log(`Found ${returns.length} return requests`);

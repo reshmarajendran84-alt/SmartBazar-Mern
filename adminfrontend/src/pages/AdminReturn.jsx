@@ -14,13 +14,10 @@ const AdminReturns = () => {
     reason: ""
   });
 
-  // ── Fetch returns ─────────────────────────────────
   const fetchReturns = async () => {
     try {
       setLoading(true);
-      // ✅ Correct endpoint: /returns (baseURL already has /api/admin)
       const res = await api.get(`/returns?status=${filter}`);
-      console.log("Fetched returns:", res.data);
       setReturns(res.data.data || []);
     } catch (error) {
       console.error("Fetch returns error:", error);
@@ -34,12 +31,9 @@ const AdminReturns = () => {
     fetchReturns();
   }, [filter]);
 
-  // ── Approve ───────────────────────────────────────
   const handleApprove = async (orderId) => {
     if (!window.confirm("Approve this return and process refund?")) return;
-
     try {
-      // ✅ Correct endpoint
       await api.post(`/returns/${orderId}/approve`);
       toast.success("Return approved and refund processed");
       fetchReturns();
@@ -49,27 +43,17 @@ const AdminReturns = () => {
     }
   };
 
-  // ── Reject ────────────────────────────────────────
   const handleReject = async () => {
     if (!rejectModal.reason.trim()) {
       toast.error("Please enter rejection reason");
       return;
     }
-
     try {
-      // ✅ Correct endpoint
       await api.post(`/returns/${rejectModal.orderId}/reject`, {
         rejectionReason: rejectModal.reason
       });
-
       toast.success("Return request rejected");
-
-      setRejectModal({
-        open: false,
-        orderId: null,
-        reason: ""
-      });
-
+      setRejectModal({ open: false, orderId: null, reason: "" });
       fetchReturns();
     } catch (error) {
       console.error("Reject error:", error.response?.data);
@@ -107,150 +91,192 @@ const AdminReturns = () => {
         </div>
       ) : (
         <div className="bg-white rounded-xl shadow overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left">Order ID</th>
-                <th className="px-4 py-3 text-left">Customer</th>
-                <th className="px-4 py-3 text-left">Amount</th>
-                <th className="px-4 py-3 text-left">Reason</th>
-                <th className="px-4 py-3 text-left">Requested On</th>
-                <th className="px-4 py-3 text-left">Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {returns.map((returnReq) => (
-                <tr key={returnReq._id} className="border-t">
-                  <td className="px-4 py-3">
-                    #{returnReq._id.slice(-8)}
-                  </td>
-
-                  <td className="px-4 py-3">
-                    <div className="font-medium">
-                      {returnReq.userId?.name ||
-                        returnReq.address?.fullName ||
-                        "Guest"}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {returnReq.userId?.email ||
-                        returnReq.address?.email ||
-                        "N/A"}
-                    </div>
-                  </td>
-
-                  <td className="px-4 py-3">₹{returnReq.total}</td>
-
-                  <td className="px-4 py-3">
-                    <div className="capitalize">
-                      {returnReq.returnReason}
-                    </div>
-
-                    {returnReq.returnDescription && (
-                      <div className="text-sm text-gray-500">
-                        {returnReq.returnDescription}
-                      </div>
-                    )}
-
-                    {/* Show rejection reason */}
-                    {returnReq.returnRejectedAt && (
-                      <div className="text-sm text-red-500 mt-1">
-                        <strong>Rejected:</strong>{" "}
-                        {returnReq.returnRejectionReason}
-                      </div>
-                    )}
-                  </td>
-
-                  <td className="px-4 py-3">
-                    {new Date(
-                      returnReq.returnRequestedAt
-                    ).toLocaleDateString()}
-                  </td>
-
-                  <td className="px-4 py-3">
-                    {returnReq.status === "Return_requested" && (
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleApprove(returnReq._id)}
-                          className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                        >
-                          Approve
-                        </button>
-
-                        <button
-                          onClick={() =>
-                            setRejectModal({
-                              open: true,
-                              orderId: returnReq._id,
-                              reason: ""
-                            })
-                          }
-                          className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
-                        >
-                          Reject
-                        </button>
-                      </div>
-                    )}
-
-                    {returnReq.status === "Returned" && (
-                      <span className="text-green-600">
-                        Refunded
-                      </span>
-                    )}
-
-                    {returnReq.returnRejectedAt && (
-                      <span className="text-red-600">
-                        Rejected
-                      </span>
-                    )}
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[900px]">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Order ID</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Customer</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Amount</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">User Return Reason</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Admin Rejection Reason</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Requested On</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+
+              <tbody>
+                {returns.map((returnReq) => (
+                  <tr key={returnReq._id} className="border-t hover:bg-gray-50">
+
+                    {/* Order ID */}
+                    <td className="px-4 py-3 font-mono text-sm">
+                      #{returnReq._id?.slice(-8)}
+                    </td>
+
+                    {/* Customer */}
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-gray-800">
+                        {returnReq.userId?.name ||
+                          returnReq.address?.fullName ||
+                          "Guest"}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {returnReq.userId?.email ||
+                          returnReq.address?.email ||
+                          "N/A"}
+                      </div>
+                    </td>
+
+                    {/* Amount */}
+                    <td className="px-4 py-3 font-semibold text-gray-800">
+                      ₹{returnReq.total}
+                    </td>
+
+                    {/* User Return Reason */}
+                    <td className="px-4 py-3">
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-2">
+                        <p className="text-sm text-gray-800 capitalize font-medium">
+                          {returnReq.returnReason?.replace(/_/g, ' ') || (
+                            <span className="text-gray-400 italic text-xs">Not recorded</span>
+                          )}
+                        </p>
+                        {returnReq.returnDescription && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            {returnReq.returnDescription}
+                          </p>
+                        )}
+                      </div>
+                    </td>
+
+                    {/* Admin Rejection Reason */}
+                    <td className="px-4 py-3">
+                      {returnReq.returnRejectedAt && returnReq.returnRejectionReason ? (
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-2">
+                          <p className="text-xs text-red-500 font-semibold mb-1">
+                            Rejection Reason:
+                          </p>
+                          <p className="text-sm text-red-700 font-medium">
+                            {returnReq.returnRejectionReason}
+                          </p>
+                        </div>
+                      ) : returnReq.returnRejectedAt && !returnReq.returnRejectionReason ? (
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-2">
+                          <p className="text-xs text-red-500 font-semibold mb-1">
+                            Rejection Reason:
+                          </p>
+                          <p className="text-sm text-red-400 italic">
+                            No reason recorded
+                          </p>
+                        </div>
+                      ) : returnReq.status === "Return_requested" ? (
+                        <span className="inline-flex items-center gap-1 text-yellow-600 text-sm">
+                          ⏳ Pending review
+                        </span>
+                      ) : returnReq.status === "Returned" ? (
+                        <span className="inline-flex items-center gap-1 text-green-600 text-sm">
+                          ✓ Approved — no rejection
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 text-sm">—</span>
+                      )}
+                    </td>
+
+                    {/* Requested On */}
+                    <td className="px-4 py-3 text-sm text-gray-500">
+                      {returnReq.returnRequestedAt
+                        ? new Date(returnReq.returnRequestedAt).toLocaleDateString()
+                        : "N/A"}
+                    </td>
+
+                    {/* Actions */}
+                    <td className="px-4 py-3">
+                      {returnReq.status === "Return_requested" && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleApprove(returnReq._id)}
+                            className="px-3 py-1 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() =>
+                              setRejectModal({
+                                open: true,
+                                orderId: returnReq._id,
+                                reason: ""
+                              })
+                            }
+                            className="px-3 py-1 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      )}
+
+                      {returnReq.status === "Returned" && (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
+                          ✓ Refunded
+                        </span>
+                      )}
+
+                      {returnReq.returnRejectedAt && (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-600 rounded-full text-sm">
+                          ✗ Rejected
+                        </span>
+                      )}
+                    </td>
+
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
       {/* Reject Modal */}
       {rejectModal.open && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl w-96">
-            <h2 className="text-lg font-semibold mb-3">
-              Reject Return
-            </h2>
+          <div className="bg-white p-6 rounded-xl w-96 max-w-[90%]">
+            <h2 className="text-xl font-semibold mb-4">Reject Return Request</h2>
 
-            <textarea
-              value={rejectModal.reason}
-              onChange={(e) =>
-                setRejectModal((prev) => ({
-                  ...prev,
-                  reason: e.target.value
-                }))
-              }
-              placeholder="Enter rejection reason..."
-              className="w-full border rounded-lg p-2 mb-4"
-              rows="3"
-            />
+            <p className="text-sm text-gray-600 mb-3">
+              Order: <span className="font-mono font-semibold">#{rejectModal.orderId?.slice(-8)}</span>
+            </p>
 
-            <div className="flex gap-2">
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Rejection Reason <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={rejectModal.reason}
+                onChange={(e) =>
+                  setRejectModal((prev) => ({
+                    ...prev,
+                    reason: e.target.value
+                  }))
+                }
+                placeholder="Enter reason for rejecting this return..."
+                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none resize-none"
+                rows="4"
+              />
+            </div>
+
+            <div className="flex gap-3">
               <button
                 onClick={() =>
-                  setRejectModal({
-                    open: false,
-                    orderId: null,
-                    reason: ""
-                  })
+                  setRejectModal({ open: false, orderId: null, reason: "" })
                 }
-                className="flex-1 border py-2 rounded-lg"
+                className="flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50 transition"
               >
                 Cancel
               </button>
-
               <button
                 onClick={handleReject}
-                className="flex-1 bg-red-600 text-white py-2 rounded-lg"
+                className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition"
               >
-                Reject
+                Confirm Rejection
               </button>
             </div>
           </div>

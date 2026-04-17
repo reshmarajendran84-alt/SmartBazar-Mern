@@ -330,16 +330,15 @@ const OrderDetailPage = () => {
             Request Return
           </button>
         )}
-        {order.status === "Return_rejected" && (
+       {/* Show rejection reason to user */}
+{order.status === "Return_rejected" && (
   <div className="bg-red-100 text-red-700 p-4 rounded-xl mb-4 text-center">
     <p className="font-semibold">❌ Return Request Rejected</p>
-
     {order.returnRejectionReason && (
       <p className="text-sm mt-2">
         Reason: <span className="font-medium">{order.returnRejectionReason}</span>
       </p>
     )}
-
     <p className="text-xs text-red-600 mt-1">
       Please contact support if you need help
     </p>
@@ -352,12 +351,12 @@ const OrderDetailPage = () => {
             <p className="text-sm mt-1">You'll be notified once processed</p>
           </div>
         )}
-        {order.returnRejectedAt && (
+        {/* {order.returnRejectedAt && (
   <div className="bg-red-100 text-red-800 p-4 rounded-xl mb-4">
     <p className="font-semibold">✗ Return Request Rejected</p>
     <p className="text-sm mt-1">Reason: {order.returnRejectionReason}</p>
   </div>
-)}
+)} */}
 
         {order.status === "Returned" && (
           <div className="bg-green-100 text-green-800 p-4 rounded-xl mb-4 text-center">
@@ -367,7 +366,7 @@ const OrderDetailPage = () => {
         )}
 
         {/* Refund note — shown after cancel/return for prepaid orders */}
-        {showRefundNote && (
+        {/* {showRefundNote && (
           <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4 text-sm text-green-700 text-center">
             <p className="font-semibold">
               Refund of ₹{order.total} has been credited to your wallet
@@ -376,7 +375,7 @@ const OrderDetailPage = () => {
               Check your wallet balance to see the updated amount
             </p>
           </div>
-        )}
+        )} */}
 
         {/* ── Bottom navigation buttons ── */}
         <div className="flex flex-col sm:flex-row gap-3">

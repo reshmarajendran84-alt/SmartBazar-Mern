@@ -44,6 +44,7 @@ const orderSchema = new mongoose.Schema(
                "Failed",
                 "Processing",
                "Return_requested",
+                 "Return_rejected",
               ],
       default: "Pending",
     },
@@ -73,9 +74,8 @@ returnReason: {
     returnRejectedAt:{
       type:Date,
     },
-    returnRejectedReason:{
-    type:String,
-  },
+returnRejectionReason: { type: String },
+
 refundAmount: {
   type: Number,
 },

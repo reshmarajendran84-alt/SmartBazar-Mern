@@ -26,6 +26,7 @@ const ReturnRequestModal = ({ order, onClose, onSuccess }) => {
     setLoading(true);
     try {
 await api.post(`/return/request/${order._id}`, {
+  reason,
         description
       });
       toast.success("Return request submitted successfully");

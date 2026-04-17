@@ -103,25 +103,25 @@ class AdminOrderController {
       res.status(400).json({ message: err.message });
     }
   }
-//   async rejectReturn(req, res) {
-//   try {
-//     const { id } = req.params;
-//     const { rejectionReason } = req.body;
+  async rejectReturn(req, res) {
+  try {
+    const { id } = req.params;
+    const { rejectionReason } = req.body;
 
-//     const order = await Order.findById(id);
-//     if (!order) return res.status(404).json({ message: "Order not found" });
+    const order = await Order.findById(id);
+    if (!order) return res.status(404).json({ message: "Order not found" });
 
-//     order.status = "Return_rejected";
-//     order.returnRejectedAt = new Date();
-//     order.rejectionReason = rejectionReason;
+    order.status = "Return_rejected";
+    order.returnRejectedAt = new Date();
+order.returnRejectionReason = rejectionReason;
 
-//     await order.save();
+    await order.save();
 
-//     res.json({ success: true, message: "Return rejected" });
-//   } catch (err) {
-//     res.status(500).json({ message: err.message });
-//   }
-// }
+    res.json({ success: true, message: "Return rejected" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+}
 
   async approveReturn(req, res) {
     try {
