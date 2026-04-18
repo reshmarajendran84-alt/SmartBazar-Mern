@@ -13,7 +13,8 @@ const orderSchema = new mongoose.Schema(
         name: String,
         quantity: Number,
         price: Number,
-        image: { type: String },
+          image:   { type: String },
+
       },
     ],
     subtotal: Number,
@@ -30,88 +31,82 @@ const orderSchema = new mongoose.Schema(
       pincode: { type: String, default: "" },
     },
     coupon: { type: String, default: "" },
-    paymentMethod: {
-      type: String,
-      enum: ["COD", "ONLINE", "WALLET"],
-      required: true,
-    },
+    paymentMethod: { type: String, enum: ["COD", "ONLINE","WALLET"], required: true },
     status: {
       type: String,
-      enum: [
-        "Pending",
-        "Confirmed",
-        "Shipped",
-        "Delivered",
-        "Paid",
-        "Cancelled",
-        "Returned",
-        "Failed",
-        "Processing",
-        "Return_requested",
-        "Return_rejected",
-      ],
+      enum: ["Pending",
+         "Confirmed",
+          "Shipped",
+           "Delivered",
+            "Paid",
+             "Cancelled",
+              "Returned",
+               "Failed",
+                "Processing",
+               "Return_requested",
+                 "Return_rejected",
+              ],
       default: "Pending",
     },
     deliveredAt: { type: Date, default: null },
-    cancelledAt: { type: Date, default: null },
-    returnedAt: { type: Date, default: null },
-    razorpayOrderId: {
-      type: String,
+cancelledAt: { type: Date, default: null },
+returnedAt: { type: Date, default: null },
+    razorpayOrderId: { 
+      type: String, 
       default: null,
-      sparse: true,
+      sparse:true
     },
-    returnRequested: {
-      type: Boolean,
-      default: false,
+    returnRequested:{
+      type:Boolean,
+      default:false
     },
-    returnReason: {
-      type: String,
-      enum: ["damaged", "wrong_item", "size_issue", "quality_issue", "other"],
-    },
-    returnRequestedAt: {
-      type: Date,
-    },
-    returnApprovedAt: {
-      type: Date,
-    },
-    returnRejectedAt: {
-      type: Date,
-    },
-    returnRejectionReason: { type: String },
+returnReason: {
+  type: String,
+  enum:  ["damaged", "wrong_item", "size_issue", "quality_issue", "other"],
 
-    refundAmount: {
-      type: Number,
+},
+    returnRequestedAt:{
+      type:Date,
     },
-    refundStatus: {
-      type: String,
-      enum: ["pending", "processing", "completed", "failed"],
+    returnApprovedAt:{
+      type:Date,
     },
-    refundCompletedAt: {
-      type: Date,
+    returnRejectedAt:{
+      type:Date,
     },
-    returnItems: [
-      {
-        productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
-        name: String,
-        quantity: Number,
-        price: Number,
-        reason: String,
-      },
-    ],
-    returnDescription: {
-      type: String,
-    },
+returnRejectionReason: { type: String },
+
+refundAmount: {
+  type: Number,
+},
+refundStatus: {
+  type: String,
+  enum: ["pending", "processing", "completed", "failed"],
+},
+  refundCompletedAt:{
+    type:Date,
+  },
+  returnItems:[{
+    productId:{ type:mongoose.Schema.Types.ObjectId, ref:"Product"},
+    name:String,
+    quantity:Number,
+    price:Number,
+    reason:String
+  }],
+returnDescription: {
+  type: String,
+},
     razorpayPaymentId: { type: String, default: null },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 orderSchema.index(
   { razorpayOrderId: 1 },
-  {
-    unique: true,
-    partialFilterExpression: { razorpayOrderId: { $type: "string" } },
-  },
+  { 
+    unique: true, 
+    partialFilterExpression: { razorpayOrderId: { $type: "string" } } 
+  }
 );
 
 const Order = mongoose.models.Order || mongoose.model("Order", orderSchema);
