@@ -1,4 +1,3 @@
-// components/OrderRow.jsx
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { useAdminOrders } from "../context/OrderContext";
@@ -32,7 +31,7 @@ const OrderRow = ({ order }) => {
     }
   };
 
-  // ✅ FIX: Get customer name from multiple sources
+  // Get customer name from multiple sources
   const getCustomerName = () => {
     // Priority 1: From populated userId
     if (order.userId?.name) return order.userId.name;
@@ -47,14 +46,14 @@ const OrderRow = ({ order }) => {
     return "Guest User";
   };
 
-  // ✅ FIX: Get customer email
+  //  FIX: Get customer email
   const getCustomerEmail = () => {
     if (order.userId?.email) return order.userId.email;
     if (order.address?.email) return order.address.email;
     return "No email";
   };
 
-  // ✅ FIX: Get customer phone
+  //  Get customer phone
   const getCustomerPhone = () => {
     if (order.userId?.phone) return order.userId.phone;
     if (order.address?.phone) return order.address.phone;

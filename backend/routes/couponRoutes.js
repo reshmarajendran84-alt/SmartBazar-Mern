@@ -1,8 +1,7 @@
-// routes/couponRoutes.js
 import express from "express";
 import couponController from "../controllers/couponController.js";
 import adminProtect from "../middlewares/adminProtect.js";
-import { protect } from "../middlewares/authMiddleware.js"; // ✅ Use named import
+import { protect } from "../middlewares/authMiddleware.js"; 
 
 const router = express.Router();
 

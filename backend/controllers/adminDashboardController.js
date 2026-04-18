@@ -1,4 +1,3 @@
-// backend/controllers/adminDashboardController.js
 import Order from "../models/Order.js";
 import User from "../models/User.js";
 import Product from "../models/Product.js";
@@ -37,10 +36,10 @@ export const getDashboardStats = async (req, res) => {
         { $match: { status: "Delivered" } },
         { $group: { _id: null, total: { $sum: "$total" } } },
       ]),
-      // ✅ FIX: Include address field in the query
+      
       Order.find()
         .populate("userId", "name email phone")
-        .select("_id userId address total status createdAt") // Add address field
+        .select("_id userId address total status createdAt") 
         .sort({ createdAt: -1 })
         .limit(5)
         .lean(),
@@ -84,11 +83,10 @@ export const getDashboardStats = async (req, res) => {
 
     const totalRevenue = revenueData[0]?.total ?? 0;
 
-    // ✅ FIX: Format recent orders to include address data
     const formattedRecentOrders = recentOrders.map(order => ({
       _id: order._id,
       userId: order.userId || null,
-      address: order.address || null, // ✅ Include the full address object
+      address: order.address || null, 
       total: order.total || 0,
       status: order.status || "Pending",
       createdAt: order.createdAt,

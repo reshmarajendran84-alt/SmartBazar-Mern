@@ -32,11 +32,10 @@ class ReturnController {
   }
   
   // Admin: Approve return
-  // Make sure adminId is properly passed
 async approveReturn(req, res) {
   try {
     const { orderId } = req.params;
-    const adminId = req.admin?.id || req.user?.id; // Handle both cases
+    const adminId = req.admin?.id || req.user?.id; 
     console.log("Approve return - orderId:", orderId);
       console.log("Approve return - adminId:", adminId);
     const { order, refundAmount } = await returnService.approveReturn(orderId, adminId);

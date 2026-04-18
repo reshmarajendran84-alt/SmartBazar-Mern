@@ -60,7 +60,7 @@ const handleAdd = async (product, quantity = 1) => {
   }
   try {
     await addToCart({ productId: product._id, quantity, price: product.price });
-    toast.success("Added to cart! 🛒");   // logged-in toast — was missing
+    toast.success("Added to cart! 🛒");   
     fetchCart();
   } catch (err) {
     toast.error("Failed to add to cart");

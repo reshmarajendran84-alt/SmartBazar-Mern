@@ -72,7 +72,6 @@ walletSchema.methods.deductMoney = async function(amount, description, orderId =
   return this;
 };
 
-// ✅ Fix: Check if model already exists before creating
 const Wallet = mongoose.models.Wallet || mongoose.model("Wallet", walletSchema);
 
 export default Wallet;

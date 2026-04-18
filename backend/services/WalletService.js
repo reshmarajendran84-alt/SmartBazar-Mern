@@ -32,7 +32,7 @@ class WalletService {
       
       await wallet.addMoney(amount, description, orderId);
       
-      console.log(`✅ Wallet credited: ₹${oldBalance} → ₹${wallet.balance}`);
+      console.log(`Wallet credited: ₹${oldBalance} → ₹${wallet.balance}`);
       console.log(`Transaction added: ${description}`);
       
       return wallet;
@@ -53,7 +53,7 @@ class WalletService {
       
       await wallet.deductMoney(amount, description, orderId);
       
-      console.log(`✅ Wallet debited: ₹${oldBalance} → ₹${wallet.balance}`);
+      console.log(` Wallet debited: ₹${oldBalance} → ₹${wallet.balance}`);
       
       return wallet;
     } catch (error) {

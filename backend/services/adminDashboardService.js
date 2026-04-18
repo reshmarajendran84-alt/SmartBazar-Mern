@@ -1,4 +1,3 @@
-// backend/services/adminDashboardService.js
 import Order from "../models/Order.js";
 import User from "../models/User.js";
 import Product from "../models/Product.js";
@@ -36,7 +35,6 @@ class AdminDashboardService {
           { $match: { status: "Delivered" } },
           { $group: { _id: null, total: { $sum: "$total" } } },
         ]),
-        // ✅ FIX: Include address field
         Order.find()
           .populate("userId", "name email phone")
           .select("_id userId address total status createdAt")
@@ -81,7 +79,6 @@ class AdminDashboardService {
         })
       );
 
-      // ✅ FIX: Include address data in recent orders
       return {
         totalOrders,
         totalUsers,
@@ -100,7 +97,7 @@ class AdminDashboardService {
         recentOrders: recentOrders.map(order => ({
           _id: order._id,
           userId: order.userId || null,
-          address: order.address || null, // ✅ Include address
+          address: order.address || null, 
           total: order.total,
           status: order.status,
           createdAt: order.createdAt,

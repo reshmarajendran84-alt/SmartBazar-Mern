@@ -244,7 +244,6 @@ class ReportService {
         cancelledAt: o.status === "Cancelled" ? o.updatedAt : null,
         returnedAt: o.status === "Returned" ? o.updatedAt : null,
         
-        // ✅ CORRECT: Use address data first, then user data
         customer: {
           name: o.customerInfo.name,
           email: o.customerInfo.email,
@@ -355,7 +354,7 @@ class ReportService {
 
       const customerInsights = {
         totalUniqueCustomers: customerList.length,
-        newCustomers: customerList.length, // Simplified for guest checkouts
+        newCustomers: customerList.length, 
         returningCustomers: repeatBuyers,
         repeatPurchaseRate,
         customerSegments: { 
