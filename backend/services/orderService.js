@@ -1,34 +1,24 @@
 import razorpay from "../config/razorpay.js";
 import Order from "../models/order.js";
 import crypto from "crypto";
-import WalletService from "./walletService.js"; 
+import WalletService from "./walletService.js";
 import Cart from "../models/Cart.js";
 import Product from "../models/Product.js";
+
 class OrderService {
-// ─── Helper: Deduct stock for all items in cart ───────────────────────────
+  // ─── Helper: Deduct stock ─────────────────────────────────────────────────
   async deductStockForItems(cartItems) {
     for (const item of cartItems) {
       const productId = item.productId?._id || item.productId;
       const product = await Product.findById(productId);
-      
-      if (!product) {
-        throw new Error(`Product ${item.name} not found`);
-      }
-      
-      if (product.stock < item.quantity) {
+      if (!product) throw new Error(`Product ${item.name} not found`);
+      if (product.stock < item.quantity)
         throw new Error(`${product.name} has insufficient stock. Available: ${product.stock}`);
-      }
-      
-      // Deduct stock
-      await Product.findByIdAndUpdate(
-        productId,
-        { $inc: { stock: -item.quantity } },
-        { new: true }
-      );
+      await Product.findByIdAndUpdate(productId, { $inc: { stock: -item.quantity } }, { new: true });
     }
   }
 
-  // ─── Helper: Restore stock for cancelled/returned orders ───────────────────
+  // ─── Helper: Restore stock ────────────────────────────────────────────────
   async restoreStockForItems(cartItems) {
     for (const item of cartItems) {
       await Product.findByIdAndUpdate(
@@ -38,6 +28,7 @@ class OrderService {
       );
     }
   }
+
   // ─── Create Razorpay order session ───────────────────────────────────────
   async createRazorpayOrder(amount) {
     if (!amount || amount <= 0) throw new Error("Invalid amount");
@@ -48,24 +39,35 @@ class OrderService {
     });
   }
 
-  // ─── Save order to DB (COD or after Razorpay) ────────────────────────────
+  // ─── Save order to DB ─────────────────────────────────────────────────────
   async createOrder(userId, data, razorpayOrderId = null) {
     if (!data.cartItems || !data.cartItems.length) throw new Error("Cart is empty");
     if (!data.total || data.total <= 0) throw new Error("Invalid total");
     if (!data.address) throw new Error("Address required");
 
-      await this.deductStockForItems(data.cartItems);
+    await this.deductStockForItems(data.cartItems);
 
-    const mappedItems = data.cartItems.map((item) => ({
-      productId: item.productId?._id || item.productId,
-      name: item.name || "Unknown Product",
-      quantity: item.quantity || 1,
-      price: item.price || 0,
-    }));
+    // Build cart items, fetching image from Product if missing
+    const processedCartItems = await Promise.all(
+      data.cartItems.map(async (item) => {
+        let imageUrl = item.image;
+        if (!imageUrl && item.productId) {
+          const product = await Product.findById(item.productId?._id || item.productId);
+          if (product?.images?.length) imageUrl = product.images[0];
+        }
+        return {
+          productId: item.productId?._id || item.productId,
+          name: item.name || "Unknown Product",
+          quantity: item.quantity || 1,
+          price: item.price || 0,
+          image: imageUrl || null,
+        };
+      })
+    );
 
     const orderData = {
       userId,
-      cartItems: mappedItems,
+      cartItems: processedCartItems,
       subtotal: data.subtotal || 0,
       shipping: data.shipping || 0,
       tax: data.tax || 0,
@@ -92,55 +94,39 @@ class OrderService {
 
   // ─── Verify Razorpay signature + save order ───────────────────────────────
   async verifyAndSaveOrder(userId, body) {
-    const {
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
-      orderData,
-    } = body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderData } = body;
 
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
       .update(razorpay_order_id + "|" + razorpay_payment_id)
       .digest("hex");
 
-    if (expectedSignature !== razorpay_signature) {
-      throw new Error("INVALID_SIGNATURE");
-    }
+    if (expectedSignature !== razorpay_signature) throw new Error("INVALID_SIGNATURE");
 
     const order = await this.createOrder(
       userId,
       { ...orderData, paymentMethod: "ONLINE" },
       razorpay_order_id
     );
-
     order.status = "Confirmed";
     order.razorpayPaymentId = razorpay_payment_id;
     await order.save();
-
     return order;
   }
 
   // ─── Cancel order ─────────────────────────────────────────────────────────
   async cancelOrder(orderId, userId) {
-      console.log(`=== Cancelling order ${orderId} for user ${userId} ===`);
-
     const order = await Order.findById(orderId);
     if (!order) throw new Error("Order not found");
-   
-    if (order.userId.toString() !== userId.toString()) {
+    if (order.userId.toString() !== userId.toString())
       throw new Error("Not authorized to cancel this order");
-    }
-    if (!["Pending", "Confirmed"].includes(order.status)) {
+    if (!["Pending", "Confirmed"].includes(order.status))
       throw new Error("Only pending or confirmed orders can be cancelled");
-    }
-        await this.restoreStockForItems(order.cartItems);
 
-
+    await this.restoreStockForItems(order.cartItems);
     order.status = "Cancelled";
     await order.save();
 
-    // FIX 3 — refund both ONLINE and WALLET prepaid orders
     if (order.paymentMethod === "ONLINE" || order.paymentMethod === "WALLET") {
       await WalletService.creditWallet(
         userId,
@@ -149,37 +135,26 @@ class OrderService {
         order._id
       );
     }
-
     return order;
   }
 
   // ─── Return order ─────────────────────────────────────────────────────────
   async returnOrder(orderId, userId) {
-        console.log(`=== Returning order ${orderId} for user ${userId} ===`);
-
     const order = await Order.findById(orderId);
     if (!order) throw new Error("Order not found");
-
-    if (order.userId.toString() !== userId.toString()) {
+    if (order.userId.toString() !== userId.toString())
       throw new Error("Not authorized to return this order");
-    }
-    if (order.status !== "Delivered") {
+    if (order.status !== "Delivered")
       throw new Error("Only delivered orders can be returned");
-    }
 
-    const daysSince =
-      (Date.now() - new Date(order.updatedAt)) / (1000 * 60 * 60 * 24);
-    if (daysSince > 7) {
-      throw new Error(
-        "Return window expired. Returns accepted within 7 days of delivery."
-      );
-    }
+    const daysSince = (Date.now() - new Date(order.updatedAt)) / (1000 * 60 * 60 * 24);
+    if (daysSince > 7)
+      throw new Error("Return window expired. Returns accepted within 7 days of delivery.");
+
     await this.restoreStockForItems(order.cartItems);
-
     order.status = "Returned";
     await order.save();
 
-    //  refund both ONLINE and WALLET prepaid orders on return
     if (order.paymentMethod === "ONLINE" || order.paymentMethod === "WALLET") {
       await WalletService.creditWallet(
         userId,
@@ -188,25 +163,16 @@ class OrderService {
         order._id
       );
     }
-
     return order;
   }
 
   // ─── Wallet order ─────────────────────────────────────────────────────────
   async placeWalletOrder(userId, data) {
-
-    // await this.deductStockForItems(data.cartItems);
-
-    const order = await this.createOrder(
-      userId,
-      { ...data, paymentMethod: "WALLET" },
-      null
-    );
-    // Debit wallet first — throws "Insufficient wallet balance" if not enough
+    const order = await this.createOrder(userId, { ...data, paymentMethod: "WALLET" }, null);
     await WalletService.debitWallet(
       userId,
       data.total,
-    `Payment for order #${order._id.toString().slice(-8).toUpperCase()}`,
+      `Payment for order #${order._id.toString().slice(-8).toUpperCase()}`,
       order._id
     );
     order.status = "Confirmed";
@@ -216,24 +182,41 @@ class OrderService {
 
   // ─── Get all orders for a user ────────────────────────────────────────────
   async getUserOrders(userId) {
-    return await Order.find({ userId }).sort({ createdAt: -1 });
+    const orders = await Order.find({ userId })
+      .sort({ createdAt: -1 })
+      .populate("cartItems.productId", "name images price");
+
+    return orders.map((order) => {
+      const obj = order.toObject();
+      obj.cartItems = obj.cartItems.map((item) => ({
+        ...item,
+        image: item.image || item.productId?.images?.[0] || null,
+        name: item.name || item.productId?.name,
+        price: item.price || item.productId?.price,
+      }));
+      return obj;
+    });
   }
 
   // ─── Get single order ─────────────────────────────────────────────────────
-  async getOrderById(orderId) {
-    const order = await Order.findById(orderId);
+  async getOrderById(orderId, userId) {
+    const order = await Order.findById(orderId).populate(
+      "cartItems.productId",
+      "name images price description"
+    );
     if (!order) throw new Error("Order not found");
-    return order;
+    if (userId && order.userId.toString() !== userId.toString())
+      throw new Error("Not authorized");
+
+    const obj = order.toObject();
+    obj.cartItems = obj.cartItems.map((item) => ({
+      ...item,
+      image: item.image || item.productId?.images?.[0] || null,
+      name: item.name || item.productId?.name,
+      price: item.price || item.productId?.price,
+    }));
+    return obj;
   }
-  // In getOrderById — add this ownership check
-async getOrderById(orderId, userId) {
-  const order = await Order.findById(orderId);
-  if (!order) throw new Error("Order not found");
-  if (order.userId.toString() !== userId.toString()) {
-    throw new Error("Not authorized");
-  }
-  return order;
-}
 }
 
 export default new OrderService();

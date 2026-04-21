@@ -2,17 +2,22 @@ import Cart from "../models/Cart.js";
 
 class CartService {
 
-  async addToCart(userId, { productId, quantity, price }) {
+  async addToCart(userId, { productId, quantity, price ,name,image}) {
     let cart = await Cart.findOne({ userId });
     if (!cart) cart = new Cart({ userId, items: [] });
-
+const safePrice    = parseFloat(price)    || 0;
+  const safeQuantity = parseInt(quantity)   || 1;
     const index = cart.items.findIndex(
       item => item.productId.toString() === productId
     );
     if (index > -1) {
       cart.items[index].quantity += quantity;
+      if (!cart.items[index].price) {
+      cart.items[index].price = safePrice;
+    }
+  
     } else {
-      cart.items.push({ productId, quantity, price });
+      cart.items.push({ productId, quantity, price ,name,image});
     }
 
     cart.totalAmount = cart.items.reduce(

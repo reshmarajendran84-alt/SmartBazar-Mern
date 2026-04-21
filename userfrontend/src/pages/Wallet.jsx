@@ -1,52 +1,84 @@
-import { useState, useEffect } from "react";
-import { toast } from "react-toastify";  
+import { useState, useEffect, useCallback } from "react";
+import { toast } from "react-toastify";
 import api from "../utils/api";
 import { useNavigate } from "react-router-dom";
 
 const WalletPage = () => {
-  const [wallet, setWallet] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [wallet, setWallet]       = useState(null);
+  const [loading, setLoading]     = useState(true);
   const [addAmount, setAddAmount] = useState("");
-  const [adding, setAdding] = useState(false);
+  const [adding, setAdding]       = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchWallet = async () => {
-      try {
-        const { data } = await api.get("/wallet");
-        setWallet(data.wallet);
-      } catch (err) {
-        console.error("Wallet fetch error:", err);
-        toast.error("Failed to load wallet");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchWallet();
+  // ── Fetch wallet ─────────────────────────────────────────────────────
+  // useCallback so handleTopUp can call it after top-up succeeds
+  const fetchWallet = useCallback(async () => {
+    try {
+      const { data } = await api.get("/wallet");
+      setWallet(data.wallet);
+    } catch (err) {
+      console.error("Wallet fetch error:", err);
+      toast.error("Failed to load wallet");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const handleAddMoney = async () => {
-    if (!addAmount || addAmount <= 0) {
+  useEffect(() => {
+    fetchWallet();
+  }, [fetchWallet]);
+
+  // ── Razorpay top-up ──────────────────────────────────────────────────
+  const handleTopUp = async (amount) => {
+    if (!amount || amount <= 0) {
       toast.error("Please enter a valid amount");
       return;
     }
-    
-    setAdding(true);
+
     try {
-      const { data } = await api.post("/wallet/credit", {
-        amount: parseFloat(addAmount),
-        description: "Added money to wallet"
-      });
-      
-      setWallet(data.wallet);
-      toast.success(`₹${addAmount} added to wallet!`);
-      setAddAmount("");
+      // Step 1: create Razorpay order
+      const { data } = await api.post("/wallet/topup/create", { amount: parseFloat(amount) });
+
+      // Step 2: open Razorpay checkout
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: data.order.amount,
+        currency: "INR",
+        name: "SmartBazar Wallet",
+        description: `Add ₹${amount} to wallet`,
+        order_id: data.order.id,
+        handler: async (response) => {
+          try {
+            // Step 3: verify and credit
+            await api.post("/wallet/topup/verify", {
+              ...response,
+              amount: parseFloat(amount),
+            });
+            toast.success(`₹${amount} added to wallet!`);
+            setAddAmount("");
+            await fetchWallet(); // refresh balance
+          } catch (err) {
+            toast.error(err?.response?.data?.message || "Payment verification failed");
+          }
+        },
+        prefill: {},
+        theme: { color: "#6366f1" },
+        modal: {
+          ondismiss: () => toast.info("Payment cancelled"),
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     } catch (err) {
-      console.error("Add money error:", err);
-      toast.error(err.response?.data?.message || "Failed to add money");
-    } finally {
-      setAdding(false);
+      console.error("Top-up error:", err);
+      toast.error(err?.response?.data?.message || "Failed to initiate payment");
     }
+  };
+
+  // ── Quick-add presets ────────────────────────────────────────────────
+  const handleQuickAdd = (amount) => {
+    setAddAmount(String(amount));
   };
 
   if (loading) {
@@ -72,9 +104,10 @@ const WalletPage = () => {
           </p>
         </div>
 
-        {/* Add Money Section - Moved BEFORE quick links for better visibility */}
+        {/* Add Money via Razorpay */}
         <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
           <h3 className="font-semibold text-gray-700 mb-3">Add Money to Wallet</h3>
+
           <div className="flex gap-3">
             <input
               type="number"
@@ -86,34 +119,40 @@ const WalletPage = () => {
               step="100"
             />
             <button
-              onClick={handleAddMoney}
+              onClick={() => handleTopUp(addAmount)}
               disabled={adding}
-              className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition"
+              className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition whitespace-nowrap"
             >
-              {adding ? "Adding..." : "Add Money"}
+              {adding ? "Processing..." : "Add Money"}
             </button>
           </div>
-          <p className="text-xs text-gray-500 mt-2">
-            💡 Quick add: 
-            <button 
-              onClick={() => setAddAmount("100")} 
-              className="ml-2 text-indigo-600 hover:text-indigo-800 font-medium"
-            >
-              ₹100
-            </button>
-            <button 
-              onClick={() => setAddAmount("500")} 
-              className="ml-2 text-indigo-600 hover:text-indigo-800 font-medium"
-            >
-              ₹500
-            </button>
-            <button 
-              onClick={() => setAddAmount("1000")} 
-              className="ml-2 text-indigo-600 hover:text-indigo-800 font-medium"
-            >
-              ₹1000
-            </button>
+
+          {/* Quick presets */}
+          <p className="text-xs text-gray-500 mt-3">
+            Quick add:
+            {[100, 500, 1000, 2000].map((amt) => (
+              <button
+                key={amt}
+                onClick={() => handleQuickAdd(amt)}
+                className="ml-2 text-indigo-600 hover:text-indigo-800 font-medium underline-offset-2 hover:underline"
+              >
+                ₹{amt}
+              </button>
+            ))}
           </p>
+
+          {/* Quick pay directly without typing */}
+          <div className="grid grid-cols-4 gap-2 mt-3">
+            {[100, 500, 1000, 2000].map((amt) => (
+              <button
+                key={amt}
+                onClick={() => handleTopUp(amt)}
+                className="border border-indigo-200 text-indigo-600 text-sm py-1.5 rounded-lg hover:bg-indigo-50 transition font-medium"
+              >
+                ₹{amt}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Quick links */}
@@ -134,9 +173,7 @@ const WalletPage = () => {
 
         {/* Transaction history */}
         <div className="bg-white rounded-2xl shadow-sm p-6">
-          <h3 className="font-semibold text-gray-700 mb-4">
-            Transaction History
-          </h3>
+          <h3 className="font-semibold text-gray-700 mb-4">Transaction History</h3>
 
           {!wallet?.transactions?.length ? (
             <div className="text-center py-8">
@@ -167,11 +204,8 @@ const WalletPage = () => {
                       </p>
                       <p className="text-xs text-gray-400">
                         {new Date(txn.createdAt).toLocaleDateString("en-IN", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit"
+                          day: "numeric", month: "short", year: "numeric",
+                          hour: "2-digit", minute: "2-digit",
                         })}
                       </p>
                     </div>
@@ -186,6 +220,7 @@ const WalletPage = () => {
             </div>
           )}
         </div>
+
       </div>
     </div>
   );

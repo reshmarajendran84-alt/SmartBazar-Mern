@@ -19,6 +19,7 @@ import OrdersPage from "./pages/OrderPage";
 import OrderDetailPage from "./pages/orderDetailPage";
 import { ReviewProvider } from "./context/ReviewContext";
 import ChatBot from "./components/ChatBot/ChatBot";
+import InvoicePage from "./pages/Invoice";
 function App() {
   return (
     <BrowserRouter>
@@ -45,6 +46,7 @@ function App() {
                 <Route path="/my-orders" element={<OrdersPage />} />
                 <Route path="/wallet" element={<Wallet />} />
                 <Route path="/orders/:orderId" element={<OrderDetailPage />} />
+                <Route path="/orders/:id" element={<InvoicePage />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />
