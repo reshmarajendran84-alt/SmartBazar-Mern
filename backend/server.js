@@ -36,9 +36,6 @@ app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 
-// app.get("/", (req, res) => {
-//   res.send("API is running...");
-// });
 
 //  Public routes — no cache blocking needed
 app.use("/api/auth", authRoutes);

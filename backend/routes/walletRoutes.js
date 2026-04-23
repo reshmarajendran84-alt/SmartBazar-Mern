@@ -3,6 +3,7 @@ import {protect} from "../middlewares/authMiddleware.js";
 import walletController from "../controllers/walletController.js";
 import razorpay from "../config/razorpay.js";
 import crypto from "crypto";
+import WalletService from "../services/walletService.js";
 
 const router = express.Router();
 
@@ -16,18 +17,21 @@ router.post("/topup/create", protect, async (req, res) => {
     if (!amount || amount < 1)
       return res.status(400).json({ message: "Minimum top-up is ₹1" });
 
-    const order = await razorpay.orders.create({
-      amount: Math.round(amount * 100), // paise
-      currency: "INR",
-      receipt: "wallet_topup_" + Date.now(),
-    });
+ const order = await razorpay.orders.create({
+  amount: Math.round(amount * 100),
+  currency: "INR",
+  receipt: "wallet_topup_" + Date.now(),
+  notes: {
+    userId: req.user.id,
+    amount: amount
+  }
+});
     res.json({ success: true, order });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// Step 2: Verify and credit wallet
 router.post("/topup/verify", protect, async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, amount } = req.body;
@@ -40,13 +44,18 @@ router.post("/topup/verify", protect, async (req, res) => {
     if (expected !== razorpay_signature)
       return res.status(400).json({ message: "Payment verification failed" });
 
-    const wallet = await WalletService.creditWallet(
-      req.user.id,
-      amount,
-      `Wallet top-up via Razorpay (${razorpay_payment_id})`
-    );
+    const order = await razorpay.orders.fetch(razorpay_order_id);
+
+const wallet = await WalletService.creditWallet(
+  req.user.id,
+  Number(order.notes.amount),
+  `Wallet top-up via Razorpay (${razorpay_payment_id})`
+);
+
     res.json({ success: true, wallet });
+
   } catch (err) {
+    console.error("VERIFY ERROR:", err);
     res.status(500).json({ message: err.message });
   }
 });

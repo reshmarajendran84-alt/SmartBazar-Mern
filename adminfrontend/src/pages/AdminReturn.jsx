@@ -1,4 +1,3 @@
-// frontend/src/pages/AdminReturns.jsx
 import { useEffect, useState } from "react";
 import api from "../utils/api";
 import { toast } from "react-toastify";
@@ -7,6 +6,7 @@ const AdminReturns = () => {
   const [returns, setReturns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("pending");
+  const [processingId, setProcessingId] = useState(null);
 
   const [rejectModal, setRejectModal] = useState({
     open: false,
@@ -31,33 +31,55 @@ const AdminReturns = () => {
     fetchReturns();
   }, [filter]);
 
+  //  Use the correct function name
   const handleApprove = async (orderId) => {
-    if (!window.confirm("Approve this return and process refund?")) return;
     try {
-      await api.post(`/returns/${orderId}/approve`);
-      toast.success("Return approved and refund processed");
-      fetchReturns();
+      setProcessingId(orderId);
+      // Note: Your route uses POST not PATCH based on your route definition
+      const response = await api.post(`/returns/${orderId}/approve`);
+      
+      if (response.data.success) {
+        toast.success(`Return approved! Refund amount: ₹${response.data.refundAmount || 'N/A'}`);
+        fetchReturns(); // Refresh the list
+      } else {
+        toast.error(response.data.message || "Failed to approve return");
+      }
     } catch (error) {
-      console.error("Approve error:", error.response?.data);
+      console.error("Approve error:", error);
       toast.error(error.response?.data?.message || "Failed to approve return");
+    } finally {
+      setProcessingId(null);
     }
   };
 
+  //  Use the correct function name
   const handleReject = async () => {
-    if (!rejectModal.reason.trim()) {
-      toast.error("Please enter rejection reason");
+    const { orderId, reason } = rejectModal;
+    
+    if (!reason || reason.trim() === "") {
+      toast.error("Please provide a rejection reason");
       return;
     }
+
     try {
-      await api.post(`/returns/${rejectModal.orderId}/reject`, {
-        rejectionReason: rejectModal.reason
+      setProcessingId(orderId);
+      // Note: Your route uses POST not PATCH based on your route definition
+      const response = await api.post(`/returns/${orderId}/reject`, {
+        rejectionReason: reason
       });
-      toast.success("Return request rejected");
-      setRejectModal({ open: false, orderId: null, reason: "" });
-      fetchReturns();
+      
+      if (response.data.success) {
+        toast.success("Return request rejected");
+        setRejectModal({ open: false, orderId: null, reason: "" });
+        fetchReturns(); // Refresh the list
+      } else {
+        toast.error(response.data.message || "Failed to reject return");
+      }
     } catch (error) {
-      console.error("Reject error:", error.response?.data);
+      console.error("Reject error:", error);
       toast.error(error.response?.data?.message || "Failed to reject return");
+    } finally {
+      setProcessingId(null);
     }
   };
 
@@ -108,7 +130,6 @@ const AdminReturns = () => {
               <tbody>
                 {returns.map((returnReq) => (
                   <tr key={returnReq._id} className="border-t hover:bg-gray-50">
-
                     {/* Order ID */}
                     <td className="px-4 py-3 font-mono text-sm">
                       #{returnReq._id?.slice(-8)}
@@ -195,9 +216,10 @@ const AdminReturns = () => {
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleApprove(returnReq._id)}
-                            className="px-3 py-1 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition"
+                            disabled={processingId === returnReq._id}
+                            className="px-3 py-1 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition disabled:opacity-50"
                           >
-                            Approve
+                            {processingId === returnReq._id ? "Processing..." : "Approve"}
                           </button>
                           <button
                             onClick={() =>
@@ -207,7 +229,8 @@ const AdminReturns = () => {
                                 reason: ""
                               })
                             }
-                            className="px-3 py-1 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition"
+                            disabled={processingId === returnReq._id}
+                            className="px-3 py-1 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition disabled:opacity-50"
                           >
                             Reject
                           </button>
@@ -226,7 +249,6 @@ const AdminReturns = () => {
                         </span>
                       )}
                     </td>
-
                   </tr>
                 ))}
               </tbody>
@@ -274,9 +296,10 @@ const AdminReturns = () => {
               </button>
               <button
                 onClick={handleReject}
-                className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition"
+                disabled={processingId === rejectModal.orderId}
+                className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition disabled:opacity-50"
               >
-                Confirm Rejection
+                {processingId === rejectModal.orderId ? "Processing..." : "Confirm Rejection"}
               </button>
             </div>
           </div>

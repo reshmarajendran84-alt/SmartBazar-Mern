@@ -34,42 +34,68 @@ class ReturnService {
     await order.save();
     return order;
   }
-
-  async approveReturn(orderId, adminId) {
+// services/returnService.js - Updated approveReturn method
+async approveReturn(orderId, adminId) {
+  try {
     const order = await Order.findById(orderId);
-
+    
     if (!order) throw new Error("Order not found");
+    
     if (order.status !== "Return_requested") {
       throw new Error("Order is not in return requested state");
     }
-
+    
+    // Update order status first
+    order.status = "Returned";
+    order.returnApprovedAt = new Date();
+    order.refundStatus = "processing";
+    order.refundAmount = order.total;
+    
+    await order.save();
+    
+    // Credit wallet with REFUND transaction type
+    try {
+      await WalletService.creditWallet(
+        order.userId,
+        order.total,
+        `Refund for returned order #${order._id.toString().slice(-8).toUpperCase()}`,
+        order._id,
+        "REFUND"
+      );
+      
+      // Update refund status to completed
+      order.refundStatus = "completed";
+      order.refundCompletedAt = new Date();
+      await order.save();
+      
+    } catch (walletError) {
+      console.error("Wallet credit failed:", walletError);
+      // Don't revert status, mark as pending refund
+      order.refundStatus = "failed";
+      order.refundFailedReason = walletError.message;
+      await order.save();
+      throw new Error(`Refund failed but order is marked as returned. Please process refund manually. Error: ${walletError.message}`);
+    }
+    
     // Restore stock
     for (const item of order.cartItems) {
       await Product.findByIdAndUpdate(
         item.productId,
-        { $inc: { stock: item.quantity } },
-        { new: true }
+        { $inc: { stock: item.quantity } }
       );
     }
-
-    const refundAmount = order.total;
-
-    await WalletService.creditWallet(
-      order.userId,
-      refundAmount,
-      `Refund for returned order #${order._id.toString().slice(-8).toUpperCase()}`,
-      order._id
-    );
-
-    order.status = "Returned";
-    order.returnApprovedAt = new Date();
-    order.refundAmount = refundAmount;
-    order.refundCompletedAt = new Date();
-
-    await order.save();
-    return { order, refundAmount };
+    
+    return {
+      success: true,
+      order,
+      refundAmount: order.total,
+      message: "Return approved and refund processed successfully"
+    };
+  } catch (error) {
+    console.error("Approve return error:", error);
+    throw error;
   }
-
+}
   async rejectReturn(orderId, adminId, rejectionReason) {
     const order = await Order.findById(orderId);
 

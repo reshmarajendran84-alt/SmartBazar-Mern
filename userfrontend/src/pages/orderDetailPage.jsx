@@ -1,411 +1,382 @@
-import { useEffect, useState, useCallback } from "react";
-import { Link, useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
 import api from "../utils/api";
 import { toast } from "react-toastify";
-import ReturnRequestModal from "../components/ReturnRequestModel";
-
-const statusSteps = ["Pending", "Confirmed", "Shipped", "Delivered"];
 
 const OrderDetailPage = () => {
-  const { orderId } = useParams();
-  const navigate = useNavigate();
+  const { id } = useParams();
   const [searchParams] = useSearchParams();
-  const [order, setOrder]               = useState(null);
-  const [loading, setLoading]           = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [error, setError]               = useState("");
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
   const [showReturnModal, setShowReturnModal] = useState(false);
+  const [returnReason, setReturnReason] = useState("");
+  const [returnDescription, setReturnDescription] = useState("");
+  const [submittingReturn, setSubmittingReturn] = useState(false);
 
-  // ── Fetch order ───────────────────────────────────────────────────────
+  // Check if action=return in URL
   useEffect(() => {
-    if (!orderId) return;
-    setLoading(true);
-    setError("");
-    api.get(`/order/${orderId}`)
-      .then(res => setOrder(res.data.order))
-      .catch(err => setError(err?.response?.data?.message || "Could not load order"))
-      .finally(() => setLoading(false));
-  }, [orderId]);
-
-  // ── Cancel ────────────────────────────────────────────────────────────
-  const handleCancel = useCallback(async () => {
-    setActionLoading(true);
-    try {
-      const { data } = await api.patch(`/order/cancel/${order._id}`);
-      toast.success("Order cancelled! Refund credited to wallet if applicable.");
-      setOrder(data.order);
-    } catch (err) {
-      toast.error(err?.response?.data?.message || "Cancel failed!");
-    } finally {
-      setActionLoading(false);
+    const action = searchParams.get("action");
+    if (action === "return" && order && order.status === "Delivered" && !order.returnRequested) {
+      setShowReturnModal(true);
     }
-  }, [order?._id]);
+  }, [searchParams, order]);
 
-  // ── Buy All Again ─────────────────────────────────────────────────────
-  const handleBuyAllAgain = useCallback(async () => {
-    setActionLoading(true);
+  // Download Invoice Handler
+  const handleDownloadInvoice = async () => {
     try {
-      for (const item of order.cartItems) {
-        await api.post("/cart/add", {
-          productId: item.productId?._id || item.productId,
-          quantity:  item.quantity,
-          price:     item.price,
-          name:      item.name,
-          image:     item.image,
-        });
-      }
-      toast.success("Items added to cart! Redirecting...");
-      setTimeout(() => navigate("/cart"), 1500);
-    } catch (err) {
-      console.error("Buy all error:", err);
-      toast.error(err?.response?.data?.message || "Failed to add items to cart");
-    } finally {
-      setActionLoading(false);
-    }
-  }, [order?.cartItems, navigate]);
-
-  // ── Buy Single Item ───────────────────────────────────────────────────
-  // ✅ Only ONE declaration — the fixed version with price/name/image
-  const handleBuySingleItem = useCallback(async (item) => {
-    setActionLoading(true);
-    try {
-      await api.post("/cart/add", {
-        productId: item.productId?._id || item.productId,
-        quantity:  1,
-        price:     item.price,
-        name:      item.name,
-        image:     item.image,
+      setDownloading(true);
+      const response = await api.get(`/order/invoice/${id}`, {
+        responseType: 'blob'
       });
-      toast.success(`${item.name} added to cart!`);
-      setTimeout(() => navigate("/cart"), 1000);
-    } catch (err) {
-      console.error("Add to cart error:", err);
-      toast.error(err?.response?.data?.message || "Failed to add to cart");
-    } finally {
-      setActionLoading(false);
-    }
-  }, [navigate]);
-
-  // ── Download Invoice ──────────────────────────────────────────────────
-  const handleDownloadInvoice = useCallback(async () => {
-    if (!order?._id) return;
-    setActionLoading(true);
-    try {
-      const response = await api.get(`/order/invoice/${order._id}`, {
-        responseType: "blob",
-      });
-      const blob = new Blob([response.data], { type: "application/pdf" });
-      const url  = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href  = url;
-      link.setAttribute("download", `invoice_${order._id.slice(-8)}.pdf`);
+      
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `invoice_${id.slice(-8)}.pdf`);
       document.body.appendChild(link);
       link.click();
-      link.remove();
+      document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      toast.success("Invoice downloaded!");
-    } catch (err) {
-      toast.error("Failed to download invoice");
+      
+    } catch (error) {
+      console.error('Error downloading invoice:', error);
+      toast.error('Failed to download invoice. Please try again.');
     } finally {
-      setActionLoading(false);
+      setDownloading(false);
     }
-  }, [order?._id]);
-
-  // ── Rate product ──────────────────────────────────────────────────────
-  const handleRateProduct = (productId) => {
-    navigate(`/product/${productId}/review?orderId=${order._id}`);
   };
 
-  // ── Handle URL params ─────────────────────────────────────────────────
+  // Return Request Handler - User requests return (needs admin approval)
+  const handleReturnRequest = async () => {
+    if (!returnReason) {
+      toast.error("Please select a reason for return");
+      return;
+    }
+
+    try {
+      setSubmittingReturn(true);
+      // Call the return request endpoint (not direct return)
+      const response = await api.post(`/return/request/${id}`, {
+        reason: returnReason,
+        description: returnDescription
+      });
+      
+      if (response.data.success) {
+        toast.success("Return request submitted successfully! Admin will review and approve/reject your request.");
+        setShowReturnModal(false);
+        fetchOrder(); // Refresh order details
+      }
+    } catch (error) {
+      console.error('Error submitting return request:', error);
+      toast.error(error.response?.data?.message || "Failed to submit return request. Please try again.");
+    } finally {
+      setSubmittingReturn(false);
+    }
+  };
+
+  // Fetch order details
+  const fetchOrder = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get(`/order/${id}`);
+      setOrder(response.data.order || response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching order:', error);
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    if (searchParams.get("action") === "return") setShowReturnModal(true);
-    if (searchParams.get("tab") === "invoice")   handleDownloadInvoice();
-  }, [searchParams, handleDownloadInvoice]);
+    if (id) {
+      fetchOrder();
+    }
+  }, [id]);
 
-  // ── Loading / error states ────────────────────────────────────────────
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <p className="text-gray-400 animate-pulse text-lg">Loading order...</p>
-    </div>
-  );
-
-  if (error) return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-gray-50">
-      <p className="text-red-500 font-medium">{error}</p>
-      <button onClick={() => navigate("/my-orders")}
-        className="text-sm text-indigo-600 hover:underline">
-        ← Back to My Orders
-      </button>
-    </div>
-  );
-
-  if (!order) return null;
-
-  // ── Derived values ────────────────────────────────────────────────────
-  const currentStep = statusSteps.indexOf(order.status);
-  const isCancelledOrReturned = ["Cancelled", "Returned", "Failed", "Return_requested", "Return_rejected"].includes(order.status);
-  const canRate            = order.status === "Delivered";
-  const canReturn          = order.status === "Delivered" && !order.returnRequested;
-  const canBuyAgain        = !["Cancelled", "Failed"].includes(order.status);
-  const canDownloadInvoice = order.status !== "Pending";
-
-  const getPaymentLabel = () => {
-    switch (order.paymentMethod) {
-      case "COD":    return "Cash on Delivery";
-      case "WALLET": return "Wallet";
-      case "ONLINE": return "Online (Razorpay)";
-      default:       return order.paymentMethod;
+  // Cancel Order Handler
+  const handleCancelOrder = async () => {
+    if (!confirm("Are you sure you want to cancel this order?")) return;
+    
+    try {
+      const response = await api.patch(`/order/cancel/${id}`);
+      if (response.data.success) {
+        toast.success("Order cancelled successfully!");
+        fetchOrder(); // Refresh order details
+      }
+    } catch (error) {
+      console.error('Error cancelling order:', error);
+      toast.error(error.response?.data?.message || "Failed to cancel order");
     }
   };
 
-  const getStatusBadgeClass = () => {
-    if (["Delivered", "Confirmed", "Paid"].includes(order.status)) return "bg-green-100 text-green-700";
-    if (["Cancelled", "Failed", "Returned"].includes(order.status)) return "bg-red-100 text-red-600";
-    if (order.status === "Shipped") return "bg-blue-100 text-blue-700";
-    return "bg-yellow-100 text-yellow-700";
+  if (loading) {
+    return <div className="text-center py-8">Loading order details...</div>;
+  }
+
+  if (!order) {
+    return <div className="text-center py-8">Order not found</div>;
+  }
+
+  // Get return request status display
+  const getReturnStatusDisplay = () => {
+    if (!order.returnRequested) return null;
+    
+    if (order.status === 'Returned') {
+      return { text: "Return Approved & Completed", color: "text-green-600", bg: "bg-green-50" };
+    }
+    if (order.status === 'Return_requested') {
+      return { text: "Return Request Pending Approval", color: "text-yellow-600", bg: "bg-yellow-50" };
+    }
+    if (order.status === 'Return_rejected') {
+      return { text: "Return Request Rejected", color: "text-red-600", bg: "bg-red-50" };
+    }
+    return null;
   };
 
-  // ── Render ────────────────────────────────────────────────────────────
+  const returnStatus = getReturnStatusDisplay();
+
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto">
-
-        {showReturnModal && (
-          <ReturnRequestModal
-            order={order}
-            onClose={() => setShowReturnModal(false)}
-            onSuccess={() => {
-              setOrder(prev => ({ ...prev, returnRequested: true, status: "Return_requested" }));
-              setShowReturnModal(false);
-            }}
-          />
-        )}
-
-        <button onClick={() => navigate("/my-orders")}
-          className="text-sm text-indigo-600 hover:underline mb-6 inline-flex items-center gap-1">
-          ← Back to My Orders
+    <div className="max-w-4xl mx-auto p-6">
+      {/* Header with Download Button */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Order Details</h1>
+        <button
+          onClick={handleDownloadInvoice}
+          disabled={downloading}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center gap-2 disabled:opacity-50"
+        >
+          {downloading ? (
+            <>
+              <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              Generating...
+            </>
+          ) : (
+            <>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Download Invoice
+            </>
+          )}
         </button>
+      </div>
 
-        {/* Order summary */}
-        <div className="bg-white rounded-2xl shadow-sm p-6 mb-4">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-xs text-gray-400 font-mono">
-                Order #{order._id?.slice(-8).toUpperCase()}
-              </p>
-              <p className="text-xs text-gray-400 mt-1">
-                Placed on {new Date(order.createdAt).toLocaleDateString("en-IN", {
-                  day: "numeric", month: "long", year: "numeric",
-                })}
-              </p>
-            </div>
-            <span className={`text-xs px-3 py-1 rounded-full font-medium ${getStatusBadgeClass()}`}>
-              {order.status}
+      {/* Return Status Banner */}
+      {returnStatus && (
+        <div className={`${returnStatus.bg} p-4 rounded-lg mb-6 border`}>
+          <div className="flex items-center gap-2">
+            <span className={`font-semibold ${returnStatus.color}`}>
+              {returnStatus.text}
+            </span>
+            {order.status === 'Return_requested' && (
+              <span className="text-sm text-gray-500 ml-2">
+                - Awaiting admin approval
+              </span>
+            )}
+            {order.status === 'Return_rejected' && order.returnRejectionReason && (
+              <span className="text-sm text-gray-500 ml-2">
+                Reason: {order.returnRejectionReason}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Order Info */}
+      <div className="bg-gray-50 p-4 rounded-lg mb-6">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p className="text-sm text-gray-600">Order ID</p>
+            <p className="font-semibold">{order._id?.slice(-8).toUpperCase()}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">Order Date</p>
+            <p className="font-semibold">{new Date(order.createdAt).toLocaleDateString('en-IN')}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">Payment Method</p>
+            <p className="font-semibold">{order.paymentMethod}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">Order Status</p>
+            <span className={`inline-block px-2 py-1 text-xs font-semibold rounded ${
+              order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
+              order.status === 'Cancelled' ? 'bg-red-100 text-red-800' :
+              order.status === 'Returned' ? 'bg-green-100 text-green-800' :
+              order.status === 'Return_requested' ? 'bg-yellow-100 text-yellow-800' :
+              order.status === 'Return_rejected' ? 'bg-red-100 text-red-800' :
+              'bg-blue-100 text-blue-800'
+            }`}>
+              {order.status === 'Return_requested' ? 'Return Requested' : 
+               order.status === 'Return_rejected' ? 'Return Rejected' : 
+               order.status}
             </span>
           </div>
-          <p className="text-2xl font-bold mt-3">₹{order.total}</p>
         </div>
+      </div>
 
-        {/* Status timeline */}
-        <div className="bg-white rounded-2xl shadow-sm p-6 mb-4">
-          <h2 className="font-semibold text-gray-700 mb-5">Order Status</h2>
-          {!isCancelledOrReturned ? (
-            <div className="flex items-center justify-between relative">
-              <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200 z-0" />
-              <div className="absolute top-4 left-0 h-0.5 bg-indigo-500 z-0 transition-all duration-500"
-                style={{ width: `${Math.max(0, (currentStep / (statusSteps.length - 1)) * 100)}%` }} />
-              {statusSteps.map((step, idx) => (
-                <div key={step} className="flex flex-col items-center z-10 gap-1 w-16">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2
-                    ${idx <= currentStep ? "bg-indigo-600 border-indigo-600 text-white" : "bg-white border-gray-300 text-gray-400"}`}>
-                    {idx < currentStep ? "✓" : idx + 1}
-                  </div>
-                  <span className={`text-xs font-medium text-center
-                    ${idx === currentStep ? "text-indigo-700 font-bold" : idx < currentStep ? "text-indigo-500" : "text-gray-400"}`}>
-                    {step}
-                  </span>
-                </div>
+      {/* Shipping Address */}
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold mb-2">Shipping Address</h2>
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <p>{order.address?.fullName}</p>
+          <p>{order.address?.addressLine}</p>
+          <p>{order.address?.city}, {order.address?.state} - {order.address?.pincode}</p>
+          <p>Phone: {order.address?.phone}</p>
+        </div>
+      </div>
+
+      {/* Order Items */}
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold mb-2">Order Items</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="p-3 text-left text-sm font-semibold">Product</th>
+                <th className="p-3 text-right text-sm font-semibold">Quantity</th>
+                <th className="p-3 text-right text-sm font-semibold">Price</th>
+                <th className="p-3 text-right text-sm font-semibold">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {order.cartItems?.map((item, index) => (
+                <tr key={index} className="border-t border-gray-200">
+                  <td className="p-3">
+                    <div className="flex items-center gap-3">
+                      {item.image && (
+                        <img src={item.image} alt={item.name} className="w-12 h-12 object-cover rounded" />
+                      )}
+                      <span>{item.name}</span>
+                    </div>
+                  </td>
+                  <td className="p-3 text-right">{item.quantity}</td>
+                  <td className="p-3 text-right">₹{item.price}</td>
+                  <td className="p-3 text-right">₹{item.price * item.quantity}</td>
+                </tr>
               ))}
+            </tbody>
+            <tfoot className="border-t-2 border-gray-300">
+              <tr>
+                <td colSpan="3" className="p-3 text-right font-semibold">Subtotal</td>
+                <td className="p-3 text-right">₹{order.subtotal}</td>
+              </tr>
+              <tr>
+                <td colSpan="3" className="p-3 text-right font-semibold">Shipping</td>
+                <td className="p-3 text-right">₹{order.shipping}</td>
+              </tr>
+              <tr>
+                <td colSpan="3" className="p-3 text-right font-semibold">Tax</td>
+                <td className="p-3 text-right">₹{order.tax}</td>
+              </tr>
+              {order.discount > 0 && (
+                <tr>
+                  <td colSpan="3" className="p-3 text-right font-semibold">Discount</td>
+                  <td className="p-3 text-right text-red-600">-₹{order.discount}</td>
+                </tr>
+              )}
+              <tr className="text-lg">
+                <td colSpan="3" className="p-3 text-right font-bold">Grand Total</td>
+                <td className="p-3 text-right font-bold">₹{order.total}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex gap-4">
+        {(order.status === 'Pending' || order.status === 'Confirmed') && (
+          <button
+            onClick={handleCancelOrder}
+            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
+          >
+            Cancel Order
+          </button>
+        )}
+        
+        {order.status === 'Delivered' && !order.returnRequested && (
+          <button
+            onClick={() => setShowReturnModal(true)}
+            className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-md"
+          >
+            Request Return
+          </button>
+        )}
+
+        {(order.status === 'Return_requested') && (
+          <div className="bg-yellow-50 text-yellow-800 px-4 py-2 rounded-md">
+            Return request pending admin approval
+          </div>
+        )}
+      </div>
+
+      {/* Return Request Modal */}
+      {showReturnModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h2 className="text-xl font-bold mb-4">Request Return</h2>
+            <p className="text-gray-600 mb-4">
+              Please provide details for your return request. Admin will review and approve/reject your request.
+            </p>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Reason for return *</label>
+              <select
+                value={returnReason}
+                onChange={(e) => setReturnReason(e.target.value)}
+                className="w-full border rounded-md p-2"
+                required
+              >
+                <option value="">Select a reason</option>
+                <option value="damaged">Product damaged</option>
+                <option value="wrong_item">Wrong item received</option>
+                <option value="size_issue">Size issue</option>
+                <option value="quality_issue">Quality issue</option>
+                <option value="other">Other</option>
+              </select>
             </div>
-          ) : (
-            <div className="bg-red-50 rounded-xl p-4 text-center">
-              <p className="text-sm text-red-500 font-medium">
-                {order.status === "Cancelled"        && "This order was cancelled"}
-                {order.status === "Returned"         && "Return approved — refund credited to wallet"}
-                {order.status === "Failed"           && "This order failed"}
-                {order.status === "Return_rejected"  && "Return request was rejected"}
-                {order.status === "Return_requested" && "Return request pending approval"}
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Description (optional)</label>
+              <textarea
+                value={returnDescription}
+                onChange={(e) => setReturnDescription(e.target.value)}
+                className="w-full border rounded-md p-2"
+                rows="3"
+                placeholder="Please provide more details about the issue..."
+              />
+            </div>
+            
+            <div className="mb-4 p-3 bg-blue-50 rounded-md">
+              <p className="text-sm text-blue-800">
+                <strong>Note:</strong> Once approved, refund will be credited to your wallet within 5-7 business days.
               </p>
             </div>
-          )}
-        </div>
-
-        {/* Items */}
-        <div className="bg-white rounded-2xl shadow-sm p-6 mb-4">
-          <h2 className="font-semibold text-gray-700 mb-4">Items Purchased</h2>
-          <div className="space-y-4">
-            {order.cartItems?.length > 0 ? order.cartItems.map((item, idx) => (
-              <div key={idx} className="flex justify-between items-start text-sm border-b pb-4 last:border-0 last:pb-0">
-                <div className="flex items-center gap-3 flex-1">
-                  {item.image && (
-                    <Link to={`/product/${item.productId?._id || item.productId}`}>
-                      <img src={item.image} alt={item.name}
-                        className="w-16 h-16 rounded-lg object-cover border hover:opacity-90 transition" />
-                    </Link>
-                  )}
-                  <div className="flex-1">
-                    <Link to={`/product/${item.productId?._id || item.productId}`}>
-                      <p className="font-medium text-gray-800 hover:text-indigo-600 transition">{item.name}</p>
-                    </Link>
-                    <p className="text-gray-400 text-xs">Qty: {item.quantity} × ₹{item.price}</p>
-                    <div className="flex gap-2 mt-2 flex-wrap">
-                      {canRate && (
-                        <button onClick={() => handleRateProduct(item.productId?._id || item.productId)}
-                          className="text-xs border border-purple-500 text-purple-600 px-2 py-1 rounded hover:bg-purple-50 transition">
-                          ⭐ Rate this item
-                        </button>
-                      )}
-                      {canBuyAgain && (
-                        <button onClick={() => handleBuySingleItem(item)} disabled={actionLoading}
-                          className="text-xs border border-green-500 text-green-600 px-2 py-1 rounded hover:bg-green-50 transition disabled:opacity-50">
-                          🛒 Buy again
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <span className="font-semibold text-gray-700">₹{item.price * item.quantity}</span>
-              </div>
-            )) : <p className="text-sm text-gray-400">No items found</p>}
-          </div>
-
-          {/* Price breakdown */}
-          <div className="mt-4 border-t pt-3 space-y-1.5 text-sm text-gray-500">
-            <div className="flex justify-between"><span>Subtotal</span><span>₹{order.subtotal}</span></div>
-            <div className="flex justify-between"><span>Shipping</span><span>₹{order.shipping}</span></div>
-            <div className="flex justify-between"><span>Tax</span><span>₹{order.tax}</span></div>
-            {order.discount > 0 && (
-              <div className="flex justify-between text-green-600">
-                <span>Discount</span><span>-₹{order.discount}</span>
-              </div>
-            )}
-            <div className="flex justify-between font-bold text-black text-base border-t pt-2 mt-1">
-              <span>Total</span><span>₹{order.total}</span>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={handleReturnRequest}
+                disabled={submittingReturn || !returnReason}
+                className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {submittingReturn ? "Submitting..." : "Submit Return Request"}
+              </button>
+              <button
+                onClick={() => setShowReturnModal(false)}
+                className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 rounded-md"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>
-
-        {/* Payment */}
-        <div className="bg-white rounded-2xl shadow-sm p-6 mb-4">
-          <h2 className="font-semibold text-gray-700 mb-3">Payment</h2>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-500">Method</span>
-              <span className="font-medium">{getPaymentLabel()}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Status</span>
-              <span className={`font-medium px-2 py-0.5 rounded-full text-xs ${getStatusBadgeClass()}`}>
-                {order.status}
-              </span>
-            </div>
-            {order.razorpayPaymentId && (
-              <div className="flex justify-between">
-                <span className="text-gray-500">Payment ID</span>
-                <span className="font-mono text-xs text-gray-400">{order.razorpayPaymentId}</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Delivery address */}
-        <div className="bg-white rounded-2xl shadow-sm p-6 mb-4">
-          <h2 className="font-semibold text-gray-700 mb-3">Delivery Address</h2>
-          {order.address ? (
-            <div className="text-sm text-gray-600 space-y-1">
-              <p className="font-semibold text-gray-800 text-base">{order.address.fullName}</p>
-              <p>{order.address.addressLine}</p>
-              <p>{order.address.city}, {order.address.state} — {order.address.pincode}</p>
-              {order.address.phone && (
-                <p className="text-gray-400 text-xs pt-1">Phone: {order.address.phone}</p>
-              )}
-            </div>
-          ) : <p className="text-sm text-gray-400">No address on file</p>}
-        </div>
-
-        {/* Action buttons */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          {canBuyAgain && (
-            <button onClick={handleBuyAllAgain} disabled={actionLoading}
-              className="bg-green-600 text-white py-3 rounded-xl text-sm font-semibold hover:bg-green-700 transition disabled:opacity-50">
-              🛒 Buy All Again
-            </button>
-          )}
-          {canDownloadInvoice && (
-            <button onClick={handleDownloadInvoice} disabled={actionLoading}
-              className="bg-blue-600 text-white py-3 rounded-xl text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-50">
-              📄 Download Invoice
-            </button>
-          )}
-          {canReturn && (
-            <button onClick={() => setShowReturnModal(true)}
-              className="bg-orange-600 text-white py-3 rounded-xl text-sm font-semibold hover:bg-orange-700 transition">
-              🔄 Request Return
-            </button>
-          )}
-          {canRate && (
-            <button onClick={() => navigate(`/rate-order/${order._id}`)}
-              className="bg-purple-600 text-white py-3 rounded-xl text-sm font-semibold hover:bg-purple-700 transition">
-              ⭐ Rate All Items
-            </button>
-          )}
-        </div>
-
-        {/* Cancel */}
-        {order.status === "Pending" && (
-          <button onClick={handleCancel} disabled={actionLoading}
-            className={`w-full mb-4 bg-red-500 text-white py-3 rounded-xl text-sm font-semibold transition
-              ${actionLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-red-600"}`}>
-            {actionLoading ? "Cancelling..." : "Cancel Order"}
-          </button>
-        )}
-
-        {/* Status messages */}
-        {order.status === "Return_rejected" && (
-          <div className="bg-red-100 text-red-700 p-4 rounded-xl mb-4 text-center">
-            <p className="font-semibold">❌ Return Request Rejected</p>
-            {order.returnRejectionReason && (
-              <p className="text-sm mt-2">Reason: <span className="font-medium">{order.returnRejectionReason}</span></p>
-            )}
-            <p className="text-xs text-red-600 mt-1">Please contact support if you need help</p>
-          </div>
-        )}
-        {order.returnRequested && order.status === "Return_requested" && (
-          <div className="bg-yellow-100 text-yellow-800 p-4 rounded-xl mb-4 text-center">
-            <p className="font-semibold">Return request pending admin approval</p>
-            <p className="text-sm mt-1">You'll be notified once processed</p>
-          </div>
-        )}
-        {order.status === "Returned" && (
-          <div className="bg-green-100 text-green-800 p-4 rounded-xl mb-4 text-center">
-            <p className="font-semibold">✓ Return approved!</p>
-            <p className="text-sm mt-1">Refund of ₹{order.refundAmount || order.total} credited to your wallet</p>
-          </div>
-        )}
-
-        {/* Bottom nav */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button onClick={() => navigate("/")}
-            className="flex-1 border border-indigo-600 text-indigo-600 py-3 rounded-xl font-semibold hover:bg-indigo-50 transition text-sm">
-            Continue Shopping
-          </button>
-          <button onClick={() => navigate("/my-orders")}
-            className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 transition text-sm">
-            My Orders
-          </button>
-        </div>
-
-      </div>
+      )}
     </div>
   );
 };

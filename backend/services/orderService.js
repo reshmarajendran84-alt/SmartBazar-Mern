@@ -40,21 +40,24 @@ class OrderService {
   }
 
   // ─── Save order to DB ─────────────────────────────────────────────────────
-  async createOrder(userId, data, razorpayOrderId = null) {
-    if (!data.cartItems || !data.cartItems.length) throw new Error("Cart is empty");
+   async createOrder(userId, data, razorpayOrderId = null) {
+    if (!data.cartItems?.length) throw new Error("Cart is empty");
     if (!data.total || data.total <= 0) throw new Error("Invalid total");
     if (!data.address) throw new Error("Address required");
 
     await this.deductStockForItems(data.cartItems);
 
-    // Build cart items, fetching image from Product if missing
     const processedCartItems = await Promise.all(
       data.cartItems.map(async (item) => {
         let imageUrl = item.image;
+
         if (!imageUrl && item.productId) {
-          const product = await Product.findById(item.productId?._id || item.productId);
+          const product = await Product.findById(
+            item.productId?._id || item.productId
+          );
           if (product?.images?.length) imageUrl = product.images[0];
         }
+
         return {
           productId: item.productId?._id || item.productId,
           name: item.name || "Unknown Product",
@@ -65,7 +68,7 @@ class OrderService {
       })
     );
 
-    const orderData = {
+    const order = await Order.create({
       userId,
       cartItems: processedCartItems,
       subtotal: data.subtotal || 0,
@@ -73,24 +76,21 @@ class OrderService {
       tax: data.tax || 0,
       discount: data.discount || 0,
       coupon: data.coupon || "",
-      total: data.total,
-      address: {
-        fullName: data.address.fullName || data.address.name || "",
-        phone: data.address.phone || "",
-        addressLine: data.address.addressLine || "",
-        city: data.address.city || "",
-        state: data.address.state || "",
-        pincode: data.address.pincode || "",
-      },
+      total: data.total, 
+      address: data.address,
       paymentMethod: data.paymentMethod,
       status: "Pending",
-      razorpayOrderId: razorpayOrderId || null,
-    };
+      razorpayOrderId,
+    });
 
-    const order = await Order.create(orderData);
-    await Cart.findOneAndUpdate({ userId }, { items: [], totalAmount: 0 });
+    await Cart.findOneAndUpdate(
+      { userId },
+      { items: [], totalAmount: 0 }
+    );
+
     return order;
   }
+
 
   // ─── Verify Razorpay signature + save order ───────────────────────────────
   async verifyAndSaveOrder(userId, body) {
@@ -117,55 +117,64 @@ class OrderService {
   // ─── Cancel order ─────────────────────────────────────────────────────────
   async cancelOrder(orderId, userId) {
     const order = await Order.findById(orderId);
+
     if (!order) throw new Error("Order not found");
     if (order.userId.toString() !== userId.toString())
-      throw new Error("Not authorized to cancel this order");
-    if (!["Pending", "Confirmed"].includes(order.status))
-      throw new Error("Only pending or confirmed orders can be cancelled");
+      throw new Error("Not authorized");
+    if (order.status === "Cancelled")
+      throw new Error("Already cancelled");
+    if (order.isRefunded)
+      throw new Error("Already refunded");
 
     await this.restoreStockForItems(order.cartItems);
-    order.status = "Cancelled";
-    await order.save();
 
-    if (order.paymentMethod === "ONLINE" || order.paymentMethod === "WALLET") {
+    order.status = "Cancelled";
+
+    if (order.paymentMethod !== "COD") {
       await WalletService.creditWallet(
         userId,
         order.total,
-        `Refund for cancelled order #${order._id.toString().slice(-8).toUpperCase()}`,
-        order._id
+        `Refund for cancelled order #${order._id.toString().slice(-6)}`,
+        order._id,
+        "REFUND"
       );
+      order.isRefunded = true;
     }
+
+    await order.save();
     return order;
   }
+
 
   // ─── Return order ─────────────────────────────────────────────────────────
   async returnOrder(orderId, userId) {
     const order = await Order.findById(orderId);
+
     if (!order) throw new Error("Order not found");
     if (order.userId.toString() !== userId.toString())
-      throw new Error("Not authorized to return this order");
+      throw new Error("Not authorized");
     if (order.status !== "Delivered")
       throw new Error("Only delivered orders can be returned");
-
-    const daysSince = (Date.now() - new Date(order.updatedAt)) / (1000 * 60 * 60 * 24);
-    if (daysSince > 7)
-      throw new Error("Return window expired. Returns accepted within 7 days of delivery.");
+    if (order.isRefunded)
+      throw new Error("Already refunded");
 
     await this.restoreStockForItems(order.cartItems);
-    order.status = "Returned";
-    await order.save();
 
-    if (order.paymentMethod === "ONLINE" || order.paymentMethod === "WALLET") {
-      await WalletService.creditWallet(
-        userId,
-        order.total,
-        `Refund for returned order #${order._id.toString().slice(-8).toUpperCase()}`,
-        order._id
-      );
-    }
+    order.status = "Returned";
+
+    await WalletService.creditWallet(
+      userId,
+      order.total,
+      `Refund for returned order #${order._id.toString().slice(-6)}`,
+      order._id,
+      "REFUND"
+    );
+
+    order.isRefunded = true;
+
+    await order.save();
     return order;
   }
-
   // ─── Wallet order ─────────────────────────────────────────────────────────
   async placeWalletOrder(userId, data) {
     const order = await this.createOrder(userId, { ...data, paymentMethod: "WALLET" }, null);

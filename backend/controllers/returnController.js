@@ -32,23 +32,22 @@ class ReturnController {
   }
   
   // Admin: Approve return
-async approveReturn(req, res) {
+  async approveReturn(req, res) {
   try {
     const { orderId } = req.params;
-    const adminId = req.admin?.id || req.user?.id; 
-    console.log("Approve return - orderId:", orderId);
-      console.log("Approve return - adminId:", adminId);
-    const { order, refundAmount } = await returnService.approveReturn(orderId, adminId);
-    
+    const adminId = req.admin?.id || req.user?.id;
+
+    const { order, refundAmount } =
+      await returnService.approveReturn(orderId, adminId);
+
     res.status(200).json({
       success: true,
       message: `Return approved. Refund amount: ₹${refundAmount}`,
       order,
       refundAmount
     });
-  } catch (error) {
-          console.error("Approve return error:", error);
 
+  } catch (error) {
     res.status(400).json({
       success: false,
       message: error.message

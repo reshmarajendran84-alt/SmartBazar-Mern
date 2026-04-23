@@ -2,31 +2,32 @@ import Cart from "../models/Cart.js";
 
 class CartService {
 
-  async addToCart(userId, { productId, quantity, price ,name,image}) {
-    let cart = await Cart.findOne({ userId });
-    if (!cart) cart = new Cart({ userId, items: [] });
-const safePrice    = parseFloat(price)    || 0;
-  const safeQuantity = parseInt(quantity)   || 1;
-    const index = cart.items.findIndex(
-      item => item.productId.toString() === productId
-    );
-    if (index > -1) {
-      cart.items[index].quantity += quantity;
-      if (!cart.items[index].price) {
+  async addToCart(userId, { productId, quantity, price, name, image }) {
+  let cart = await Cart.findOne({ userId });
+  if (!cart) cart = new Cart({ userId, items: [] });
+
+  const safePrice    = parseFloat(price)  || 0;
+  const safeQuantity = parseInt(quantity) || 1; 
+
+  const index = cart.items.findIndex(
+    item => item.productId.toString() === productId
+  );
+
+  if (index > -1) {
+    cart.items[index].quantity += safeQuantity; 
+    if (!cart.items[index].price) {
       cart.items[index].price = safePrice;
     }
-  
-    } else {
-      cart.items.push({ productId, quantity, price ,name,image});
-    }
-
-    cart.totalAmount = cart.items.reduce(
-      (total, item) => total + item.quantity * item.price, 0
-    );
-    await cart.save();
-    return cart;
+  } else {
+    cart.items.push({ productId, quantity: safeQuantity, price: safePrice, name, image }); 
   }
 
+  cart.totalAmount = cart.items.reduce(
+    (total, item) => total + item.quantity * item.price, 0
+  );
+  await cart.save();
+  return cart;
+}
   // Merge guest cart into DB cart on login
   async mergeCart(userId, guestItems) {
     let cart = await Cart.findOne({ userId });
@@ -56,18 +57,21 @@ const safePrice    = parseFloat(price)    || 0;
     return cart;
   }
 
-  async updateCart(userId, { productId, quantity }) {
-    const cart = await Cart.findOne({ userId });
-    if (!cart) throw new Error("Cart not found");
-    const item = cart.items.find(item => item.productId.toString() === productId);
-    if (item) item.quantity = quantity;
-    cart.totalAmount = cart.items.reduce(
-      (total, item) => total + item.quantity * item.price, 0
-    );
-    await cart.save();
-    return cart;
-  }
-
+ async updateCart(userId, { productId, quantity }) {
+  const cart = await Cart.findOne({ userId });
+  if (!cart) throw new Error("Cart not found");
+  
+  const safeQuantity = parseInt(quantity) || 1; 
+  
+  const item = cart.items.find(item => item.productId.toString() === productId);
+  if (item) item.quantity = safeQuantity; 
+  
+  cart.totalAmount = cart.items.reduce(
+    (total, item) => total + item.quantity * item.price, 0
+  );
+  await cart.save();
+  return cart;
+}
   async removeFromCart(userId, productId) {
     const cart = await Cart.findOne({ userId });
     if (!cart) throw new Error("Cart not found");

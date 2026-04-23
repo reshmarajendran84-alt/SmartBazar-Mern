@@ -22,7 +22,7 @@ class AdminOrderService {
     }
 
     const orders = await Order.find(query)
-      .populate("userId", "name email")
+      .populate("userId", "name email phone profileImage")
       .sort({ createdAt: -1 });
 
     if (search) {
@@ -37,7 +37,8 @@ class AdminOrderService {
   }
 
   async getOrderById(id) {
-    const order = await Order.findById(id).populate("userId", "name email");
+    const order = await Order.findById(id).populate("userId", "name email phone profileImage")
+    .populate("cartItems.productId","name images price")
     if (!order) throw new Error("Order not found");
     return order;
   }

@@ -1,24 +1,21 @@
 import { useState, useEffect, useCallback } from "react";
-import { toast } from "react-toastify";
 import api from "../utils/api";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const WalletPage = () => {
-  const [wallet, setWallet]       = useState(null);
-  const [loading, setLoading]     = useState(true);
-  const [addAmount, setAddAmount] = useState("");
-  const [adding, setAdding]       = useState(false);
+  const [wallet, setWallet] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("all");
   const navigate = useNavigate();
 
-  // ── Fetch wallet ─────────────────────────────────────────────────────
-  // useCallback so handleTopUp can call it after top-up succeeds
   const fetchWallet = useCallback(async () => {
     try {
       const { data } = await api.get("/wallet");
       setWallet(data.wallet);
     } catch (err) {
-      console.error("Wallet fetch error:", err);
-      toast.error("Failed to load wallet");
+      console.error(err);
+      toast.error("Failed to load wallet data");
     } finally {
       setLoading(false);
     }
@@ -28,199 +25,243 @@ const WalletPage = () => {
     fetchWallet();
   }, [fetchWallet]);
 
-  // ── Razorpay top-up ──────────────────────────────────────────────────
-  const handleTopUp = async (amount) => {
-    if (!amount || amount <= 0) {
-      toast.error("Please enter a valid amount");
-      return;
-    }
-
-    try {
-      // Step 1: create Razorpay order
-      const { data } = await api.post("/wallet/topup/create", { amount: parseFloat(amount) });
-
-      // Step 2: open Razorpay checkout
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-        amount: data.order.amount,
-        currency: "INR",
-        name: "SmartBazar Wallet",
-        description: `Add ₹${amount} to wallet`,
-        order_id: data.order.id,
-        handler: async (response) => {
-          try {
-            // Step 3: verify and credit
-            await api.post("/wallet/topup/verify", {
-              ...response,
-              amount: parseFloat(amount),
-            });
-            toast.success(`₹${amount} added to wallet!`);
-            setAddAmount("");
-            await fetchWallet(); // refresh balance
-          } catch (err) {
-            toast.error(err?.response?.data?.message || "Payment verification failed");
-          }
-        },
-        prefill: {},
-        theme: { color: "#6366f1" },
-        modal: {
-          ondismiss: () => toast.info("Payment cancelled"),
-        },
-      };
-
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-    } catch (err) {
-      console.error("Top-up error:", err);
-      toast.error(err?.response?.data?.message || "Failed to initiate payment");
+  // Filter transactions based on active tab
+  const getFilteredTransactions = () => {
+    if (!wallet?.transactions) return [];
+    
+    switch (activeTab) {
+      case "refunds":
+        return wallet.transactions.filter(txn => txn.transactionType === "REFUND");
+      case "payments":
+        return wallet.transactions.filter(txn => txn.transactionType === "PAYMENT");
+      case "topups":
+        return wallet.transactions.filter(txn => txn.transactionType === "TOPUP");
+      default:
+        return wallet.transactions;
     }
   };
 
-  // ── Quick-add presets ────────────────────────────────────────────────
-  const handleQuickAdd = (amount) => {
-    setAddAmount(String(amount));
-  };
+  // Calculate balances
+  const refundTransactions = wallet?.transactions?.filter(
+    txn => txn.transactionType === "REFUND"
+  ) || [];
+  
+  const paymentTransactions = wallet?.transactions?.filter(
+    txn => txn.transactionType === "PAYMENT"
+  ) || [];
+  
+  const totalRefunds = refundTransactions.reduce(
+    (total, txn) => total + txn.amount, 0
+  );
+  
+  const totalPayments = paymentTransactions.reduce(
+    (total, txn) => total + txn.amount, 0
+  );
+
+  const filteredTransactions = getFilteredTransactions();
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-500 animate-pulse">Loading wallet...</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+          <p className="text-gray-500">Loading wallet...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4">
-      <div className="max-w-lg mx-auto">
-
-        {/* Balance card */}
-        <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-2xl p-8 mb-6 shadow-lg">
-          <p className="text-sm opacity-80 mb-1">Total Balance</p>
-          <h2 className="text-5xl font-bold mb-1">
-            ₹{wallet?.balance?.toFixed(2) || "0.00"}
-          </h2>
-          <p className="text-xs opacity-70 mt-2">
-            Refunds from cancelled/returned orders are credited here
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Wallet</h1>
+          <p className="text-gray-600">Manage your transactions and refunds</p>
         </div>
 
-        {/* Add Money via Razorpay */}
-        <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
-          <h3 className="font-semibold text-gray-700 mb-3">Add Money to Wallet</h3>
-
-          <div className="flex gap-3">
-            <input
-              type="number"
-              placeholder="Enter amount"
-              value={addAmount}
-              onChange={(e) => setAddAmount(e.target.value)}
-              className="flex-1 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 outline-none"
-              min="1"
-              step="100"
-            />
-            <button
-              onClick={() => handleTopUp(addAmount)}
-              disabled={adding}
-              className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition whitespace-nowrap"
-            >
-              {adding ? "Processing..." : "Add Money"}
-            </button>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {/* Current Balance Card */}
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between mb-4">
+              <div className="bg-white/20 rounded-full p-3">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <span className="text-sm bg-white/20 px-3 py-1 rounded-full">Wallet</span>
+            </div>
+            <p className="text-sm opacity-90 mb-1">Current Balance</p>
+            <p className="text-3xl font-bold">₹{wallet?.balance?.toFixed(2) || '0.00'}</p>
           </div>
 
-          {/* Quick presets */}
-          <p className="text-xs text-gray-500 mt-3">
-            Quick add:
-            {[100, 500, 1000, 2000].map((amt) => (
-              <button
-                key={amt}
-                onClick={() => handleQuickAdd(amt)}
-                className="ml-2 text-indigo-600 hover:text-indigo-800 font-medium underline-offset-2 hover:underline"
-              >
-                ₹{amt}
-              </button>
-            ))}
-          </p>
+          {/* Total Refunds Card */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+            <div className="flex items-center justify-between mb-4">
+              <div className="bg-green-100 rounded-full p-3">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <span className="text-xs bg-green-100 text-green-600 px-3 py-1 rounded-full">Total</span>
+            </div>
+            <p className="text-sm text-gray-500 mb-1">Total Refunds</p>
+            <p className="text-2xl font-bold text-green-600">+₹{totalRefunds.toFixed(2)}</p>
+            <p className="text-xs text-gray-400 mt-2">{refundTransactions.length} transactions</p>
+          </div>
 
-          {/* Quick pay directly without typing */}
-          <div className="grid grid-cols-4 gap-2 mt-3">
-            {[100, 500, 1000, 2000].map((amt) => (
-              <button
-                key={amt}
-                onClick={() => handleTopUp(amt)}
-                className="border border-indigo-200 text-indigo-600 text-sm py-1.5 rounded-lg hover:bg-indigo-50 transition font-medium"
-              >
-                ₹{amt}
-              </button>
-            ))}
+          {/* Total Payments Card */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+            <div className="flex items-center justify-between mb-4">
+              <div className="bg-red-100 rounded-full p-3">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                </svg>
+              </div>
+              <span className="text-xs bg-red-100 text-red-600 px-3 py-1 rounded-full">Total</span>
+            </div>
+            <p className="text-sm text-gray-500 mb-1">Total Payments</p>
+            <p className="text-2xl font-bold text-red-600">-₹{totalPayments.toFixed(2)}</p>
+            <p className="text-xs text-gray-400 mt-2">{paymentTransactions.length} transactions</p>
           </div>
         </div>
 
-        {/* Quick links */}
-        <div className="flex gap-3 mb-6">
+        {/* Action Buttons */}
+        <div className="flex flex-wrap gap-4 mb-8">
           <button
             onClick={() => navigate("/my-orders")}
-            className="flex-1 bg-white border border-gray-200 rounded-xl py-3 text-sm font-medium text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 transition"
+            className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-all duration-200 shadow-md hover:shadow-lg"
           >
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
             My Orders
           </button>
+          
           <button
             onClick={() => navigate("/")}
-            className="flex-1 bg-white border border-gray-200 rounded-xl py-3 text-sm font-medium text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 transition"
+            className="inline-flex items-center px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-all duration-200"
           >
-            Shop Now
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-1.5 6M18 13l1.5 6M9 21h6M12 18v3" />
+            </svg>
+            Continue Shopping
           </button>
         </div>
 
-        {/* Transaction history */}
-        <div className="bg-white rounded-2xl shadow-sm p-6">
-          <h3 className="font-semibold text-gray-700 mb-4">Transaction History</h3>
-
-          {!wallet?.transactions?.length ? (
-            <div className="text-center py-8">
-              <p className="text-5xl mb-3">💳</p>
-              <p className="text-gray-400 text-sm">No transactions yet.</p>
-              <p className="text-gray-300 text-xs mt-1">
-                Cancel a prepaid order to get a refund here.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {[...wallet.transactions].reverse().map((txn, idx) => (
-                <div
-                  key={idx}
-                  className="flex justify-between items-center border-b pb-3 last:border-0 hover:bg-gray-50 p-2 rounded-lg transition"
+        {/* Transactions Section */}
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          {/* Tabs */}
+          <div className="border-b border-gray-200">
+            <div className="flex space-x-8 px-6">
+              {[
+                { id: "all", label: "All Transactions", icon: "M4 6h16M4 12h16M4 18h16" },
+                { id: "refunds", label: "Refunds", icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" },
+                { id: "payments", label: "Payments", icon: "M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" },
+                { id: "topups", label: "Top Ups", icon: "M12 6v6m0 0v6m0-6h6m-6 0H6" },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`py-4 px-2 border-b-2 font-medium text-sm transition-all duration-200 inline-flex items-center gap-2 ${
+                    activeTab === tab.id
+                      ? "border-blue-600 text-blue-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold ${
-                      txn.type === "CREDIT"
-                        ? "bg-green-100 text-green-600"
-                        : "bg-red-100 text-red-500"
-                    }`}>
-                      {txn.type === "CREDIT" ? "↑" : "↓"}
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={tab.icon} />
+                  </svg>
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Transactions List */}
+          <div className="divide-y divide-gray-100">
+            {filteredTransactions.length === 0 ? (
+              <div className="text-center py-12">
+                <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-gray-500">No transactions found</p>
+                <p className="text-sm text-gray-400 mt-1">Start shopping to see your transactions</p>
+              </div>
+            ) : (
+              filteredTransactions.map((txn, idx) => (
+                <div key={idx} className="p-6 hover:bg-gray-50 transition-all duration-200">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    {/* Left side - Transaction details */}
+                    <div className="flex items-start gap-4 flex-1">
+                      {/* Icon based on transaction type */}
+                      <div className={`flex-shrink-0 rounded-full p-2 ${
+                        txn.type === "CREDIT" 
+                          ? "bg-green-100" 
+                          : "bg-red-100"
+                      }`}>
+                        {txn.type === "CREDIT" ? (
+                          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        ) : (
+                          <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                          </svg>
+                        )}
+                      </div>
+                      
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900">{txn.description}</p>
+                        <div className="flex flex-wrap gap-3 mt-1">
+                          <span className="inline-flex items-center text-xs text-gray-500">
+                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            {new Date(txn.createdAt).toLocaleDateString("en-IN", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </span>
+                          <span className={`inline-flex items-center text-xs px-2 py-0.5 rounded-full ${
+                            txn.transactionType === "REFUND" ? "bg-green-100 text-green-700" :
+                            txn.transactionType === "PAYMENT" ? "bg-red-100 text-red-700" :
+                            "bg-blue-100 text-blue-700"
+                          }`}>
+                            {txn.transactionType}
+                          </span>
+                          {txn.orderId && (
+                            <span className="text-xs text-gray-400 font-mono">
+                              Order #{txn.orderId.slice(-8).toUpperCase()}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">
-                        {txn.description}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {new Date(txn.createdAt).toLocaleDateString("en-IN", {
-                          day: "numeric", month: "short", year: "numeric",
-                          hour: "2-digit", minute: "2-digit",
-                        })}
+                    
+                    {/* Right side - Amount */}
+                    <div className={`text-right ${
+                      txn.type === "CREDIT" ? "text-green-600" : "text-red-600"
+                    }`}>
+                      <p className="text-lg font-bold">
+                        {txn.type === "CREDIT" ? "+" : "-"}₹{txn.amount.toFixed(2)}
                       </p>
                     </div>
                   </div>
-                  <span className={`font-bold text-sm ${
-                    txn.type === "CREDIT" ? "text-green-600" : "text-red-500"
-                  }`}>
-                    {txn.type === "CREDIT" ? "+" : "-"}₹{txn.amount}
-                  </span>
                 </div>
-              ))}
-            </div>
-          )}
+              ))
+            )}
+          </div>
         </div>
 
+        {/* Footer Stats */}
+        {wallet?.transactions?.length > 0 && (
+          <div className="mt-6 text-center text-sm text-gray-500">
+            Total {wallet.transactions.length} transactions
+          </div>
+        )}
       </div>
     </div>
   );

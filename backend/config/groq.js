@@ -1,6 +1,5 @@
 import Groq from "groq-sdk"
 
-// Add this line to debug
 console.log("GROQ KEY:", process.env.GROQ_API_KEY ? "✅ Found" : "❌ NOT FOUND")
 
 const client = new Groq({

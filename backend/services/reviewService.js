@@ -29,7 +29,6 @@ class ReviewService {
       isOwner:   currentUserId
                    ? r.userId._id.toString() === currentUserId.toString()
                    : false,
-      // user: { name: r.userId.name },
       user: { name: r.userId.name || r.userId.email?.split("@")[0] },
 
     }));

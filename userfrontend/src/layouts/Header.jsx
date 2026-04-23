@@ -48,7 +48,7 @@ function Header() {
           {/* Desktop Right */}
           <div className="hidden md:flex items-center gap-6">
 
-            {/* ✅ Wallet balance */}
+            {/*  Wallet balance */}
             {user && (
               <Link
                 to="/wallet"

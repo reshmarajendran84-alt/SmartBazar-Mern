@@ -45,8 +45,9 @@ function App() {
                 <Route path="/order-success" element={<OrderSuccess />} />
                 <Route path="/my-orders" element={<OrdersPage />} />
                 <Route path="/wallet" element={<Wallet />} />
-                <Route path="/orders/:orderId" element={<OrderDetailPage />} />
-                <Route path="/orders/:id" element={<InvoicePage />} />
+                <Route path="/orders/:id" element={<OrderDetailPage />} />
+                <Route path="/orders/:id/invoice" element={<InvoicePage />} />
+
               </Route>
 
               <Route path="*" element={<NotFound />} />

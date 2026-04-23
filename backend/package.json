@@ -33,6 +33,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@types/pdfkit": "^0.17.6",
     "nodemon": "^3.1.11"
   }
 }

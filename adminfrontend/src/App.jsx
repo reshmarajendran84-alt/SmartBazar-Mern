@@ -9,6 +9,7 @@ import Login from "./pages/AdminLogin";
 import ProductDetails from "./pages/Product/ProductDetails";
 import CouponPage from "./pages/CouponPage";
 import AdminOrdersPage from "./pages/AdminOrdersPage";
+import AdminOrderDetail from "./pages/AdminOrderDetail"; 
 import { AdminOrderProvider } from "./context/OrderContext";
 import SalesReport from "./pages/SalesReportPage";
 import ReviewsPage from "./pages/ReviewPage";
@@ -42,9 +43,10 @@ function App() {
             <Route path="products" element={<ProductList />} />
             <Route path="coupons" element={<CouponPage />} />
             <Route path="orders" element={<AdminOrdersPage />} />
-            <Route path="sales-report" element={< SalesReport/>}/>
-            <Route path="reviews" element={< ReviewsPage/>}/>
-            <Route path="returns" element={< AdminReturns/>}/>
+            <Route path="orders/:id" element={<AdminOrderDetail />} /> 
+            <Route path="sales-report" element={<SalesReport />} />
+            <Route path="reviews" element={<ReviewsPage />} />
+            <Route path="returns" element={<AdminReturns />} />
           </Route>
         </Routes>
       </AdminOrderProvider>

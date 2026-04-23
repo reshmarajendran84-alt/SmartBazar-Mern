@@ -15,7 +15,7 @@ export default function AuthPage() {
   const navigate        = useNavigate();
   const location        = useLocation();
   const { login }       = useAuth();
-  const { mergeOnLogin } = useCart();   // ✅ fixed: was useState()
+  const { mergeOnLogin } = useCart();  
 
   const from = location.state?.from?.pathname || "/";
 

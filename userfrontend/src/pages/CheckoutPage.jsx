@@ -244,7 +244,7 @@ const CheckoutPage = React.memo(() => {
       <div className="max-w-lg mx-auto bg-white rounded-2xl shadow-lg p-6">
         <h2 className="text-2xl font-bold mb-6">Checkout</h2>
 
-        {/* ✅ Wallet Balance Display */}
+        {/*  Wallet Balance Display */}
         {paymentMethod === "WALLET" && (
           <div className={`mb-4 p-3 rounded-lg ${walletBalance >= total ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
             <div className="flex justify-between items-center">
@@ -364,7 +364,7 @@ const CheckoutPage = React.memo(() => {
             Online Payment (Razorpay)
           </label>
           
-          {/* ✅ Wallet payment option with balance check */}
+          {/*  Wallet payment option with balance check */}
           <label className={`flex items-center gap-2 cursor-pointer ${walletBalance < total ? 'opacity-50' : ''}`}>
             <input
               type="radio"

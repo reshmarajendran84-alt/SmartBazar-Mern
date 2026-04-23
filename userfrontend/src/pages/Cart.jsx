@@ -18,30 +18,46 @@ const CartPage = () => {
 
   if (loading)
     return <p className="text-center mt-10 text-gray-500">Loading...</p>;
-const normalizeItem = (item) => {
-  // DB item — productId is a populated object
-  if (item.productId && typeof item.productId === "object") return item;
 
-  // Guest item — productId is a plain string ID
-  return {
-    ...item,
-    productId: {
-      _id:    item.productId,
-      name:   item.name,
-      images: item.image ? [item.image] : [],
-    },
+  const normalizeItem = (item) => {
+    // DB item — productId is a populated object
+    if (item.productId && typeof item.productId === "object") return item;
+
+    // Guest item — productId is a plain string ID
+    return {
+      ...item,
+      productId: {
+        _id:    item.productId,
+        name:   item.name,
+        images: item.image ? [item.image] : [],
+      },
+    };
   };
-};
 
-  // 1 — Filter out cart items where product was deleted from DB
-  const validItems =(
-    cart.items?.filter(
+  // Merge duplicate products by productId, summing quantities
+  const mergeDuplicates = (items) => {
+    const map = {};
+    for (const item of items) {
+      const id = item.productId?._id || item.productId;
+      if (!id) continue;
+      if (map[id]) {
+        map[id] = { ...map[id], quantity: map[id].quantity + item.quantity };
+      } else {
+        map[id] = { ...item };
+      }
+    }
+    return Object.values(map);
+  };
+
+  // Filter out deleted products, normalize, then deduplicate
+  const validItems = mergeDuplicates(
+    (cart.items?.filter(
       (item) => item.productId !== null && item.productId !== undefined
-    ) || []).map(normalizeItem);
+    ) || []).map(normalizeItem)
+  );
 
-  // — Use validItems for all calculations
-  const subtotal =
-    validItems.reduce((acc, item) => acc + item.price * item.quantity, 0) || 0;
+  // Calculations
+  const subtotal = validItems.reduce((acc, item) => acc + item.price * item.quantity, 0) || 0;
   const shipping = validItems.length > 0 ? 100 : 0;
   const tax = validItems.length > 0 ? 50 : 0;
   const totalBeforeDiscount = subtotal + shipping + tax;
@@ -78,13 +94,11 @@ const normalizeItem = (item) => {
 
   // Proceed to checkout
   const handleProceedToCheckout = () => {
-    // — use validItems for empty check
     if (validItems.length === 0) {
       toast.warning("Your cart is empty");
       return;
     }
 
-    //  — use validItems for formatted items
     const formattedItems = validItems.map((item) => ({
       productId: item.productId,
       name: item.productId?.name || item.name,
@@ -113,7 +127,6 @@ const normalizeItem = (item) => {
         Shopping Cart
       </h2>
 
-      {/* ✅ FIX 5 — use validItems.length for empty check */}
       {validItems.length === 0 ? (
         <div className="flex flex-col items-center justify-center min-h-[60vh]
           bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100
@@ -136,7 +149,6 @@ const normalizeItem = (item) => {
 
           {/* LEFT — CART ITEMS */}
           <div className="flex-1 space-y-4">
-            {/* ✅ FIX 6 — map over validItems, all productId access uses ?. */}
             {validItems.map((item) => (
               <div
                 key={item.productId?._id}
@@ -153,11 +165,9 @@ const normalizeItem = (item) => {
 
                 <div className="flex-1 space-y-2">
                   <h3 className="font-semibold text-gray-800 text-lg">
-                    {/* ✅ FIX 7 — fallback if name is missing */}
                     {item.productId?.name ?? "Product unavailable"}
                   </h3>
 
-                  {/* Show original price with strikethrough if available */}
                   {item.productId?.originalPrice ? (
                     <div className="flex items-center gap-2">
                       <p className="text-gray-400 line-through text-sm">
@@ -311,7 +321,7 @@ const normalizeItem = (item) => {
         </div>
       )}
 
-      {/* ✅ FIX 8 — Mobile bottom bar uses validItems.length */}
+      {/* Mobile bottom bar */}
       {validItems.length > 0 && (
         <div className="fixed bottom-0 left-0 w-full bg-white border-t shadow p-3 flex justify-between items-center md:hidden z-50">
           <span className="font-bold text-lg text-gray-800">₹{finalTotal}</span>
