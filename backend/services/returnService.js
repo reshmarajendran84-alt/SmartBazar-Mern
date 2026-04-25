@@ -3,7 +3,6 @@ import Product from "../models/Product.js";
 import WalletService from "./walletService.js";
 
 class ReturnService {
-
   async requestReturn(orderId, userId, { reason, description }) {
     const order = await Order.findById(orderId);
 
@@ -19,7 +18,7 @@ class ReturnService {
     }
 
     const daysSinceDelivery = Math.floor(
-      (Date.now() - new Date(order.deliveredAt)) / (1000 * 60 * 60 * 24)
+      (Date.now() - new Date(order.deliveredAt)) / (1000 * 60 * 60 * 24),
     );
     if (daysSinceDelivery > 7) {
       throw new Error("Return period expired (7 days)");
@@ -34,68 +33,68 @@ class ReturnService {
     await order.save();
     return order;
   }
-// services/returnService.js - Updated approveReturn method
-async approveReturn(orderId, adminId) {
-  try {
-    const order = await Order.findById(orderId);
-    
-    if (!order) throw new Error("Order not found");
-    
-    if (order.status !== "Return_requested") {
-      throw new Error("Order is not in return requested state");
-    }
-    
-    // Update order status first
-    order.status = "Returned";
-    order.returnApprovedAt = new Date();
-    order.refundStatus = "processing";
-    order.refundAmount = order.total;
-    
-    await order.save();
-    
-    // Credit wallet with REFUND transaction type
+  // services/returnService.js - Updated approveReturn method
+  async approveReturn(orderId, adminId) {
     try {
-      await WalletService.creditWallet(
-        order.userId,
-        order.total,
-        `Refund for returned order #${order._id.toString().slice(-8).toUpperCase()}`,
-        order._id,
-        "REFUND"
-      );
-      
-      // Update refund status to completed
-      order.refundStatus = "completed";
-      order.refundCompletedAt = new Date();
+      const order = await Order.findById(orderId);
+
+      if (!order) throw new Error("Order not found");
+
+      if (order.status !== "Return_requested") {
+        throw new Error("Order is not in return requested state");
+      }
+
+      // Update order status first
+      order.status = "Returned";
+      order.returnApprovedAt = new Date();
+      order.refundStatus = "processing";
+      order.refundAmount = order.total;
+
       await order.save();
-      
-    } catch (walletError) {
-      console.error("Wallet credit failed:", walletError);
-      // Don't revert status, mark as pending refund
-      order.refundStatus = "failed";
-      order.refundFailedReason = walletError.message;
-      await order.save();
-      throw new Error(`Refund failed but order is marked as returned. Please process refund manually. Error: ${walletError.message}`);
+
+      // Credit wallet with REFUND transaction type
+      try {
+        await WalletService.creditWallet(
+          order.userId,
+          order.total,
+          `Refund for returned order #${order._id.toString().slice(-8).toUpperCase()}`,
+          order._id,
+          "REFUND",
+        );
+
+        // Update refund status to completed
+        order.refundStatus = "completed";
+        order.refundCompletedAt = new Date();
+        await order.save();
+      } catch (walletError) {
+        console.error("Wallet credit failed:", walletError);
+        // Don't revert status, mark as pending refund
+        order.refundStatus = "failed";
+        order.refundFailedReason = walletError.message;
+        await order.save();
+        throw new Error(
+          `Refund failed but order is marked as returned. Please process refund manually. Error: ${walletError.message}`,
+        );
+      }
+
+      // Restore stock
+      for (const item of order.cartItems) {
+        await Product.findByIdAndUpdate(item.productId, {
+          $inc: { stock: item.quantity },
+        });
+      }
+
+      return {
+        success: true,
+        order,
+        refundAmount: order.total,
+        message: "Return approved and refund processed successfully",
+      };
+    } catch (error) {
+      console.error("Approve return error:", error);
+      throw error;
     }
-    
-    // Restore stock
-    for (const item of order.cartItems) {
-      await Product.findByIdAndUpdate(
-        item.productId,
-        { $inc: { stock: item.quantity } }
-      );
-    }
-    
-    return {
-      success: true,
-      order,
-      refundAmount: order.total,
-      message: "Return approved and refund processed successfully"
-    };
-  } catch (error) {
-    console.error("Approve return error:", error);
-    throw error;
   }
-}
   async rejectReturn(orderId, adminId, rejectionReason) {
     const order = await Order.findById(orderId);
 
@@ -124,8 +123,8 @@ async approveReturn(orderId, adminId) {
       query = {
         $or: [
           { status: "Return_rejected" },
-          { returnRejectedAt: { $ne: null } }
-        ]
+          { returnRejectedAt: { $ne: null } },
+        ],
       };
     } else {
       query = { returnRequested: true };
@@ -133,7 +132,9 @@ async approveReturn(orderId, adminId) {
 
     const returns = await Order.find(query)
       .populate("userId", "name email phone")
-      .select("_id userId address total status returnReason returnDescription returnRequestedAt returnRejectedAt returnRejectionReason refundAmount")
+      .select(
+        "_id userId address total status returnReason returnDescription returnRequestedAt returnRejectedAt returnRejectionReason refundAmount",
+      )
       .sort({ returnRequestedAt: -1 });
 
     return returns;
@@ -142,7 +143,7 @@ async approveReturn(orderId, adminId) {
   async getUserReturns(userId) {
     const returns = await Order.find({
       userId,
-      returnRequested: true
+      returnRequested: true,
     }).sort({ returnRequestedAt: -1 });
 
     return returns;

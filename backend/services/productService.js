@@ -3,11 +3,10 @@ import Order from "../models/Order.js";
 import mongoose from "mongoose";
 
 class ProductService {
-
   async getPublicProductsService(query) {
-    const page     = Number(query.page) || 1;
-    const limit    = 8;
-    const { category, price, sort, search } = query;
+    const page = Number(query.page) || 1;
+    const limit = 8;
+    const { category, price, sort, search, rating } = query;
 
     let filter = { isActive: true };
 
@@ -18,17 +17,19 @@ class ProductService {
     if (price) {
       filter.price = { $lte: Number(price) };
     }
-
+    if (rating) {
+      filter.rating = { $gte: Number(rating) };
+    }
     if (search) {
       filter.$or = [{ name: { $regex: search, $options: "i" } }];
     }
 
     let dbQuery = Product.find(filter).populate("category", "name");
 
-    if (sort === "price_asc")  dbQuery = dbQuery.sort({ price: 1 });
+    if (sort === "price_asc") dbQuery = dbQuery.sort({ price: 1 });
     if (sort === "price_desc") dbQuery = dbQuery.sort({ price: -1 });
 
-    const count    = await Product.countDocuments(filter);
+    const count = await Product.countDocuments(filter);
     const products = await dbQuery.skip((page - 1) * limit).limit(limit);
 
     return {
@@ -47,11 +48,13 @@ class ProductService {
     const updated = await Product.findOneAndUpdate(
       { _id: item.product, stock: { $gte: item.qty } },
       { $inc: { stock: -item.qty } },
-      { new: true }
+      { new: true },
     );
 
     if (!updated) {
-      throw new Error(`"${item.name}" is out of stock or insufficient quantity`);
+      throw new Error(
+        `"${item.name}" is out of stock or insufficient quantity`,
+      );
     }
 
     return updated;

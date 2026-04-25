@@ -21,7 +21,7 @@ const loadRazorpayScript = () =>
     document.body.appendChild(script);
   });
 
-const CheckoutPage = React.memo(() => {
+const CheckoutPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -35,86 +35,147 @@ const CheckoutPage = React.memo(() => {
     appliedCoupon = null,
   } = location.state || {};
 
-  const { addresses } = useAddress();
+  const { addresses = [], addAddress, refreshAddresses } = useAddress();
+  const { fetchCart } = useCart();
+
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [loading, setLoading] = useState(false);
   const [walletBalance, setWalletBalance] = useState(0);
-  const [checkingBalance, setCheckingBalance] = useState(false);
-  const { fetchCart } = useCart();
+  const [saveNewAddress, setSaveNewAddress] = useState(true);
 
-  //  Fetch wallet balance on component mount
+  const [inlineAddress, setInlineAddress] = useState({
+    name: "",
+    phone: "",
+    addressLine: "",
+    city: "",
+    state: "",
+    pincode: "",
+  });
+
+  const handleChange = (key) => (e) => {
+    setInlineAddress((prev) => ({
+      ...prev,
+      [key]: e.target.value,
+    }));
+  };
+
+  // Wallet
   useEffect(() => {
-    const fetchWalletBalance = async () => {
+    const fetchWallet = async () => {
       try {
         const { data } = await api.get("/wallet");
         setWalletBalance(data.wallet?.balance || 0);
-      } catch (err) {
-        console.error("Failed to fetch wallet balance:", err);
+      } catch {
         setWalletBalance(0);
       }
     };
-    fetchWalletBalance();
+    fetchWallet();
   }, []);
 
-  // Auto-select default address
+  // Auto select address
   useEffect(() => {
-    if (addresses && addresses.length > 0) {
+    if (addresses.length > 0) {
       const def = addresses.find((a) => a.isDefault) || addresses[0];
       setSelectedAddressId(def._id);
     }
   }, [addresses]);
 
-  const selectedAddress = addresses?.find((a) => a._id === selectedAddressId) || null;
+  const selectedAddress =
+    addresses.find((a) => a._id === selectedAddressId) || null;
 
-  //  Check if wallet has sufficient balance
-  const hasSufficientWalletBalance = () => {
-    if (paymentMethod !== "WALLET") return true;
-    if (walletBalance >= total) return true;
-    return false;
-  };
-
-  //  Get wallet balance warning message
-  const getWalletWarning = () => {
-    if (paymentMethod !== "WALLET") return null;
-    if (walletBalance < total) {
-      return `Insufficient wallet balance! Available: ₹${walletBalance.toFixed(2)}, Required: ₹${total.toFixed(2)}`;
+  // Function to save inline address to user's profile
+  const saveAddressToProfile = async () => {
+    if (!saveNewAddress) return null;
+    
+    // Validate address fields
+    const { name, phone, addressLine, city, state, pincode } = inlineAddress;
+    if (!name || !phone || !addressLine || !city || !state || !pincode) {
+      return null;
     }
-    return null;
+    
+    // Check if address already exists (by comparing fields)
+    const addressExists = addresses.some(addr => 
+      addr.name === name &&
+      addr.phone === phone &&
+      addr.addressLine === addressLine &&
+      addr.city === city &&
+      addr.state === state &&
+      addr.pincode === pincode
+    );
+    
+    if (addressExists) {
+      // Find the existing address ID
+      const existingAddr = addresses.find(addr => 
+        addr.name === name &&
+        addr.phone === phone &&
+        addr.addressLine === addressLine &&
+        addr.city === city &&
+        addr.state === state &&
+        addr.pincode === pincode
+      );
+      return existingAddr._id;
+    }
+    
+    try {
+      // Save the new address
+      const response = await addAddress(inlineAddress);
+      toast.success("Address saved to your profile!");
+      
+      // Refresh addresses list (if refreshAddresses exists)
+      if (refreshAddresses) {
+        await refreshAddresses();
+      }
+      
+      return response.data?.address?._id || response._id;
+    } catch (error) {
+      console.error("Failed to save address:", error);
+      // Don't show error toast here to avoid interrupting checkout
+      return null;
+    }
   };
 
+  //  VALIDATION
   const validateOrderData = () => {
     if (!cartItems.length) {
       toast.error("Cart is empty");
       return false;
     }
-    
-    if (!selectedAddress) {
-      toast.error("Please select a delivery address");
-      return false;
-    }
-    
-    //  Check wallet balance for WALLET payment
-    if (paymentMethod === "WALLET" && walletBalance < total) {
-      toast.error(`Insufficient wallet balance! Available: ₹${walletBalance.toFixed(2)}`);
-      return false;
-    }
-    
-    // Check required address fields
-    const requiredFields = ['name', 'phone', 'addressLine', 'city', 'state', 'pincode'];
-    for (const field of requiredFields) {
-      if (!selectedAddress[field]) {
-        toast.error(`Address missing: ${field}`);
+
+    if (addresses.length === 0) {
+      const { name, phone, addressLine, city, state, pincode } = inlineAddress;
+
+      if (!name || !phone || !addressLine || !city || !state || !pincode) {
+        toast.error("Please fill delivery address");
+        return false;
+      }
+
+      if (!/^\d{10}$/.test(phone)) {
+        toast.error("Invalid phone number");
+        return false;
+      }
+
+      if (!/^\d{6}$/.test(pincode)) {
+        toast.error("Invalid pincode");
+        return false;
+      }
+    } else {
+      if (!selectedAddress) {
+        toast.error("Select delivery address");
         return false;
       }
     }
-    
+
+    if (paymentMethod === "WALLET" && walletBalance < total) {
+      toast.error("Insufficient wallet balance");
+      return false;
+    }
+
     return true;
   };
 
-  const getOrderData = () => {
-    if (!selectedAddress) return null;
-    
+  //ORDER DATA
+  const getOrderData = (savedAddressId = null) => {
     return {
       cartItems: cartItems.map((item) => ({
         productId: item.productId?._id || item.productId,
@@ -122,58 +183,58 @@ const CheckoutPage = React.memo(() => {
         quantity: item.quantity,
         price: item.price,
       })),
-      subtotal: subtotal || 0,
-      shipping: shipping || 0,
-      tax: tax || 0,
-      discount: discount || 0,
-      total: total || 0,
-      address: {
-        fullName: selectedAddress.name || "",
-        phone: selectedAddress.phone || "",
-        addressLine: selectedAddress.addressLine || "",
-        city: selectedAddress.city || "",
-        state: selectedAddress.state || "",
-        pincode: selectedAddress.pincode || "",
-      },
+      subtotal,
+      shipping,
+      tax,
+      discount,
+      total,
+      address:
+        addresses.length === 0
+          ? {
+              fullName: inlineAddress.name,
+              phone: inlineAddress.phone,
+              addressLine: inlineAddress.addressLine,
+              city: inlineAddress.city,
+              state: inlineAddress.state,
+              pincode: inlineAddress.pincode,
+            }
+          : {
+              fullName: selectedAddress?.name,
+              phone: selectedAddress?.phone,
+              addressLine: selectedAddress?.addressLine,
+              city: selectedAddress?.city,
+              state: selectedAddress?.state,
+              pincode: selectedAddress?.pincode,
+            },
+      addressId: savedAddressId || (addresses.length === 0 ? null : selectedAddressId),
       coupon: appliedCoupon || "",
-      paymentMethod: paymentMethod,
+      paymentMethod,
     };
   };
 
+  //  PLACE ORDER
   const handlePlaceOrder = async () => {
-    if (!validateOrderData()) {
-      return;
-    }
-    
+    if (!validateOrderData()) return;
+
     setLoading(true);
-    
+    let savedAddressId = null;
+
     try {
-      const orderData = getOrderData();
-      if (!orderData) {
-        toast.error("Invalid order data");
-        setLoading(false);
-        return;
+      // If user entered a new address (no saved addresses), save it to profile first
+      if (addresses.length === 0 && saveNewAddress) {
+        savedAddressId = await saveAddressToProfile();
       }
-      
-      console.log("ORDER DATA BEING SENT:", orderData);
-      
-      //  Handle WALLET payment
+
+      const orderData = getOrderData(savedAddressId);
+
       if (paymentMethod === "WALLET") {
-        // Double-check balance before sending
-        if (walletBalance < total) {
-          toast.error(`Insufficient wallet balance! Available: ₹${walletBalance.toFixed(2)}`);
-          setLoading(false);
-          return;
-        }
-        
         const res = await placeWalletOrder(orderData);
         await fetchCart();
         toast.success("Order placed successfully using wallet!");
         navigate("/order-success", { state: { order: res.data.order } });
         return;
       }
-      
-      // Handle COD
+
       if (paymentMethod === "COD") {
         const res = await placeCODOrder(orderData);
         await fetchCart();
@@ -182,10 +243,10 @@ const CheckoutPage = React.memo(() => {
         return;
       }
 
-      // Handle ONLINE (Razorpay)
-      const isLoaded = await loadRazorpayScript();
-      if (!isLoaded) {
-        toast.error("Razorpay SDK failed to load");
+      // Razorpay
+      const loaded = await loadRazorpayScript();
+      if (!loaded) {
+        toast.error("Razorpay failed to load");
         setLoading(false);
         return;
       }
@@ -208,32 +269,24 @@ const CheckoutPage = React.memo(() => {
             });
             await fetchCart();
             toast.success("Payment successful!");
-            navigate("/order-success", { state: { order: verifyRes.data.order } });
+            navigate("/order-success", {
+              state: { order: verifyRes.data.order },
+            });
           } catch (err) {
             toast.error("Payment verification failed!");
           }
         },
         prefill: {
-          name: selectedAddress?.name || "",
-          contact: selectedAddress?.phone || "",
+          name: selectedAddress?.name || inlineAddress.name || "",
+          contact: selectedAddress?.phone || inlineAddress.phone || "",
         },
         theme: { color: "#4f46e5" },
       };
 
       new window.Razorpay(options).open();
-      
     } catch (err) {
       console.error("Order error:", err);
-      
-      //  Better error message for wallet insufficient balance
-      if (err.response?.data?.message?.includes("Insufficient wallet balance")) {
-        toast.error(`Insufficient wallet balance! Please add funds or choose another payment method.`);
-        // Refresh wallet balance
-        const { data } = await api.get("/wallet");
-        setWalletBalance(data.wallet?.balance || 0);
-      } else {
-        toast.error(err.response?.data?.message || "Order failed");
-      }
+      toast.error(err.response?.data?.message || "Order failed");
     } finally {
       setLoading(false);
     }
@@ -241,167 +294,232 @@ const CheckoutPage = React.memo(() => {
 
   return (
     <div className="min-h-screen bg-gray-100 py-10 px-4">
-      <div className="max-w-lg mx-auto bg-white rounded-2xl shadow-lg p-6">
+      <div className="max-w-lg mx-auto bg-white rounded-xl shadow-lg p-6">
         <h2 className="text-2xl font-bold mb-6">Checkout</h2>
 
-        {/*  Wallet Balance Display */}
-        {paymentMethod === "WALLET" && (
-          <div className={`mb-4 p-3 rounded-lg ${walletBalance >= total ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Wallet Balance:</span>
-              <span className={`text-lg font-bold ${walletBalance >= total ? 'text-green-600' : 'text-red-600'}`}>
-                ₹{walletBalance.toFixed(2)}
-              </span>
-            </div>
-            <div className="flex justify-between items-center mt-1">
-              <span className="text-sm font-medium">Order Total:</span>
-              <span className="text-lg font-bold">₹{total.toFixed(2)}</span>
-            </div>
-            {walletBalance < total && (
-              <div className="mt-2 text-sm text-red-600">
-                ⚠️ Insufficient balance. Need ₹{(total - walletBalance).toFixed(2)} more.
-              </div>
-            )}
-            {walletBalance >= total && (
-              <div className="mt-2 text-sm text-green-600">
-                ✅ Sufficient balance! You can pay with wallet.
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Address selection */}
+        {/* ADDRESS SECTION */}
         <div className="mb-6">
           <h3 className="font-semibold mb-3">Delivery Address</h3>
-          {!addresses || addresses.length === 0 ? (
-            <p className="text-sm text-red-500">
-              No address found.{" "}
-              <a href="/user/profile" className="underline text-indigo-600">
-                Add one in your profile →
-              </a>
-            </p>
-          ) : (
-            addresses.map((addr) => (
-              <label
-                key={addr._id}
-                className={`block border rounded-lg p-3 mb-2 cursor-pointer transition ${
-                  selectedAddressId === addr._id
-                    ? "border-indigo-600 bg-indigo-50"
-                    : "border-gray-200"
-                }`}
-              >
+
+          {addresses.length === 0 ? (
+            <>
+              <div className="space-y-3">
                 <input
-                  type="radio"
-                  name="address"
-                  className="mr-2"
-                  checked={selectedAddressId === addr._id}
-                  onChange={() => setSelectedAddressId(addr._id)}
+                  placeholder="Full Name"
+                  value={inlineAddress.name}
+                  onChange={handleChange("name")}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                 />
-                <div>
-                  <p className="font-medium">{addr.name}</p>
-                  <p className="text-sm text-gray-600">{addr.addressLine}</p>
-                  <p className="text-sm text-gray-600">
-                    {addr.city}, {addr.state} - {addr.pincode}
-                  </p>
-                  <p className="text-sm text-gray-600">Phone: {addr.phone}</p>
+                <input
+                  placeholder="Phone Number"
+                  value={inlineAddress.phone}
+                  onChange={handleChange("phone")}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                />
+                <input
+                  placeholder="Address Line"
+                  value={inlineAddress.addressLine}
+                  onChange={handleChange("addressLine")}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <input
+                    placeholder="City"
+                    value={inlineAddress.city}
+                    onChange={handleChange("city")}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                  />
+                  <input
+                    placeholder="State"
+                    value={inlineAddress.state}
+                    onChange={handleChange("state")}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                  />
                 </div>
-                {addr.isDefault && (
-                  <span className="ml-2 text-xs text-green-600">(Default)</span>
-                )}
+                <input
+                  placeholder="Pincode"
+                  value={inlineAddress.pincode}
+                  onChange={handleChange("pincode")}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                />
+              </div>
+              
+              {/* Option to save address to profile */}
+              <label className="flex items-center gap-2 mt-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={saveNewAddress}
+                  onChange={(e) => setSaveNewAddress(e.target.checked)}
+                  className="text-indigo-600 focus:ring-indigo-500"
+                />
+                <span className="text-sm text-gray-700">
+                  Save this address to my profile for future orders
+                </span>
               </label>
-            ))
+            </>
+          ) : (
+            <div className="space-y-3">
+              {addresses.map((addr) => (
+                <label
+                  key={addr._id}
+                  className={`flex items-start gap-3 border rounded-lg p-3 cursor-pointer transition ${
+                    selectedAddressId === addr._id
+                      ? "border-indigo-500 bg-indigo-50"
+                      : "border-gray-200 hover:border-indigo-200"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    checked={selectedAddressId === addr._id}
+                    onChange={() => setSelectedAddressId(addr._id)}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-800">{addr.name}</p>
+                    <p className="text-sm text-gray-600">{addr.addressLine}</p>
+                    <p className="text-sm text-gray-600">
+                      {addr.city}, {addr.state} - {addr.pincode}
+                    </p>
+                    <p className="text-sm text-gray-500">📞 {addr.phone}</p>
+                  </div>
+                </label>
+              ))}
+              
+              <button
+                onClick={() => navigate('/profile')}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-dashed border-gray-300 rounded-lg text-indigo-600 hover:border-indigo-400 hover:bg-indigo-50 transition"
+              >
+                <span>+</span>
+                <span className="text-sm">Add New Address</span>
+              </button>
+            </div>
           )}
         </div>
 
         {/* Order summary */}
-        <div className="mb-6 bg-gray-50 rounded-lg p-4 text-sm space-y-1">
-          <h3 className="font-semibold mb-2">Order Summary</h3>
+        <div className="mb-6 bg-gray-50 rounded-lg p-4 text-sm space-y-2">
+          <h3 className="font-semibold mb-2 text-gray-800">Order Summary</h3>
           <div className="flex justify-between">
-            <span>Subtotal</span>
-            <span>₹{subtotal}</span>
+            <span className="text-gray-600">Subtotal</span>
+            <span className="text-gray-800">₹{subtotal.toLocaleString("en-IN")}</span>
           </div>
           <div className="flex justify-between">
-            <span>Shipping</span>
-            <span>₹{shipping}</span>
+            <span className="text-gray-600">Shipping</span>
+            <span className="text-gray-800">₹{shipping.toLocaleString("en-IN")}</span>
           </div>
           <div className="flex justify-between">
-            <span>Tax</span>
-            <span>₹{tax}</span>
+            <span className="text-gray-600">Tax</span>
+            <span className="text-gray-800">₹{tax.toLocaleString("en-IN")}</span>
           </div>
           {discount > 0 && (
             <div className="flex justify-between text-green-600">
               <span>Discount</span>
-              <span>-₹{discount}</span>
+              <span>-₹{discount.toLocaleString("en-IN")}</span>
+            </div>
+          )}
+          {appliedCoupon && (
+            <div className="flex justify-between text-indigo-600 text-xs">
+              <span>Coupon Applied</span>
+              <span className="font-mono">{appliedCoupon}</span>
             </div>
           )}
           <div className="flex justify-between font-bold border-t pt-2 mt-2">
-            <span>Total</span>
-            <span>₹{total}</span>
+            <span className="text-gray-800">Total</span>
+            <span className="text-indigo-600 text-lg">₹{total.toLocaleString("en-IN")}</span>
           </div>
         </div>
 
         {/* Payment method */}
         <div className="mb-6">
           <h3 className="font-semibold mb-3">Payment Method</h3>
-          
-          <label className="flex items-center gap-2 mb-2 cursor-pointer">
+
+          <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg mb-2 cursor-pointer hover:border-indigo-200 transition">
             <input
               type="radio"
               value="COD"
               checked={paymentMethod === "COD"}
               onChange={() => setPaymentMethod("COD")}
+              className="text-indigo-600"
             />
-            Cash on Delivery
+            <div>
+              <span className="font-medium">Cash on Delivery</span>
+              <p className="text-xs text-gray-500">Pay when you receive the order</p>
+            </div>
           </label>
-          
-          <label className="flex items-center gap-2 mb-2 cursor-pointer">
+
+          <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg mb-2 cursor-pointer hover:border-indigo-200 transition">
             <input
               type="radio"
               value="ONLINE"
               checked={paymentMethod === "ONLINE"}
               onChange={() => setPaymentMethod("ONLINE")}
+              className="text-indigo-600"
             />
-            Online Payment (Razorpay)
+            <div>
+              <span className="font-medium">Online Payment</span>
+              <p className="text-xs text-gray-500">Credit/Debit Card, UPI, NetBanking</p>
+            </div>
           </label>
-          
-          {/*  Wallet payment option with balance check */}
-          <label className={`flex items-center gap-2 cursor-pointer ${walletBalance < total ? 'opacity-50' : ''}`}>
+
+          <label
+            className={`flex items-center gap-3 p-3 border rounded-lg transition ${
+              walletBalance < total
+                ? "opacity-50 cursor-not-allowed border-gray-200"
+                : "cursor-pointer hover:border-indigo-200 border-gray-200"
+            }`}
+          >
             <input
               type="radio"
               value="WALLET"
               checked={paymentMethod === "WALLET"}
               onChange={() => setPaymentMethod("WALLET")}
               disabled={walletBalance < total}
+              className="text-purple-600"
             />
-            <span>Pay with Wallet</span>
-            <span className="text-sm text-gray-500">(₹{walletBalance.toFixed(2)} available)</span>
+            <div className="flex-1">
+              <div className="flex justify-between items-center">
+                <span className="font-medium">Pay with Wallet</span>
+                <span className="text-sm font-semibold text-purple-600">
+                  ₹{walletBalance.toFixed(2)}
+                </span>
+              </div>
+              <p className="text-xs text-gray-500">Use your wallet balance</p>
+            </div>
           </label>
-          
+
           {walletBalance < total && (
-            <p className="text-xs text-red-500 mt-1">
-              ⚠️ Need ₹{(total - walletBalance).toFixed(2)} more to use wallet
-            </p>
+            <div className="mt-2 p-2 bg-yellow-50 rounded-lg border border-yellow-200">
+              <p className="text-xs text-yellow-700">
+                ⚠️ Need ₹{(total - walletBalance).toFixed(2)} more to use wallet
+              </p>
+            </div>
           )}
         </div>
 
         <button
           onClick={handlePlaceOrder}
-          disabled={loading || !selectedAddress || !addresses?.length || (paymentMethod === "WALLET" && walletBalance < total)}
-          className={`w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold transition ${
-            loading || !selectedAddress || !addresses?.length || (paymentMethod === "WALLET" && walletBalance < total)
-              ? "opacity-50 cursor-not-allowed"
-              : ""
+          disabled={
+            loading ||
+            (!selectedAddress && addresses.length > 0) ||
+            (paymentMethod === "WALLET" && walletBalance < total)
+          }
+          className={`w-full py-3 rounded-lg font-semibold transition ${
+            loading ||
+            (!selectedAddress && addresses.length > 0) ||
+            (paymentMethod === "WALLET" && walletBalance < total)
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-indigo-600 hover:bg-indigo-700 text-white"
           }`}
         >
-          {loading 
-            ? "Processing..." 
-            : paymentMethod === "WALLET" 
-              ? `Pay with Wallet — ₹${total}` 
-              : `Place Order — ₹${total}`}
+          {loading
+            ? "Processing..."
+            : paymentMethod === "WALLET"
+            ? `Pay with Wallet — ₹${total.toLocaleString("en-IN")}`
+            : `Place Order — ₹${total.toLocaleString("en-IN")}`}
         </button>
       </div>
     </div>
   );
-});
+};
 
 export default CheckoutPage;

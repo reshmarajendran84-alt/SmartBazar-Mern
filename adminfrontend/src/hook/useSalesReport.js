@@ -418,7 +418,7 @@ const pdfCurrency = (val) => `Rs. ${Number(val ?? 0).toLocaleString("en-IN", { m
 
         <div class="print-footer">
           <p>This report includes all orders from ${startDate} to ${endDate}</p>
-          <p style="margin-top: 0.3rem;">© ${new Date().getFullYear()} Your Store - All Rights Reserved</p>
+          <p style="margin-top: 0.3rem;">© ${new Date().getFullYear()} SmartBazar Store - All Rights Reserved</p>
         </div>
       </body>
       </html>

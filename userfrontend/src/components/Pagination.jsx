@@ -15,7 +15,6 @@ const Pagination = ({ page, setPage, pages }) => {
       {/* Page numbers */}
       {Array.from({ length: pages }, (_, i) => {
         const p = i + 1;
-        // Show first, last, current, and neighbours — hide rest with ellipsis
         const show =
           p === 1 || p === pages || Math.abs(p - page) <= 1;
         const showLeftDots  = p === 2 && page > 4;

@@ -26,13 +26,13 @@ class AdminController {
         sameSite:"strict",
       });
       res.status(200).json({
-        success:false,
+        success:true,
         message:"Admin logged out successfully",
       });
 
     } catch(error){
       res.status(500).json({
-        success:false,
+        success:true,
         message:"Logout Failed",
       });
     }

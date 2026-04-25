@@ -4,65 +4,67 @@ const AboutPage = () => {
   return (
     <div className="bg-gray-50 min-h-screen">
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-
-        {/* Header */}
-        <div className="text-center mb-12 sm:mb-16">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold 
-          bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+      {/* ─── HERO SECTION ─── */}
+      <div className="relative h-[250px] sm:h-[350px] md:h-[400px] overflow-hidden">
+        <img
+          src="/images/download (3).jpg"
+          alt="Shopping"
+          className="w-full h-full object-cover scale-105"
+        />
+        <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-center px-4">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white">
             About SmartBazar
           </h1>
-
-          <p className="mt-4 text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
-            Bringing quality products and seamless shopping experience right to your doorstep.
+          <p className="mt-3 text-sm sm:text-lg text-gray-200 max-w-xl">
+            Your trusted online shopping destination for quality and convenience
           </p>
         </div>
+      </div>
+
+      {/* ─── CONTENT ─── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
 
         {/* Mission & Vision */}
-        <div className="grid md:grid-cols-2 gap-10 lg:gap-12 items-center mb-16 sm:mb-20">
+        <div className="grid md:grid-cols-2 gap-10 items-center mb-16">
 
           {/* Image */}
-          <div className="relative group overflow-hidden rounded-2xl shadow-xl">
+          <div className="overflow-hidden rounded-2xl shadow-lg group">
             <img
               src="/images/download (3).jpg"
               alt="Shopping Experience"
               className="w-full h-[250px] sm:h-[350px] object-cover 
-              transform group-hover:scale-110 transition duration-500"
+              group-hover:scale-110 transition duration-500"
             />
-            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition"></div>
           </div>
 
-          {/* Content */}
+          {/* Text */}
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
                 Our Mission
               </h2>
-
-              <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
-                At SmartBazar, our mission is to provide our customers with a wide
-                variety of high-quality products at affordable prices. We strive
-                to make online shopping simple, safe, and enjoyable for everyone.
+              <p className="text-gray-600 leading-relaxed">
+                At SmartBazar, we aim to deliver high-quality products at the
+                best prices. We make shopping simple, fast, and enjoyable for
+                everyone.
               </p>
             </div>
 
             <div>
-              <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
                 Our Vision
               </h2>
-
-              <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
-                We envision a world where shopping is effortless, personalized,
-                and accessible to everyone, bringing smiles to homes through
-                convenience, quality, and trust.
+              <p className="text-gray-600 leading-relaxed">
+                We want to create a seamless and personalized shopping
+                experience that brings convenience and happiness to every home.
               </p>
             </div>
           </div>
 
         </div>
 
-        {/* Core Values */}
-        <div className="mb-16 sm:mb-20">
+        {/* ─── CORE VALUES ─── */}
+        <div className="mb-16">
           <h2 className="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-10">
             Our Core Values
           </h2>
@@ -72,30 +74,35 @@ const AboutPage = () => {
             {[
               {
                 title: "Customer First",
-                desc: "We put our customers at the heart of everything we do."
+                desc: "Customers are our top priority in everything we do.",
+                icon: "👥"
               },
               {
                 title: "Quality Products",
-                desc: "We carefully select products to meet the highest standards."
+                desc: "We ensure only the best products reach you.",
+                icon: "🏆"
               },
               {
                 title: "Fast Delivery",
-                desc: "Get your orders quickly and reliably, every time."
+                desc: "Quick and reliable delivery every time.",
+                icon: "🚚"
               },
               {
-                title: "Trust & Security",
-                desc: "Your data and transactions are safe with us."
+                title: "Secure Shopping",
+                desc: "Your data and payments are always protected.",
+                icon: "🔒"
               }
             ].map((item, index) => (
               <div
                 key={index}
-                className="bg-white p-5 sm:p-6 rounded-xl shadow-md 
-                hover:shadow-2xl hover:-translate-y-2 transition duration-300 text-center"
+                className="bg-white p-6 rounded-xl shadow-md text-center
+                hover:shadow-xl hover:-translate-y-2 transition duration-300"
               >
-                <h3 className="font-semibold text-base sm:text-lg mb-2 text-purple-600">
+                <div className="text-3xl mb-3">{item.icon}</div>
+                <h3 className="font-semibold text-lg text-purple-600 mb-2">
                   {item.title}
                 </h3>
-                <p className="text-gray-600 text-xs sm:text-sm">
+                <p className="text-gray-600 text-sm">
                   {item.desc}
                 </p>
               </div>
@@ -104,24 +111,24 @@ const AboutPage = () => {
           </div>
         </div>
 
-        {/* CTA */}
-        <div className="text-center bg-gradient-to-r from-purple-600 to-indigo-600 
-        text-white rounded-2xl py-10 sm:py-12 px-4 sm:px-6 shadow-xl">
+        {/* ─── CTA SECTION ─── */}
+        <div className="text-center bg-gradient-to-r from-indigo-600 to-purple-600 
+        text-white rounded-2xl py-12 px-6 shadow-xl">
 
           <h2 className="text-2xl sm:text-3xl font-bold mb-3">
-            Join Us Today
+            Start Shopping Today
           </h2>
 
-          <p className="mb-6 text-purple-100 text-sm sm:text-base">
-            Experience the easiest and most enjoyable shopping journey with SmartBazar.
+          <p className="text-sm sm:text-base text-indigo-100 mb-6">
+            Discover amazing deals and enjoy a smooth shopping experience.
           </p>
 
           <a
-            href="/"
-            className="inline-block bg-white text-purple-600 font-semibold 
-            px-6 py-3 rounded-lg hover:bg-gray-100 transition shadow-md"
+            href="/products"
+            className="inline-block bg-white text-indigo-600 font-semibold 
+            px-6 py-3 rounded-lg hover:bg-gray-100 transition"
           >
-            Shop Now
+            Shop Now →
           </a>
 
         </div>

@@ -1,5 +1,5 @@
 import Review  from "../models/Review.js";
-import Product from "../models/product.js";
+import Product from "../models/Product.js";
 
 class AdminReviewService {
 
@@ -10,7 +10,15 @@ class AdminReviewService {
       .populate("productId", "name images")
       .sort({ createdAt: -1 })
       .lean();
-  }
+
+       return reviews.map(r => ({
+    ...r,
+    user: {
+      name: r.userId?.name || "Unknown User",
+      email: r.userId?.email || ""
+    }
+  }));
+}
 
   async updateStatus(reviewId, status) {
     const allowed = ["pending", "approved", "rejected"];

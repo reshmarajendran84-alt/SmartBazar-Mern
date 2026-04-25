@@ -5,255 +5,192 @@ import { useAddress } from "../context/AddressContext";
 import { toast } from "react-toastify";
 import api from "../utils/api";
 
+const InputField = ({ label, ...props }) => (
+  <div className="flex flex-col gap-1">
+    {label && (
+      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+        {label}
+      </label>
+    )}
+    <input
+      className="border border-gray-200 bg-gray-50 px-3 py-2.5 rounded-lg text-sm
+                 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+      {...props}
+    />
+  </div>
+);
+
 const UserProfile = () => {
   const navigate = useNavigate();
   const { user, setUser, setLoading } = useAuth();
   const { addresses, loading, addAddress, updateAddress, deleteAddress, setDefaultAddress } = useAddress();
 
-  const emptyAddress = { 
-    name: "",     
-    phone: "",    
-    addressLine: "", 
-    city: "", 
-    state: "", 
-    pincode: "" 
-  };
-  
-  const [newAddress, setNewAddress] = useState(emptyAddress);
-  const [editingId, setEditingId] = useState(null);
-  const [error, setError] = useState("");
-  const [saving, setSaving] = useState(false);
   const [wallet, setWallet] = useState(null);
+  const [newAddress, setNewAddress] = useState({
+    name: "", phone: "", addressLine: "", city: "", state: "", pincode: ""
+  });
+  const [editingId, setEditingId] = useState(null);
 
-  // Fetch wallet
   useEffect(() => {
-    const fetchWallet = async () => {
-      try {
-        const { data } = await api.get("/wallet");
-        setWallet(data.wallet);
-      } catch (err) {
-        console.error("Wallet fetch error:", err);
-      }
-    };
-    fetchWallet();
+    api.get("/wallet").then(res => setWallet(res.data.wallet));
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = () => {
     localStorage.removeItem("token");
     setUser(null);
     setLoading(false);
     navigate("/auth/login");
-  }, [navigate, setUser, setLoading]);
+  };
+
+  const patch = (key) => (e) =>
+    setNewAddress(prev => ({ ...prev, [key]: e.target.value }));
 
   const handleSubmit = async () => {
-    if (!newAddress.name) return toast.warning("Name is required");
-    if (!newAddress.phone) return toast.warning("Phone number is required");
-    if (!newAddress.addressLine) return toast.warning("Address is required");
-    if (!newAddress.city) return toast.warning("City is required");
-    if (!newAddress.state) return toast.warning("State is required");
-    if (!/^\d{6}$/.test(newAddress.pincode)) return toast.warning("Enter valid 6-digit pincode");
-    if (!/^\d{10}$/.test(newAddress.phone)) return toast.warning("Enter valid 10-digit phone number");
-
     try {
-      setSaving(true);
       if (editingId) {
         await updateAddress(editingId, newAddress);
-        toast.success("Address updated successfully ✅");
-        setEditingId(null);
+        toast.success("Updated ✅");
       } else {
         await addAddress(newAddress);
-        toast.success("Address added successfully 🎉");
+        toast.success("Added 🎉");
       }
-      setNewAddress(emptyAddress);
-    } catch (err) {
-      toast.error("Something went wrong ❌");
-    } finally {
-      setSaving(false);
+      setNewAddress({ name:"", phone:"", addressLine:"", city:"", state:"", pincode:"" });
+      setEditingId(null);
+    } catch {
+      toast.error("Error ❌");
     }
   };
 
-  // Handle edit - include name and phone when editing
-  const handleEdit = (addr) => {
-    setNewAddress({ 
-      name: addr.name || "",
-      phone: addr.phone || "",
-      addressLine: addr.addressLine, 
-      city: addr.city, 
-      state: addr.state, 
-      pincode: addr.pincode 
-    });
-    setEditingId(addr._id);
-  };
-
-  if (loading) return <p className="text-center mt-10">Loading...</p>;
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"/>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-[calc(100vh-140px)] bg-gray-100 py-10 px-4">
-      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-6 md:p-8">
+    <div className="min-h-screen bg-gray-100 p-4 md:p-8">
 
-        <h2 className="text-3xl font-bold text-gray-800 mb-2">User Profile</h2>
-        <p className="text-gray-600 mb-6">
-          Email: <span className="font-semibold">{user?.email}</span>
-        </p>
+      <div className="max-w-5xl mx-auto space-y-6">
 
-        {/* Wallet balance card */}
-        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-6 flex justify-between items-center">
+        {/* HEADER */}
+        <div className="bg-white rounded-2xl shadow p-6 flex justify-between items-center">
           <div>
-            <p className="text-sm text-indigo-500 font-medium">Wallet Balance</p>
-            <p className="text-2xl font-bold text-indigo-700">
-              ₹{wallet?.balance?.toFixed(2) || "0.00"}
-            </p>
+            <h2 className="text-2xl font-bold">My Profile</h2>
+            <p className="text-sm text-gray-500">{user?.email}</p>
           </div>
-          <Link
-            to="/wallet"
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-indigo-700 transition"
-          >
-            View Wallet →
+
+          <div className="w-12 h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center text-lg font-bold">
+            {user?.email?.[0]?.toUpperCase()}
+          </div>
+        </div>
+
+        {/* WALLET */}
+        <div className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white p-6 rounded-2xl flex justify-between items-center">
+          <div>
+            <p className="text-xs opacity-80">Wallet Balance</p>
+            <h3 className="text-3xl font-bold">₹{wallet?.balance || 0}</h3>
+          </div>
+
+          <Link to="/wallet" className="bg-white/20 px-4 py-2 rounded-lg hover:bg-white/30">
+            View →
           </Link>
         </div>
 
-        {/* Quick links */}
-        <div className="flex gap-3 mb-6">
-          <Link
-            to="/my-orders"
-            className="flex-1 text-center border border-indigo-300 text-indigo-600 py-2 rounded-lg text-sm font-medium hover:bg-indigo-50 transition"
-          >
-            My Orders
+        {/* ACTIONS */}
+        <div className="grid grid-cols-2 gap-3">
+          <Link to="/my-orders" className="bg-white shadow p-4 text-center rounded-xl hover:bg-gray-50">
+            📦 Orders
           </Link>
-          <button
-            onClick={logout}
-            className="flex-1 border border-red-300 text-red-500 py-2 rounded-lg text-sm font-medium hover:bg-red-50 transition"
-          >
-            Logout
+          <button onClick={logout} className="bg-white shadow p-4 text-red-500 rounded-xl hover:bg-red-50">
+            🚪 Logout
           </button>
         </div>
 
-        {/* Address form - ADDED name and phone inputs */}
-        <h3 className="text-lg font-semibold mb-3">
-          {editingId ? "Edit Address" : "Add Address"}
-        </h3>
+        {/* ADDRESS FORM */}
+        <div className="bg-white p-6 rounded-2xl shadow">
+          <h3 className="font-bold mb-4">
+            {editingId ? "Edit Address" : "Add Address"}
+          </h3>
 
-        <div className="grid md:grid-cols-2 gap-3 mb-2">
-          <input
-            type="text"
-            placeholder="Full Name *"
-            className="border px-3 py-2 rounded"
-            value={newAddress.name}
-            onChange={(e) => setNewAddress({ ...newAddress, name: e.target.value })}
-          />
-          
-          <input
-            type="tel"
-            placeholder="Phone Number *"
-            className="border px-3 py-2 rounded"
-            value={newAddress.phone}
-            maxLength={10}
-            onChange={(e) => {
-              const onlyNumbers = e.target.value.replace(/\D/g, "");
-              setNewAddress({ ...newAddress, phone: onlyNumbers });
-            }}
-          />
-          
-          <input
-            placeholder="Address Line *"
-            className="border px-3 py-2 rounded"
-            value={newAddress.addressLine}
-            onChange={(e) => setNewAddress({ ...newAddress, addressLine: e.target.value })}
-          />
-          
-          <input
-            placeholder="City *"
-            className="border px-3 py-2 rounded"
-            value={newAddress.city}
-            onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
-          />
-          
-          <input
-            placeholder="State *"
-            className="border px-3 py-2 rounded"
-            value={newAddress.state}
-            onChange={(e) => setNewAddress({ ...newAddress, state: e.target.value })}
-          />
-          
-          <input
-            type="text"
-            placeholder="Pincode *"
-            className="border px-3 py-2 rounded"
-            value={newAddress.pincode}
-            maxLength={6}
-            onChange={(e) => {
-              const onlyNumbers = e.target.value.replace(/\D/g, "");
-              setNewAddress({ ...newAddress, pincode: onlyNumbers });
-            }}
-          />
-        </div>
-
-        {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
-
-        <button
-          onClick={handleSubmit}
-          disabled={saving}
-          className="bg-indigo-600 text-white px-5 py-2 rounded mb-6 disabled:opacity-50"
-        >
-          {saving ? "Saving..." : editingId ? "Update Address" : "Add Address"}
-        </button>
-
-        <h3 className="text-lg font-semibold mb-3">Saved Addresses</h3>
-        {editingId && (
-          <button
-            onClick={() => { setEditingId(null); setNewAddress(emptyAddress); setError(""); }}
-            className="ml-3 text-gray-600 underline mb-3"
-          >
-            Cancel
-          </button>
-        )}
-
-        {addresses.length === 0 && <p>No addresses found</p>}
-
-        {addresses.map((addr) => (
-          <div
-            key={addr._id}
-            className="bg-gray-50 rounded-xl p-4 mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
-          >
-            <div>
-              <p className="font-medium">{addr.name || "No name"}</p>
-              <p>{addr.addressLine}, {addr.city}, {addr.state} - {addr.pincode}</p>
-              <p className="text-sm text-gray-600">Phone: {addr.phone || "No phone"}</p>
-              {addr.isDefault && <span className="text-green-600 text-sm">Default ⭐</span>}
+          <div className="grid md:grid-cols-2 gap-3">
+            <InputField label="Name" value={newAddress.name} onChange={patch("name")} />
+            <InputField label="Phone" value={newAddress.phone} onChange={patch("phone")} />
+            <div className="md:col-span-2">
+              <InputField label="Address" value={newAddress.addressLine} onChange={patch("addressLine")} />
             </div>
-            <div className="flex gap-2">
-              <button
-                onClick={async () => {
-                  try { await setDefaultAddress(addr._id); toast.success("Default address updated ⭐"); }
-                  catch { toast.error("Failed to set default address ❌"); }
-                }}
-                disabled={addr.isDefault || editingId}
-                className="px-3 py-1 bg-blue-500 text-white rounded disabled:opacity-50"
-              >
-                Set Default
-              </button>
-              <button
-                onClick={() => handleEdit(addr)}  
-                className="px-3 py-1 bg-yellow-500 text-white rounded"
-              >
-                Edit
-              </button>
-              <button
-                onClick={async () => {
-                  if (!window.confirm("Are you sure you want to delete this address?")) return;
-                  try {
-                    await deleteAddress(addr._id);
-                    toast.success("Address deleted successfully 🗑️");
-                    if (editingId === addr._id) { setEditingId(null); setNewAddress(emptyAddress); setError(""); }
-                  } catch { toast.error("Failed to delete address ❌"); }
-                }}
-                className="px-3 py-1 bg-red-500 text-white rounded"
-              >
-                Delete
-              </button>
-            </div>
+            <InputField label="City" value={newAddress.city} onChange={patch("city")} />
+            <InputField label="State" value={newAddress.state} onChange={patch("state")} />
+            <InputField label="Pincode" value={newAddress.pincode} onChange={patch("pincode")} />
           </div>
-        ))}
+
+          <button
+            onClick={handleSubmit}
+            className="mt-4 bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700"
+          >
+            {editingId ? "Update" : "Add"}
+          </button>
+        </div>
+
+        {/* ADDRESS LIST */}
+        <div className="bg-white p-6 rounded-2xl shadow">
+          <h3 className="font-bold mb-4">Saved Addresses</h3>
+
+          {addresses.length === 0 ? (
+            <p className="text-gray-400 text-center">No addresses</p>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-4">
+              {addresses.map(addr => (
+                <div key={addr._id} className="border rounded-xl p-4 hover:shadow transition">
+
+                  <div className="flex justify-between">
+                    <h4 className="font-semibold">{addr.name}</h4>
+                    {addr.isDefault && (
+                      <span className="text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full">
+                        Default
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-sm text-gray-600 mt-1">{addr.addressLine}</p>
+                  <p className="text-sm text-gray-500">
+                    {addr.city}, {addr.state} - {addr.pincode}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">📞 {addr.phone}</p>
+
+                  <div className="flex gap-2 mt-3">
+                    {!addr.isDefault && (
+                      <button
+                        onClick={() => setDefaultAddress(addr._id)}
+                        className="text-xs bg-indigo-100 text-indigo-600 px-2 py-1 rounded"
+                      >
+                        Default
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        setNewAddress(addr);
+                        setEditingId(addr._id);
+                      }}
+                      className="text-xs bg-yellow-100 text-yellow-600 px-2 py-1 rounded"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => deleteAddress(addr._id)}
+                      className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded"
+                    >
+                      Delete
+                    </button>
+                  </div>
+
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
       </div>
     </div>
   );

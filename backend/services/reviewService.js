@@ -1,6 +1,6 @@
 import Review from "../models/Review.js";
-import Order  from "../models/order.js";
-import Product from "../models/product.js";
+import Order  from "../models/Order.js";
+import Product from "../models/Product.js";
 
 class ReviewService {
 
@@ -12,7 +12,8 @@ class ReviewService {
 
     const reviews = await Review.find(query)
       .populate("userId", "name email")
-      .sort({ createdAt: -1 });
+        .populate("productId", "name")
+       .sort({ createdAt: -1 });
 
     const approvedOnly = reviews.filter(r => r.status === "approved");
     const avgRating =
@@ -25,7 +26,7 @@ class ReviewService {
       rating:    r.rating,
       comment:   r.comment,
       createdAt: r.createdAt,
-      status:    r.status,   // ← user sees their own status (pending/approved/rejected)
+      status:    r.status,   
       isOwner:   currentUserId
                    ? r.userId._id.toString() === currentUserId.toString()
                    : false,
@@ -84,7 +85,7 @@ class ReviewService {
 
     review.rating  = rating;
     review.comment = comment.trim();
-    review.status  = "pending"; // ← reset to pending after edit (re-moderate)
+    review.status  = "pending"; 
     await review.save();
     await this.#updateProductRating(review.productId);
     return review;
@@ -102,7 +103,7 @@ class ReviewService {
   }
 
   async #updateProductRating(productId) {
-    const reviews = await Review.find({ productId, status: "approved" }); // only approved
+    const reviews = await Review.find({ productId, status: "approved" }); 
     const avg = reviews.length > 0
       ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
       : 0;

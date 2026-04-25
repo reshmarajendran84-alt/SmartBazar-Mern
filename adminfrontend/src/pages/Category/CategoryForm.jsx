@@ -1,105 +1,92 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 
 const CategoryForm = ({ onClose, onSubmit, editData }) => {
-  const [name, setName] = useState("");
+  const [name, setName]       = useState("");
   const [loading, setLoading] = useState(false);
+  const inputRef              = useRef(null);
 
   useEffect(() => {
-    if (editData) {
-      setName(editData.name);
-    } else {
-      setName("");
-    }
+    setName(editData?.name ?? "");
+    setTimeout(() => inputRef.current?.focus(), 60);
   }, [editData]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleBackdrop = (e) => {
+    if (e.target === e.currentTarget) onClose();
+  };
 
-    if (!name.trim()) {
-      return toast.error("Category name required");
-    }
+  const handleSubmit = async (e) => {
+    e?.preventDefault();
+    if (!name.trim()) return toast.error("Category name is required");
 
     try {
       setLoading(true);
-      await onSubmit(name);
-      // onClose();
-    } catch (error) {
-      console.error(error.response?.data || error.message);
-      toast.error("Something went wrong. Try again!");
+      await onSubmit(name.trim());
+    } catch (err) {
+      toast.error(err.response?.data?.message ?? "Something went wrong");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center px-3 sm:px-4 z-50">
+    <div
+      onClick={handleBackdrop}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+    >
+      <div className="w-full max-w-sm bg-white rounded-2xl border border-gray-100 shadow-xl p-6">
 
-      {/* Modal */}
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white w-full max-w-md rounded-2xl shadow-2xl p-5 sm:p-6 space-y-5 sm:space-y-6 
-        animate-[fadeIn_.3s_ease] transition-all"
-      >
         {/* Header */}
-        <div className="text-center space-y-1">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
-            {editData ? "Edit Category" : "Add Category"}
+        <div className="mb-5">
+          <h2 className="text-base font-semibold text-gray-800">
+            {editData ? "Edit category" : "Add category"}
           </h2>
-          <p className="text-xs sm:text-sm text-gray-500">
+          <p className="text-xs text-gray-400 mt-0.5">
             {editData
               ? "Update your category information"
               : "Create a new product category"}
           </p>
         </div>
 
-        {/* Input */}
+        {/* Field */}
         <div>
-          <label className="text-sm font-medium text-gray-600">
-            Category Name
+          <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">
+            Category name
           </label>
-
           <input
+            ref={inputRef}
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Enter category name"
-            className="mt-2 w-full border border-gray-300 px-4 py-2.5 rounded-lg 
-            focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 
-            outline-none transition text-sm sm:text-base"
+            onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+            placeholder="e.g. Electronics"
+            className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm 
+            text-gray-800 placeholder-gray-400 outline-none 
+            focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
           />
         </div>
 
-        {/* Buttons */}
-        <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
-
+        {/* Actions */}
+        <div className="flex justify-end gap-2.5 mt-6">
           <button
             type="button"
             onClick={onClose}
-            className="w-full sm:w-auto px-4 py-2.5 rounded-lg border 
-            text-gray-600 hover:bg-gray-100 transition"
+            className="px-4 py-2 rounded-lg text-sm text-gray-500 bg-gray-50 
+            border border-gray-200 hover:bg-gray-100 transition"
           >
             Cancel
           </button>
-
           <button
-            type="submit"
+            onClick={handleSubmit}
             disabled={loading}
-            className={`w-full sm:w-auto px-5 py-2.5 rounded-lg text-white font-medium transition shadow
-            ${
-              loading
-                ? "bg-indigo-400 cursor-not-allowed"
-                : "bg-indigo-600 hover:bg-indigo-700"
-            }`}
+            className="px-5 py-2 rounded-lg text-sm font-medium text-white 
+            bg-indigo-600 hover:bg-indigo-700 transition 
+            disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading
-              ? "Processing..."
-              : editData
-              ? "Update"
-              : "Save"}
+            {loading ? "Saving..." : editData ? "Update" : "Save"}
           </button>
-
         </div>
-      </form>
+
+      </div>
     </div>
   );
 };

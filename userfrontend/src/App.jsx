@@ -39,7 +39,7 @@ function App() {
               <Route path="/about" element={<AboutPage />} />
 
               <Route element={<UserProtectedRoute />}>
-                <Route path="/user/profile" element={<UserProfile />} />
+                <Route path="/profile" element={<UserProfile />} />
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
                 <Route path="/order-success" element={<OrderSuccess />} />

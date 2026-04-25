@@ -4,47 +4,29 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 function SearchBar() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
-
-  const currentSearch = params.get("search") || "";
-  const [keyword, setKeyword] = useState(currentSearch);
+  const [keyword, setKeyword] = useState(params.get("search") || "");
 
   const handleSearch = (e) => {
     e.preventDefault();
+    // Preserve all existing filters, just update search + reset page
+    const next = new URLSearchParams(params);
     const trimmed = keyword.trim();
-    const p = new URLSearchParams();
-    if (trimmed) p.set("search", trimmed);
-    p.set("page", "1");
-    navigate(`/products?${p.toString()}`);
-  };
-
-  const handleClear = () => {
-    setKeyword("");
-    navigate("/products");
+    if (trimmed) next.set("search", trimmed);
+    else next.delete("search");
+    next.set("page", "1");
+    navigate(`/products?${next.toString()}`);
   };
 
   return (
-    <form onSubmit={handleSearch} className="flex gap-2 w-full">
-      <div className="relative flex-1">
-        <input
-          type="text"
-          placeholder="Search products..."
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
-          className="border px-3 py-1 w-full rounded pr-8"
-        />
-        {keyword && (
-          <button
-            type="button"
-            onClick={handleClear}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-          >
-            ✕
-          </button>
-        )}
-      </div>
-      <button type="submit" className="bg-blue-500 text-white px-3 rounded">
-        Search
-      </button>
+    <form onSubmit={handleSearch} className="flex w-full max-w-xl">
+      <input
+        type="text"
+        placeholder="Search products..."
+        value={keyword}
+        onChange={(e) => setKeyword(e.target.value)}
+        className="flex-1 border border-gray-300 px-4 py-2 rounded-l-lg focus:ring-2 focus:ring-indigo-400 outline-none"
+      />
+      <button className="bg-indigo-600 text-white px-4 rounded-r-lg">Search</button>
     </form>
   );
 }

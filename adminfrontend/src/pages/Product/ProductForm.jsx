@@ -2,36 +2,24 @@ import { useState, useEffect } from "react";
 import { createProduct, updateProduct } from "../../services/productService";
 import { getCategories } from "../../services/categoryService";
 import toast from "react-hot-toast";
+import { FiX, FiUpload } from "react-icons/fi";
 
 const ProductForm = ({ onClose, refresh, editData }) => {
   const isEdit = !!editData;
-
-  const [form, setForm] = useState({
-    name: "",
-    price: "",
-    category: "",
-    stock: "",
-    description: "",
-  });
-
-  const [images, setImages] = useState([]);
-  const [preview, setPreview] = useState([]);
+  const [form, setForm] = useState({ name: "", price: "", category: "", stock: "", description: "" });
+  const [images, setImages]     = useState([]);
+  const [preview, setPreview]   = useState([]);
   const [categories, setCategories] = useState([]);
 
-  useEffect(() => {
-    loadCategories();
-  }, []);
+  useEffect(() => { loadCategories(); }, []);
 
   useEffect(() => {
     if (editData) {
       setForm({
-        name: editData.name,
-        price: editData.price,
+        name: editData.name, price: editData.price,
         category: editData.category?._id || "",
-        stock: editData.stock,
-        description: editData.description,
+        stock: editData.stock, description: editData.description,
       });
-
       setPreview(editData.images || []);
     }
   }, [editData]);
@@ -40,172 +28,119 @@ const ProductForm = ({ onClose, refresh, editData }) => {
     try {
       const { data } = await getCategories();
       setCategories(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.log(err);
-    }
+    } catch {}
   };
 
-  const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-    console.log("Files selected:", files.length);
-    console.log("Files:", files);
-
-    // setImages(files);
-    if (files.length > 5) {
-      toast.error("Maximum 5 images allowed");
-      return;
-    }
+    if (files.length > 5) return toast.error("Max 5 images allowed");
     setImages(files);
-    const previews = files.map((file) => URL.createObjectURL(file));
-    setPreview(previews);
+    setPreview(files.map(f => URL.createObjectURL(f)));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("images state:", images); 
-    console.log("images count:", images.length); 
-
-    const formData = new FormData();
-
-    formData.append("name", form.name);
-    formData.append("price", form.price);
-    formData.append("stock", form.stock);
-    formData.append("category", form.category);
-    formData.append("description", form.description);
-
-    images.forEach((file) => {
-      formData.append("images", file);
-      console.log("appending image:", file.name);
-    });
-    const toastId = toast.loading("Submitting...");
-
+    const fd = new FormData();
+    Object.entries(form).forEach(([k, v]) => fd.append(k, v));
+    images.forEach(f => fd.append("images", f));
+    const toastId = toast.loading("Saving...");
     try {
-      if (isEdit) {
-        await updateProduct(editData._id, formData);
-        toast.success("Product Updated", { id: toastId });
-      } else {
-        await createProduct(formData); // calls productSevice.js
-        toast.success("Product Created", { id: toastId });
-      }
-
+      isEdit ? await updateProduct(editData._id, fd) : await createProduct(fd);
+      toast.success(isEdit ? "Product updated" : "Product created", { id: toastId });
       refresh();
       onClose();
-    } catch (error) {
+    } catch {
       toast.error("Something went wrong", { id: toastId });
     }
   };
 
+  const inputCls = "w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition";
+
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center p-4">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 space-y-5"
-      >
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-bold text-gray-800">
-            {isEdit ? "Update Product" : "Add Product"}
+    <form onSubmit={handleSubmit}
+      className="bg-white rounded-2xl border border-gray-100 shadow-xl w-full max-w-xl p-5 sm:p-6 space-y-4">
+
+      {/* Header */}
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-base font-semibold text-gray-800">
+            {isEdit ? "Edit product" : "Add product"}
           </h2>
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-gray-500 hover:text-red-500"
-          >
-            ✕
-          </button>
+          <p className="text-xs text-gray-400 mt-0.5">
+            {isEdit ? "Update product details" : "Fill in details to create a product"}
+          </p>
         </div>
+        <button type="button" onClick={onClose}
+          className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition">
+          <FiX size={15} />
+        </button>
+      </div>
 
-        {/* Form Grid */}
-        <div className="grid md:grid-cols-2 gap-4">
-          <input
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            placeholder="Product Name"
-            className="border rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 outline-none"
-          />
-
-          <input
-            name="price"
-            type="number"
-            value={form.price}
-            onChange={handleChange}
-            placeholder="Price"
-            className="border rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 outline-none"
-          />
-
-          <input
-            name="stock"
-            type="number"
-            value={form.stock}
-            onChange={handleChange}
-            placeholder="Stock"
-            className="border rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 outline-none"
-          />
-
-          <select
-            name="category"
-            value={form.category}
-            onChange={handleChange}
-            className="border rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 outline-none"
-          >
-            <option value="">Select Category</option>
-
-            {categories?.map((c) => (
-              <option key={c._id} value={c._id}>
-                {c.name}
-              </option>
-            ))}
+      {/* Fields */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {[
+          { name: "name", placeholder: "Product name", type: "text" },
+          { name: "price", placeholder: "Price (₹)", type: "number" },
+          { name: "stock", placeholder: "Stock quantity", type: "number" },
+        ].map(f => (
+          <div key={f.name}>
+            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">
+              {f.placeholder}
+            </label>
+            <input name={f.name} type={f.type} value={form[f.name]}
+              onChange={handleChange} placeholder={f.placeholder} className={inputCls} />
+          </div>
+        ))}
+        <div>
+          <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">
+            Category
+          </label>
+          <select name="category" value={form.category} onChange={handleChange} className={inputCls}>
+            <option value="">Select category</option>
+            {categories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
           </select>
         </div>
+      </div>
 
-        {/* Description */}
-        <textarea
-          name="description"
-          value={form.description}
-          onChange={handleChange}
-          placeholder="Product Description"
-          rows="3"
-          className="border rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-indigo-500 outline-none"
-        />
+      <div>
+        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">
+          Description
+        </label>
+        <textarea name="description" value={form.description} onChange={handleChange}
+          placeholder="Describe the product..." rows={3} className={`${inputCls} resize-none`} />
+      </div>
 
-        {/* Image Upload */}
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-          <input
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={handleImageChange}
-            className="cursor-pointer"
-          />
+      {/* Upload */}
+      <div className="border border-dashed border-gray-200 rounded-xl p-4 text-center">
+        <FiUpload className="mx-auto mb-2 text-gray-300" size={20} />
+        <input type="file" multiple accept="image/*" onChange={handleImageChange}
+          className="text-xs text-gray-500 cursor-pointer" />
+        <p className="text-xs text-gray-400 mt-1.5">Up to 5 images · JPG, PNG, WEBP</p>
+      </div>
 
-          <p className="text-sm text-gray-500 mt-2">Upload product images</p>
+      {/* Preview */}
+      {preview.length > 0 && (
+        <div className="flex gap-2 flex-wrap">
+          {preview.map((img, i) => (
+            <img key={i} src={img} className="w-14 h-14 object-cover rounded-lg border border-gray-100" alt="" />
+          ))}
         </div>
+      )}
 
-        {/* Image Preview */}
-        {preview.length > 0 && (
-          <div className="flex gap-3 flex-wrap">
-            {preview.map((img, i) => (
-              <img
-                key={i}
-                src={img}
-                alt="preview"
-                className="w-20 h-20 object-cover rounded-lg border"
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Submit */}
-        <button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-medium transition">
-          {isEdit ? "Update Product" : "Add Product"}
+      {/* Actions */}
+      <div className="flex justify-end gap-2.5 pt-1">
+        <button type="button" onClick={onClose}
+          className="px-4 py-2 rounded-lg text-sm text-gray-500 bg-gray-50 border border-gray-200 hover:bg-gray-100 transition">
+          Cancel
         </button>
-      </form>
-    </div>
+        <button type="submit"
+          className="px-5 py-2 rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition">
+          {isEdit ? "Update product" : "Add product"}
+        </button>
+      </div>
+    </form>
   );
 };
 

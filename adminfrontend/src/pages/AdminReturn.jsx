@@ -1,12 +1,20 @@
 import { useEffect, useState } from "react";
 import api from "../utils/api";
 import { toast } from "react-toastify";
+import { 
+  FiRefreshCw, FiCheckCircle, FiXCircle, FiClock, 
+  FiUser, FiMail, FiCalendar, FiAlertCircle,
+  FiChevronLeft, FiChevronRight, FiFilter
+} from "react-icons/fi";
 
 const AdminReturns = () => {
   const [returns, setReturns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("pending");
   const [processingId, setProcessingId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [mobileViewOpen, setMobileViewOpen] = useState(null);
 
   const [rejectModal, setRejectModal] = useState({
     open: false,
@@ -17,8 +25,9 @@ const AdminReturns = () => {
   const fetchReturns = async () => {
     try {
       setLoading(true);
-      const res = await api.get(`/returns?status=${filter}`);
+      const res = await api.get(`/returns`);
       setReturns(res.data.data || []);
+      setCurrentPage(1);
     } catch (error) {
       console.error("Fetch returns error:", error);
       toast.error("Failed to load returns");
@@ -29,282 +38,343 @@ const AdminReturns = () => {
 
   useEffect(() => {
     fetchReturns();
-  }, [filter]);
+  }, []);
 
-  //  Use the correct function name
+  const getFilteredReturns = () => {
+    switch(filter) {
+      case "pending":
+        return returns.filter(r => r.status === "Return_requested");
+      case "approved":
+        return returns.filter(r => r.status === "Returned");
+      case "rejected":
+        return returns.filter(r => r.status === "Rejected" || r.returnRejectedAt);
+      default:
+        return returns;
+    }
+  };
+
+  const filteredReturns = getFilteredReturns();
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentReturns = filteredReturns.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredReturns.length / itemsPerPage);
+
+  const getStatusBadge = (returnReq) => {
+    if (returnReq.status === "Rejected" || returnReq.returnRejectedAt) {
+      return { bg: "bg-red-100", text: "text-red-800", icon: FiXCircle, label: "Rejected" };
+    }
+    if (returnReq.status === "Returned") {
+      return { bg: "bg-green-100", text: "text-green-800", icon: FiCheckCircle, label: "Approved" };
+    }
+    return { bg: "bg-yellow-100", text: "text-yellow-800", icon: FiClock, label: "Pending" };
+  };
+
   const handleApprove = async (orderId) => {
     try {
       setProcessingId(orderId);
-      // Note: Your route uses POST not PATCH based on your route definition
       const response = await api.post(`/returns/${orderId}/approve`);
-      
       if (response.data.success) {
-        toast.success(`Return approved! Refund amount: ₹${response.data.refundAmount || 'N/A'}`);
-        fetchReturns(); // Refresh the list
+        toast.success(`Return approved! Refund: ₹${response.data.refundAmount || 'N/A'}`);
+        fetchReturns();
       } else {
         toast.error(response.data.message || "Failed to approve return");
       }
     } catch (error) {
-      console.error("Approve error:", error);
       toast.error(error.response?.data?.message || "Failed to approve return");
     } finally {
       setProcessingId(null);
     }
   };
 
-  //  Use the correct function name
   const handleReject = async () => {
     const { orderId, reason } = rejectModal;
-    
     if (!reason || reason.trim() === "") {
       toast.error("Please provide a rejection reason");
       return;
     }
-
     try {
       setProcessingId(orderId);
-      // Note: Your route uses POST not PATCH based on your route definition
-      const response = await api.post(`/returns/${orderId}/reject`, {
-        rejectionReason: reason
-      });
-      
+      const response = await api.post(`/returns/${orderId}/reject`, { rejectionReason: reason });
       if (response.data.success) {
         toast.success("Return request rejected");
         setRejectModal({ open: false, orderId: null, reason: "" });
-        fetchReturns(); // Refresh the list
+        fetchReturns();
       } else {
         toast.error(response.data.message || "Failed to reject return");
       }
     } catch (error) {
-      console.error("Reject error:", error);
       toast.error(error.response?.data?.message || "Failed to reject return");
     } finally {
       setProcessingId(null);
     }
   };
 
+  const stats = {
+    pending: returns.filter(r => r.status === "Return_requested").length,
+    approved: returns.filter(r => r.status === "Returned").length,
+    rejected: returns.filter(r => r.status === "Rejected" || r.returnRejectedAt).length,
+  };
+
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Return Management</h1>
-
-      {/* Filter Buttons */}
-      <div className="flex gap-2 mb-6">
-        {["pending", "approved", "rejected"].map(status => (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto">
+        
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+              Return Management
+            </h1>
+            <p className="text-sm text-gray-500 mt-1">Manage and process customer return requests</p>
+          </div>
           <button
-            key={status}
-            onClick={() => setFilter(status)}
-            className={`px-4 py-2 rounded-lg ${
-              filter === status
-                ? "bg-indigo-600 text-white"
-                : "bg-gray-200 text-gray-700"
-            }`}
+            onClick={fetchReturns}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition shadow-sm"
           >
-            {status.charAt(0).toUpperCase() + status.slice(1)}
+            <FiRefreshCw className={`text-sm ${loading ? 'animate-spin' : ''}`} />
+            <span className="text-sm">Refresh</span>
           </button>
-        ))}
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          {[
+            { key: "pending", label: "Pending", count: stats.pending, color: "yellow", icon: FiClock },
+            { key: "approved", label: "Approved", count: stats.approved, color: "green", icon: FiCheckCircle },
+            { key: "rejected", label: "Rejected", count: stats.rejected, color: "red", icon: FiXCircle }
+          ].map(stat => (
+            <div
+              key={stat.key}
+              onClick={() => setFilter(stat.key)}
+              className={`bg-white rounded-xl border p-4 shadow-sm hover:shadow-md transition-all cursor-pointer ${
+                filter === stat.key ? `border-${stat.color}-400 ring-2 ring-${stat.color}-200` : "border-gray-100"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">{stat.label}</p>
+                  <p className={`text-2xl font-bold text-${stat.color}-600`}>{stat.count}</p>
+                </div>
+                <div className={`w-10 h-10 bg-${stat.color}-100 rounded-full flex items-center justify-center`}>
+                  <stat.icon className={`text-${stat.color}-600 text-lg`} />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Filter Tabs */}
+        <div className="mb-6">
+          <div className="flex flex-wrap gap-2 border-b border-gray-200">
+            {["pending", "approved", "rejected"].map(status => (
+              <button
+                key={status}
+                onClick={() => setFilter(status)}
+                className={`px-4 py-2 text-sm font-medium transition-all capitalize ${
+                  filter === status
+                    ? `text-${status === "pending" ? "yellow" : status === "approved" ? "green" : "red"}-600 border-b-2 border-${status === "pending" ? "yellow" : status === "approved" ? "green" : "red"}-600`
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                {status} ({stats[status]})
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Content */}
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
+            <p className="text-gray-500">Loading returns...</p>
+          </div>
+        ) : filteredReturns.length === 0 ? (
+          <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
+            <FiAlertCircle className="mx-auto text-gray-400 text-5xl mb-4" />
+            <p className="text-gray-500 text-lg">No {filter} return requests found</p>
+          </div>
+        ) : (
+          <>
+            {/* Desktop Table */}
+            <div className="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-100">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500">Order ID</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500">Customer</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500">Amount</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500">Reason</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500">Status</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500">Requested</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {currentReturns.map(returnReq => {
+                      const statusBadge = getStatusBadge(returnReq);
+                      const StatusIcon = statusBadge.icon;
+                      return (
+                        <tr key={returnReq._id} className="hover:bg-gray-50 transition">
+                          <td className="px-6 py-4 font-mono text-sm">#{returnReq._id?.slice(-8)}</td>
+                          <td className="px-6 py-4">
+                            <div>
+                              <p className="text-sm font-medium">{returnReq.userId?.name || returnReq.address?.fullName || "Guest"}</p>
+                              <p className="text-xs text-gray-500">{returnReq.userId?.email || returnReq.address?.email}</p>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 font-semibold">₹{returnReq.total}</td>
+                          <td className="px-6 py-4">
+                            <p className="text-sm capitalize">{returnReq.returnReason?.replace(/_/g, ' ')}</p>
+                            {returnReq.returnRejectionReason && (
+                              <p className="text-xs text-red-500 mt-1">Rejected: {returnReq.returnRejectionReason}</p>
+                            )}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusBadge.bg} ${statusBadge.text}`}>
+                              <StatusIcon className="text-xs" />
+                              {statusBadge.label}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-500">
+                            {new Date(returnReq.returnRequestedAt).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4">
+                            {returnReq.status === "Return_requested" && (
+                              <div className="flex gap-2">
+                                <button onClick={() => handleApprove(returnReq._id)} disabled={processingId === returnReq._id}
+                                  className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700">
+                                  Approve
+                                </button>
+                                <button onClick={() => setRejectModal({ open: true, orderId: returnReq._id, reason: "" })}
+                                  className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700">
+                                  Reject
+                                </button>
+                              </div>
+                            )}
+                            {returnReq.status === "Returned" && (
+                              <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
+                                <FiCheckCircle /> Refunded
+                              </span>
+                            )}
+                            {(returnReq.status === "Rejected" || returnReq.returnRejectedAt) && (
+                              <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-600 rounded-full text-sm">
+                                <FiXCircle /> Rejected
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="lg:hidden space-y-4">
+              {currentReturns.map(returnReq => {
+                const statusBadge = getStatusBadge(returnReq);
+                const StatusIcon = statusBadge.icon;
+                return (
+                  <div key={returnReq._id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="font-mono text-sm font-bold">#{returnReq._id?.slice(-8)}</span>
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${statusBadge.bg} ${statusBadge.text}`}>
+                        <StatusIcon className="text-xs" />
+                        {statusBadge.label}
+                      </span>
+                    </div>
+                    <div className="space-y-2 mb-3">
+                      <div className="flex items-start gap-2">
+                        <FiUser className="text-gray-400 mt-0.5 flex-shrink-0" size={14} />
+                        <div>
+                          <p className="text-sm font-medium">{returnReq.userId?.name || returnReq.address?.fullName || "Guest"}</p>
+                          <p className="text-xs text-gray-500">{returnReq.userId?.email || returnReq.address?.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500 text-sm">Amount:</span>
+                        <span className="font-semibold">₹{returnReq.total}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500 text-sm">Reason:</span>
+                        <p className="text-sm capitalize mt-1">{returnReq.returnReason?.replace(/_/g, ' ')}</p>
+                      </div>
+                      {returnReq.returnRejectionReason && (
+                        <div className="bg-red-50 p-2 rounded-lg">
+                          <p className="text-xs text-red-600 font-medium">Rejection Reason:</p>
+                          <p className="text-xs text-red-500">{returnReq.returnRejectionReason}</p>
+                        </div>
+                      )}
+                    </div>
+                    {returnReq.status === "Return_requested" && (
+                      <div className="flex gap-2 pt-2 border-t border-gray-100">
+                        <button onClick={() => handleApprove(returnReq._id)} className="flex-1 py-2 bg-green-600 text-white rounded-lg text-sm">
+                          Approve
+                        </button>
+                        <button onClick={() => setRejectModal({ open: true, orderId: returnReq._id, reason: "" })} className="flex-1 py-2 bg-red-600 text-white rounded-lg text-sm">
+                          Reject
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
+                <p className="text-sm text-gray-500">
+                  Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredReturns.length)} of {filteredReturns.length}
+                </p>
+                <div className="flex gap-2">
+                  <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}
+                    className="p-2 bg-white border rounded-lg hover:bg-gray-50 disabled:opacity-50">
+                    <FiChevronLeft />
+                  </button>
+                  {[...Array(totalPages)].map((_, i) => (
+                    <button key={i} onClick={() => setCurrentPage(i + 1)}
+                      className={`px-3 py-1.5 rounded-lg text-sm ${currentPage === i + 1 ? 'bg-indigo-600 text-white' : 'bg-white border hover:bg-gray-50'}`}>
+                      {i + 1}
+                    </button>
+                  ))}
+                  <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}
+                    className="p-2 bg-white border rounded-lg hover:bg-gray-50 disabled:opacity-50">
+                    <FiChevronRight />
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Reject Modal */}
+        {rejectModal.open && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl w-full max-w-md">
+              <div className="p-6">
+                <h2 className="text-xl font-semibold mb-4">Reject Return Request</h2>
+                <textarea
+                  value={rejectModal.reason}
+                  onChange={(e) => setRejectModal(prev => ({ ...prev, reason: e.target.value }))}
+                  placeholder="Enter rejection reason..."
+                  className="w-full border rounded-lg p-3 mb-4 focus:ring-2 focus:ring-red-500 outline-none"
+                  rows="4"
+                />
+                <div className="flex gap-3">
+                  <button onClick={() => setRejectModal({ open: false, orderId: null, reason: "" })}
+                    className="flex-1 border py-2 rounded-lg hover:bg-gray-50">Cancel</button>
+                  <button onClick={handleReject} className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700">
+                    Confirm
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-
-      {/* Content */}
-      {loading ? (
-        <div className="text-center py-12">Loading...</div>
-      ) : returns.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
-          No return requests found
-        </div>
-      ) : (
-        <div className="bg-white rounded-xl shadow overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px]">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Order ID</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Customer</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Amount</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">User Return Reason</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Admin Rejection Reason</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Requested On</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {returns.map((returnReq) => (
-                  <tr key={returnReq._id} className="border-t hover:bg-gray-50">
-                    {/* Order ID */}
-                    <td className="px-4 py-3 font-mono text-sm">
-                      #{returnReq._id?.slice(-8)}
-                    </td>
-
-                    {/* Customer */}
-                    <td className="px-4 py-3">
-                      <div className="font-medium text-gray-800">
-                        {returnReq.userId?.name ||
-                          returnReq.address?.fullName ||
-                          "Guest"}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {returnReq.userId?.email ||
-                          returnReq.address?.email ||
-                          "N/A"}
-                      </div>
-                    </td>
-
-                    {/* Amount */}
-                    <td className="px-4 py-3 font-semibold text-gray-800">
-                      ₹{returnReq.total}
-                    </td>
-
-                    {/* User Return Reason */}
-                    <td className="px-4 py-3">
-                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-2">
-                        <p className="text-sm text-gray-800 capitalize font-medium">
-                          {returnReq.returnReason?.replace(/_/g, ' ') || (
-                            <span className="text-gray-400 italic text-xs">Not recorded</span>
-                          )}
-                        </p>
-                        {returnReq.returnDescription && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            {returnReq.returnDescription}
-                          </p>
-                        )}
-                      </div>
-                    </td>
-
-                    {/* Admin Rejection Reason */}
-                    <td className="px-4 py-3">
-                      {returnReq.returnRejectedAt && returnReq.returnRejectionReason ? (
-                        <div className="bg-red-50 border border-red-200 rounded-lg p-2">
-                          <p className="text-xs text-red-500 font-semibold mb-1">
-                            Rejection Reason:
-                          </p>
-                          <p className="text-sm text-red-700 font-medium">
-                            {returnReq.returnRejectionReason}
-                          </p>
-                        </div>
-                      ) : returnReq.returnRejectedAt && !returnReq.returnRejectionReason ? (
-                        <div className="bg-red-50 border border-red-200 rounded-lg p-2">
-                          <p className="text-xs text-red-500 font-semibold mb-1">
-                            Rejection Reason:
-                          </p>
-                          <p className="text-sm text-red-400 italic">
-                            No reason recorded
-                          </p>
-                        </div>
-                      ) : returnReq.status === "Return_requested" ? (
-                        <span className="inline-flex items-center gap-1 text-yellow-600 text-sm">
-                          ⏳ Pending review
-                        </span>
-                      ) : returnReq.status === "Returned" ? (
-                        <span className="inline-flex items-center gap-1 text-green-600 text-sm">
-                          ✓ Approved — no rejection
-                        </span>
-                      ) : (
-                        <span className="text-gray-400 text-sm">—</span>
-                      )}
-                    </td>
-
-                    {/* Requested On */}
-                    <td className="px-4 py-3 text-sm text-gray-500">
-                      {returnReq.returnRequestedAt
-                        ? new Date(returnReq.returnRequestedAt).toLocaleDateString()
-                        : "N/A"}
-                    </td>
-
-                    {/* Actions */}
-                    <td className="px-4 py-3">
-                      {returnReq.status === "Return_requested" && (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleApprove(returnReq._id)}
-                            disabled={processingId === returnReq._id}
-                            className="px-3 py-1 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition disabled:opacity-50"
-                          >
-                            {processingId === returnReq._id ? "Processing..." : "Approve"}
-                          </button>
-                          <button
-                            onClick={() =>
-                              setRejectModal({
-                                open: true,
-                                orderId: returnReq._id,
-                                reason: ""
-                              })
-                            }
-                            disabled={processingId === returnReq._id}
-                            className="px-3 py-1 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition disabled:opacity-50"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      )}
-
-                      {returnReq.status === "Returned" && (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
-                          ✓ Refunded
-                        </span>
-                      )}
-
-                      {returnReq.returnRejectedAt && (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-600 rounded-full text-sm">
-                          ✗ Rejected
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Reject Modal */}
-      {rejectModal.open && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl w-96 max-w-[90%]">
-            <h2 className="text-xl font-semibold mb-4">Reject Return Request</h2>
-
-            <p className="text-sm text-gray-600 mb-3">
-              Order: <span className="font-mono font-semibold">#{rejectModal.orderId?.slice(-8)}</span>
-            </p>
-
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Rejection Reason <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                value={rejectModal.reason}
-                onChange={(e) =>
-                  setRejectModal((prev) => ({
-                    ...prev,
-                    reason: e.target.value
-                  }))
-                }
-                placeholder="Enter reason for rejecting this return..."
-                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none resize-none"
-                rows="4"
-              />
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() =>
-                  setRejectModal({ open: false, orderId: null, reason: "" })
-                }
-                className="flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50 transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleReject}
-                disabled={processingId === rejectModal.orderId}
-                className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition disabled:opacity-50"
-              >
-                {processingId === rejectModal.orderId ? "Processing..." : "Confirm Rejection"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

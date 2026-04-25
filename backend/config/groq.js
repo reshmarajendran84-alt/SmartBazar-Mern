@@ -27,8 +27,6 @@ model: "llama-3.3-70b-versatile",
     })
     return completion.choices[0].message.content
   } catch (err) {
-    console.error("GROQ FULL ERROR:", err.message)
-    console.error("GROQ STATUS:", err.status)
     throw err
   }
 }

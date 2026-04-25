@@ -6,6 +6,10 @@ import cloudinary from "./config/cloudinary.js";
 import razorpay from "./config/razorpay.js";
 
 import noCache from "./middlewares/noCache.js";
+import errorHandler from "./middlewares/errorMiddleware.js";
+import { corsOptions } from "./config/corsConfig.js";
+import { generalLimiter, authLimiter, adminLimiter } from "./middlewares/rateLimiter.js";
+
 
 import couponRoutes from "./routes/couponRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
@@ -26,7 +30,7 @@ import adminOrderRoutes from "./routes/adminOrderRoutes.js";
 import dashboardRoutes from "./routes/adminDashboardRoutes.js";
 import adminReportRoutes from "./routes/adminReportRoutes.js";
 import adminReviewsRoutes from "./routes/adminReviewRoutes.js";
-
+import adminUserRoutes from "./routes/adminUserRoutes.js";
 dotenv.config();
 connectDB();
 
@@ -36,13 +40,39 @@ app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 
+app.use(cors(corsOptions));
+
 
 //  Public routes — no cache blocking needed
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authRoutes,authLimiter);
 app.use("/api/products", productRoutes);
 app.use("/api/categories", publicCategoryRoutes);
 
 //  Protected routes — noCache applied to ALL
+
+// app.use("/api/user",          noCache, addressRoutes,generalLimiter);
+// app.use("/api/cart",          noCache, cartRoutes,generalLimiter);
+// app.use("/api/order",         noCache, orderRoutes,generalLimiter);
+// app.use("/api/wallet",        noCache, walletRoutes,generalLimiter);
+// app.use("/api/coupon",        noCache, couponRoutes,generalLimiter);
+// app.use("/api/reviews" ,noCache,reviewRoutes,generalLimiter);
+// app.use("/api/chat",noCache, chatRoutes,generalLimiter);
+// app.use("/api/return", noCache, returnRoutes,generalLimiter);
+
+// //  Admin protected routes
+
+// app.use("/api/admin",            noCache, adminRoutes,adminLimiter);
+// app.use("/api/admin/categories", noCache, adminCartegoryRoutes,generalLimiter);
+// app.use("/api/admin/products", noCache, adminProtectedRoute,generalLimiter);
+// app.use("/api/admin/coupons",  noCache, couponRoutes,generalLimiter);
+// app.use("/api/admin/orders",   noCache, adminOrderRoutes,generalLimiter);
+// app.use("/api/admin/dashboard", noCache, dashboardRoutes,generalLimiter);
+// app.use("/api/admin/reports" ,noCache, adminReportRoutes,generalLimiter)
+// app.use("/api/admin/reviews" ,noCache, adminReviewsRoutes,generalLimiter);
+// app.use("/api/admin/returns", noCache, returnRoutes,generalLimiter);
+// app.use("/api/admin/users", noCache, adminUserRoutes,generalLimiter)
+
+
 app.use("/api/user",          noCache, addressRoutes);
 app.use("/api/cart",          noCache, cartRoutes);
 app.use("/api/order",         noCache, orderRoutes);
@@ -62,9 +92,11 @@ app.use("/api/admin/dashboard", noCache, dashboardRoutes);
 app.use("/api/admin/reports" ,noCache, adminReportRoutes)
 app.use("/api/admin/reviews" ,noCache, adminReviewsRoutes);
 app.use("/api/admin/returns", noCache, returnRoutes);
+app.use("/api/admin/users", noCache, adminUserRoutes)
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log("Razorpay Key ID:", process.env.RAZORPAY_KEY_ID);
 });

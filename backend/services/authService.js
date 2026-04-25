@@ -6,7 +6,6 @@ import generateOTP from "../utils/generateOTP.js";
 import sendEmail from "../utils/sendEmail.js";
 
 class AuthService {
-
   async checkEmail(email) {
     const user = await User.findOne({ email });
     return user && user.isVerified && user.password
@@ -15,7 +14,6 @@ class AuthService {
   }
 
   async sendSignupOtp(email) {
-
     let user = await User.findOne({ email });
 
     if (user && user.isVerified) {
@@ -23,7 +21,7 @@ class AuthService {
     }
 
     if (!user) {
-      user = await User.create({  email });
+      user = await User.create({ email });
     }
 
     if (user.otpLastSent && Date.now() - user.otpLastSent < 30000) {
@@ -35,7 +33,7 @@ class AuthService {
     user.otp = otp;
     user.otpExpiry = Date.now() + 5 * 60 * 1000;
     user.otpLastSent = Date.now();
-console.log("otp",otp);
+    console.log("otp", otp);
     await user.save();
     await sendEmail(email, otp);
 
@@ -88,9 +86,9 @@ console.log("otp",otp);
     if (!match) throw new Error("Invalid credentials");
 
     const token = jwt.sign(
-      {  id: user._id, role: user.role },
+      { id: user._id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "1h" },
     );
 
     return { message: "Login successful", token };

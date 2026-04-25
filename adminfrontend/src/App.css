@@ -1,0 +1,86 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"],
+
+  theme: {
+    extend: {
+      // ─── SmartBazar Branded Palette ───────────────────────────────────────
+      colors: {
+        brand: {
+          50:  "#EEF2FF",   // page backgrounds, pill fills
+          100: "#E0E7FF",   // hover surfaces
+          200: "#C7D2FE",   // borders, dividers
+          300: "#A5B4FC",   // muted accents
+          400: "#818CF8",   // secondary buttons, icon fills
+          500: "#6366F1",   // softer primary
+          600: "#4F46E5",   // PRIMARY — buttons, links, active states
+          700: "#4338CA",   // hover on primary buttons
+          800: "#3730A3",   // focus rings, pressed states
+          900: "#312E81",   // extra-dark, text on light brand fills
+          950: "#1E1B4B",   // sidebar background
+        },
+
+        // Status badges — consistent across Admin & User
+        status: {
+          pendingBg:    "#FEF9C3",
+          pendingText:  "#854D0E",
+          confirmedBg:  "#DBEAFE",
+          confirmedText:"#1D4ED8",
+          shippedBg:    "#F3E8FF",
+          shippedText:  "#6B21A8",
+          deliveredBg:  "#DCFCE7",
+          deliveredText:"#166534",
+          cancelledBg:  "#FEE2E2",
+          cancelledText:"#991B1B",
+          returnedBg:   "#FFEDD5",
+          returnedText: "#9A3412",
+        },
+
+        // Semantic surface colors
+        surface: {
+          page:    "#F3F4F6",   // app background (bg-gray-100)
+          card:    "#FFFFFF",   // card / modal background
+          muted:   "#F9FAFB",   // table header, sidebar section
+          border:  "#E5E7EB",   // default border (gray-200)
+        },
+
+        // Revenue / stats highlights
+        revenue:  "#16A34A",    // green-600 — revenue, delivered
+        danger:   "#EF4444",    // red-500  — cancelled, delete, errors
+        warning:  "#F59E0B",    // amber-500 — pending review, returns
+        info:     "#3B82F6",    // blue-500  — confirmed, informational
+      },
+
+      // ─── Typography ───────────────────────────────────────────────────────
+      fontFamily: {
+        sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        mono: ["JetBrains Mono", "ui-monospace", "Courier New", "monospace"],
+      },
+
+      // ─── Border Radius ────────────────────────────────────────────────────
+      borderRadius: {
+        "xl":  "12px",
+        "2xl": "16px",
+        "3xl": "24px",
+      },
+
+      // ─── Box Shadow ───────────────────────────────────────────────────────
+      boxShadow: {
+        card:   "0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.06)",
+        modal:  "0 10px 40px -8px rgb(0 0 0 / 0.20)",
+        sidebar:"4px 0 24px -4px rgb(0 0 0 / 0.18)",
+      },
+
+      // ─── Screen Breakpoints ───────────────────────────────────────────────
+      screens: {
+        xs: "400px",   // extra-small phones
+        sm: "640px",   // standard Tailwind
+        md: "768px",   // standard Tailwind
+        lg: "1024px",  // standard Tailwind
+        xl: "1280px",  // standard Tailwind
+      },
+    },
+  },
+
+  plugins: [],
+};

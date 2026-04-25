@@ -1,40 +1,27 @@
 import { useCategory } from "../context/CategoryContext";
-import { useSearchParams } from "react-router-dom";
 
-export default function CategoryFilter() {
-
+export default function CategoryFilter({ selected, onChange }) {
   const { categories } = useCategory();
-  const [params, setParams] = useSearchParams();
 
-  const category = params.get("category") || "";
- 
-  const handleCategory = (value) => {
-
-setParams((prev) => {
-      const next = new URLSearchParams(prev); // ← preserve ALL existing params
-      next.set("page", "1");                  // ← reset to page 1 as string
-      if (value) {
-        next.set("category", value);
-      } else {
-        next.delete("category");              // ← clean URL when "All" selected
-      }
-      return next;
-    });
-  };
   return (
-    <select
-      className="border p-2 mb-4"
-      value={category}
-      onChange={(e) => handleCategory(e.target.value)}
-    >
-      <option value="">All</option>
-
+    <div className="flex flex-col gap-1">
+      <button
+        onClick={() => onChange("")}
+        className={`text-left px-3 py-2 rounded-xl text-sm transition
+          ${selected === "" ? "bg-gray-900 text-white font-semibold" : "hover:bg-gray-50 text-gray-600"}`}
+      >
+        All
+      </button>
       {categories.map((c) => (
-        <option key={c._id} value={c._id}>
+        <button
+          key={c._id}
+          onClick={() => onChange(c._id)}
+          className={`text-left px-3 py-2 rounded-xl text-sm transition
+            ${selected === c._id ? "bg-gray-900 text-white font-semibold" : "hover:bg-gray-50 text-gray-600"}`}
+        >
           {c.name}
-        </option>
+        </button>
       ))}
-
-    </select>
+    </div>
   );
 }

@@ -1,9 +1,9 @@
 import express from "express";
-import { getDashboardStats } from "../controllers/adminDashboardController.js";
 import adminProtect from "../middlewares/adminProtect.js";
+import dashboardController from "../controllers/adminDashboardController.js";
 
 const router = express.Router();
 
-router.get("/stats", adminProtect, getDashboardStats);
+router.get("/stats", adminProtect, dashboardController.getDashboardStats);
 
 export default router;
