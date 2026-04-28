@@ -11,16 +11,17 @@ class AuthController {
     }
   }
 
-  async sendSignupOtp(req, res) {
-    try {
-     const { email} = req.body;
+ async sendSignupOtp(req, res) {
+  try {
+    const { email } = req.body;
+    console.log("sendSignupOtp called with:", email); // ← add this
     const data = await authService.sendSignupOtp(email);
     res.json(data);
   } catch (err) {
+    console.error("sendSignupOtp error:", err.message); // ← add this
     res.status(400).json({ message: err.message });
   }
-  }
-
+}
   async verifyOtp(req, res) {
     try {
       const { email, otp } = req.body;

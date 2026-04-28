@@ -25,48 +25,58 @@ export default function AuthPage() {
     try {
       setLoading(true);
       const res = await api.post("/auth/check-email", { email });
-      if (res.data.flow === "LOGIN") {
-        setStep("LOGIN");
-      } else {
-        await sendOtp();
-        setStep("OTP");
-      }
+
+if (res.data.flow === "LOGIN") {
+  setStep("LOGIN");
+} else if (res.data.flow === "SET_PASSWORD") {
+  setStep("SET_PASSWORD");  // skip OTP, go straight to set password
+} else {
+  await sendOtp();
+  setStep("OTP");
+}
     } catch (error) {
       toast.error(error.response?.data?.message || "Error checking email");
     } finally {
       setLoading(false);
     }
   };
-// LOGIN — token saved first, THEN merge, THEN navigate
-const handleLogin = async () => {
-  if (!email || !password)
-    return toast.warning("Email and password are required ⚠️");
-  try {
-    setLoading(true);
-    const res = await api.post("/auth/login", { email, password });
 
-    await login(res.data.token);  // 1. save token + load profile
-    await mergeOnLogin();         // 2. merge guest cart → DB + fetchCart
+  // LOGIN — token saved first, THEN merge, THEN navigate
+  const handleLogin = async () => {
+    if (!email || !password)
+      return toast.warning("Email and password are required ⚠️");
+    
+    try {
+      setLoading(true);
+      const res = await api.post("/auth/login", { email, password });
+      
+      // ✅ Move console logs INSIDE the try block after res is defined
+      console.log("Login response:", res.data);
+      console.log("Token:", res.data.token);
+      console.log("User data:", res.data.user);
+      
+      // Make sure we're passing both token AND user data
+      await login(res.data.token, res.data.user);
+      await mergeOnLogin();
 
-    toast.success("Login successful 🎉");
-    setEmail("");
-    setPassword("");
-    navigate(from, { replace: true });
-  } catch (error) {
-    toast.error(error.response?.data?.message || "Login failed");
-  } finally {
-    setLoading(false);
-  }
-};
+      toast.success("Login successful 🎉");
+      setEmail("");
+      setPassword("");
+      navigate(from, { replace: true });
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error(error.response?.data?.message || "Login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // SEND OTP
   const sendOtp = async () => {
     try {
-
       await api.post("/auth/send-otp", { email });
       toast.success("OTP sent to your email 📩");
       setStep("OTP");
-
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to send OTP");
     }
@@ -137,6 +147,7 @@ const handleLogin = async () => {
               placeholder="Password"
               className="w-full px-4 py-3 rounded-xl border border-gray-300
                          focus:ring-2 focus:ring-indigo-500 outline-none transition"
+              value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
             <PrimaryButton onClick={handleLogin} loading={loading}>
@@ -151,6 +162,7 @@ const handleLogin = async () => {
               placeholder="Enter OTP"
               className="w-full px-4 py-3 rounded-xl border border-gray-300
                          focus:ring-2 focus:ring-indigo-500 outline-none transition"
+              value={otp}
               onChange={(e) => setOtp(e.target.value)}
             />
             <PrimaryButton onClick={verifyOtp} loading={loading}>
@@ -166,6 +178,7 @@ const handleLogin = async () => {
               placeholder="Set Password"
               className="w-full px-4 py-3 rounded-xl border border-gray-300
                          focus:ring-2 focus:ring-indigo-500 outline-none transition"
+              value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
             <PrimaryButton onClick={setPasswordFn} loading={loading}>

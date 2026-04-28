@@ -79,7 +79,7 @@ function Header() {
             {user ? (
               <>
                 <Link
-                  to="/user/profile"
+                  to="/profile"
                   className="text-sm text-gray-600 hover:text-indigo-600 transition"
                 >
                   {user.name || user.email}
