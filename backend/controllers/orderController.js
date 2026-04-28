@@ -26,7 +26,7 @@ class OrderController {
     }
   }
 
-  //  Razorpay Order
+  // Razorpay Order
   async createRazorpayOrder(req, res) {
     try {
       const { amount } = req.body;
@@ -37,7 +37,7 @@ class OrderController {
     }
   }
 
-  //  Verify Payment
+  // Verify Payment
   async verifyPayment(req, res) {
     try {
       const order = await OrderService.verifyAndSaveOrder(
@@ -53,7 +53,7 @@ class OrderController {
     }
   }
 
-  //  Cancel Order (uses service)
+  // Cancel Order
   async cancelOrder(req, res) {
     try {
       const order = await OrderService.cancelOrder(
@@ -66,7 +66,7 @@ class OrderController {
     }
   }
 
-  //  Return Order
+  // Return Order
   async returnOrder(req, res) {
     try {
       const order = await OrderService.returnOrder(
@@ -79,7 +79,7 @@ class OrderController {
     }
   }
 
-  //  Get All Orders
+  // Get All Orders
   async getUserOrders(req, res) {
     try {
       const orders = await OrderService.getUserOrders(req.user.id);
@@ -102,7 +102,7 @@ class OrderController {
     }
   }
 
-  //  Admin Update
+  // Admin Update Order Status
   async updateOrderStatus(req, res) {
     try {
       const { orderId, status } = req.body;
@@ -122,7 +122,7 @@ class OrderController {
     }
   }
 
-  //  Wallet Order
+  // Wallet Order
   async placeWalletOrder(req, res) {
     try {
       const userId = req.user.id;
@@ -143,116 +143,148 @@ class OrderController {
       res.status(400).json({ message: err.message });
     }
   }
-  
 
- async downloadInvoice(req, res) {
-  try {
-    // Use whichever param your route defines: orderId or id
-    const id = req.params.orderId || req.params.id;
- 
-    const order = await Order.findById(id)
-      .populate("userId", "name email")
-      .populate("cartItems.productId", "name");
- 
-    if (!order) return res.status(404).json({ message: "Order not found" });
- 
-    const doc = new PDFDocument({ margin: 50 });
- 
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=invoice_${order._id.toString().slice(-8)}.pdf`
-    );
-    doc.pipe(res);
- 
-    // Header
-    doc.fontSize(20).font("Helvetica-Bold").text("INVOICE", { align: "right" });
-    doc.moveDown(0.5);
-    doc.fontSize(10).font("Helvetica")
-      .text(`Order #: ${order._id.toString().slice(-8).toUpperCase()}`, { align: "right" })
-      .text(`Date: ${new Date(order.createdAt).toLocaleDateString("en-IN")}`, { align: "right" })
-      .text(`Status: ${order.status}`, { align: "right" });
- 
-    doc.moveDown(1);
-    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-    doc.moveDown(1);
- 
-    // Bill To
-    doc.font("Helvetica-Bold").fontSize(11).text("Bill To:");
-    doc.font("Helvetica").fontSize(10)
-      .text(order.address?.fullName || order.userId?.name || "N/A")
-      .text(order.address?.addressLine || "")
-      .text(`${order.address?.city}, ${order.address?.state} - ${order.address?.pincode}`)
-      .text(`Phone: ${order.address?.phone}`)
-      .text(`Email: ${order.userId?.email || "N/A"}`);
- 
-    doc.moveDown(1);
-    doc.text(`Payment Method: ${order.paymentMethod}`);
-    if (order.razorpayPaymentId) doc.text(`Payment ID: ${order.razorpayPaymentId}`);
- 
-    doc.moveDown(1);
-    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-    doc.moveDown(0.5);
- 
-    // Table header
-    doc.font("Helvetica-Bold").fontSize(10);
-    const headerY = doc.y;
-    doc.text("Item",  50,  headerY, { width: 240 });
-    doc.text("Qty",   290, headerY, { width: 60,  align: "center" });
-    doc.text("Price", 350, headerY, { width: 90,  align: "right" });
-    doc.text("Total", 440, headerY, { width: 90,  align: "right" });
-    doc.moveDown(0.5);
-    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-    doc.moveDown(0.5);
- 
-    // Items
-    doc.font("Helvetica").fontSize(10);
-    for (const item of order.cartItems) {
-      const y = doc.y;
-      doc.text(item.name,                              50,  y, { width: 240 });
-      doc.text(String(item.quantity),                  290, y, { width: 60,  align: "center" });
-      doc.text(`Rs.${item.price.toFixed(2)}`,          350, y, { width: 90,  align: "right" });
-      doc.text(`Rs.${(item.price * item.quantity).toFixed(2)}`, 440, y, { width: 90, align: "right" });
-      doc.moveDown(0.8);
+  // Download Invoice
+  async downloadInvoice(req, res) {
+    try {
+      const id = req.params.orderId || req.params.id;
+   
+      const order = await Order.findById(id)
+        .populate("userId", "name email")
+        .populate("cartItems.productId", "name");
+   
+      if (!order) return res.status(404).json({ message: "Order not found" });
+   
+      const doc = new PDFDocument({ margin: 50 });
+   
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=invoice_${order._id.toString().slice(-8)}.pdf`
+      );
+      doc.pipe(res);
+   
+      // Header
+      doc.fontSize(20).font("Helvetica-Bold").text("INVOICE", { align: "right" });
+      doc.moveDown(0.5);
+      doc.fontSize(10).font("Helvetica")
+        .text(`Order #: ${order._id.toString().slice(-8).toUpperCase()}`, { align: "right" })
+        .text(`Date: ${new Date(order.createdAt).toLocaleDateString("en-IN")}`, { align: "right" })
+        .text(`Status: ${order.status}`, { align: "right" });
+   
+      doc.moveDown(1);
+      doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+      doc.moveDown(1);
+   
+      // Bill To
+      doc.font("Helvetica-Bold").fontSize(11).text("Bill To:");
+      doc.font("Helvetica").fontSize(10)
+        .text(order.address?.fullName || order.userId?.name || "N/A")
+        .text(order.address?.addressLine || "")
+        .text(`${order.address?.city}, ${order.address?.state} - ${order.address?.pincode}`)
+        .text(`Phone: ${order.address?.phone}`)
+        .text(`Email: ${order.userId?.email || "N/A"}`);
+   
+      doc.moveDown(1);
+      doc.text(`Payment Method: ${order.paymentMethod}`);
+      if (order.razorpayPaymentId) doc.text(`Payment ID: ${order.razorpayPaymentId}`);
+   
+      doc.moveDown(1);
+      doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+      doc.moveDown(0.5);
+   
+      // Table header
+      doc.font("Helvetica-Bold").fontSize(10);
+      const headerY = doc.y;
+      doc.text("Item",  50,  headerY, { width: 240 });
+      doc.text("Qty",   290, headerY, { width: 60,  align: "center" });
+      doc.text("Price", 350, headerY, { width: 90,  align: "right" });
+      doc.text("Total", 440, headerY, { width: 90,  align: "right" });
+      doc.moveDown(0.5);
+      doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+      doc.moveDown(0.5);
+   
+      // Items
+      doc.font("Helvetica").fontSize(10);
+      for (const item of order.cartItems) {
+        const y = doc.y;
+        doc.text(item.name,                              50,  y, { width: 240 });
+        doc.text(String(item.quantity),                  290, y, { width: 60,  align: "center" });
+        doc.text(`Rs.${item.price.toFixed(2)}`,          350, y, { width: 90,  align: "right" });
+        doc.text(`Rs.${(item.price * item.quantity).toFixed(2)}`, 440, y, { width: 90, align: "right" });
+        doc.moveDown(0.8);
+      }
+   
+      doc.moveDown(0.5);
+      doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+      doc.moveDown(0.5);
+   
+      // Totals
+      const totals = [
+        ["Subtotal", order.subtotal],
+        ["Shipping", order.shipping],
+        ["Tax",      order.tax],
+        ...(order.discount > 0 ? [["Discount", -order.discount]] : []),
+      ];
+      doc.font("Helvetica").fontSize(10);
+      for (const [label, val] of totals) {
+        const ty = doc.y;
+        doc.text(label, 350, ty, { width: 90 });
+        doc.text(`Rs.${Math.abs(val).toFixed(2)}`, 440, ty, { width: 90, align: "right" });
+        doc.moveDown(0.6);
+      }
+      doc.moveDown(0.3);
+      doc.moveTo(350, doc.y).lineTo(550, doc.y).stroke();
+      doc.moveDown(0.3);
+   
+      doc.font("Helvetica-Bold").fontSize(11);
+      const gtY = doc.y;
+      doc.text("Grand Total", 350, gtY, { width: 90 });
+      doc.text(`Rs.${order.total.toFixed(2)}`, 440, gtY, { width: 90, align: "right" });
+   
+      doc.moveDown(2);
+      doc.font("Helvetica").fontSize(9).fillColor("gray")
+        .text("Thank you for your order.", { align: "center" });
+   
+      doc.end();
+    } catch (err) {
+      console.error("Invoice error:", err);
+      res.status(500).json({ message: "Failed to generate invoice" });
     }
- 
-    doc.moveDown(0.5);
-    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-    doc.moveDown(0.5);
- 
-    // Totals
-    const totals = [
-      ["Subtotal", order.subtotal],
-      ["Shipping", order.shipping],
-      ["Tax",      order.tax],
-      ...(order.discount > 0 ? [["Discount", -order.discount]] : []),
-    ];
-    doc.font("Helvetica").fontSize(10);
-    for (const [label, val] of totals) {
-      const ty = doc.y;
-      doc.text(label, 350, ty, { width: 90 });
-      doc.text(`Rs.${Math.abs(val).toFixed(2)}`, 440, ty, { width: 90, align: "right" });
-      doc.moveDown(0.6);
-    }
-    doc.moveDown(0.3);
-    doc.moveTo(350, doc.y).lineTo(550, doc.y).stroke();
-    doc.moveDown(0.3);
- 
-    doc.font("Helvetica-Bold").fontSize(11);
-    const gtY = doc.y;
-    doc.text("Grand Total", 350, gtY, { width: 90 });
-    doc.text(`Rs.${order.total.toFixed(2)}`, 440, gtY, { width: 90, align: "right" });
- 
-    doc.moveDown(2);
-    doc.font("Helvetica").fontSize(9).fillColor("gray")
-      .text("Thank you for your order.", { align: "center" });
- 
-    doc.end();
-  } catch (err) {
-    console.error("Invoice error:", err);
-    res.status(500).json({ message: "Failed to generate invoice" });
   }
-}
+
+  // Get Delivered Order for Product (for Review functionality)
+  async getDeliveredOrderForProduct(req, res) {
+    try {
+      const userId = req.user.id;
+      const { productId } = req.params;
+
+      // Find a delivered order that contains this product
+      const order = await Order.findOne({
+        userId,
+        status: "Delivered",
+        "cartItems.productId": productId
+      }).sort({ deliveredAt: -1 }); // Get the most recent one
+
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: "No delivered order found for this product"
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        orderId: order._id
+      });
+    } catch (error) {
+      console.error("Error fetching delivered order:", error);
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
 }
 
 export default new OrderController();

@@ -1,6 +1,5 @@
 const Pagination = ({ page, setPage, pages }) => {
-  if (!pages || pages <= 1) return null; // ← hide when only 1 page
-
+  if (!pages || pages <= 1) return null; 
   return (
     <div className="flex gap-2 mt-6 flex-wrap">
       {/* Prev button */}

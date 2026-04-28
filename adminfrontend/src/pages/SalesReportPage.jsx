@@ -35,7 +35,6 @@ export default function SalesReportPage() {
     handlePrint,
   } = useSalesReport();
 
-  // Prepare chart data from revenueByDate
   const getChartData = () => {
     if (!reportData?.revenueByDate) return [];
     return reportData.revenueByDate.map(item => ({

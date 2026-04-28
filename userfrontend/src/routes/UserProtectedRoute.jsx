@@ -5,7 +5,6 @@ import { useAuth } from "../context/AuthContext";
 const UserProtectedRoute = () => {
   const { user, loading } = useAuth(); 
 
-  // bfcache — back button after logout
   useEffect(() => {
     const handlePageShow = (event) => {
       if (event.persisted) {
@@ -23,7 +22,7 @@ const UserProtectedRoute = () => {
     <div className="min-h-screen flex items-center justify-center">
       <p className="text-gray-400 animate-pulse">Loading...</p>
     </div>
-  ); // wait for auth check to finish
+  ); 
 
   if (!user) return <Navigate to="/auth/login" replace />;
 

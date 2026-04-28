@@ -11,13 +11,10 @@ class AuthService {
 
   if (!user) return { flow: "SIGNUP" };
 
-  // Fully registered → login
   if (user.isVerified && user.password) return { flow: "LOGIN" };
 
-  // Verified OTP but never set password → resume signup at set-password step
   if (user.isVerified && !user.password) return { flow: "SET_PASSWORD" };
 
-  // Exists but not verified → resend OTP
   return { flow: "SIGNUP" };
 }
   async sendSignupOtp(email) {

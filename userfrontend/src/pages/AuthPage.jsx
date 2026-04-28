@@ -29,7 +29,7 @@ export default function AuthPage() {
 if (res.data.flow === "LOGIN") {
   setStep("LOGIN");
 } else if (res.data.flow === "SET_PASSWORD") {
-  setStep("SET_PASSWORD");  // skip OTP, go straight to set password
+  setStep("SET_PASSWORD");  
 } else {
   await sendOtp();
   setStep("OTP");
@@ -50,12 +50,10 @@ if (res.data.flow === "LOGIN") {
       setLoading(true);
       const res = await api.post("/auth/login", { email, password });
       
-      // ✅ Move console logs INSIDE the try block after res is defined
       console.log("Login response:", res.data);
       console.log("Token:", res.data.token);
       console.log("User data:", res.data.user);
       
-      // Make sure we're passing both token AND user data
       await login(res.data.token, res.data.user);
       await mergeOnLogin();
 

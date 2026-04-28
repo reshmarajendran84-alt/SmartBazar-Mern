@@ -4,14 +4,13 @@ import rateLimit from "express-rate-limit";
 export const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   // max: 100,
-    max: process.env.NODE_ENV === "production" ? 100 : 1000, // Higher limit in dev
+    max: process.env.NODE_ENV === "production" ? 100 : 1000, 
 
   message: { success: false, message: "Too many requests, please try again later" },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-// Auth limiter (stricter)
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   // max: 5,
@@ -20,7 +19,6 @@ export const authLimiter = rateLimit({
   message: { success: false, message: "Too many login attempts, try again after 15 minutes" },
 });
 
-// OTP limiter (already exists, but ensure it's used)
 export const otpLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
   // max: 3,

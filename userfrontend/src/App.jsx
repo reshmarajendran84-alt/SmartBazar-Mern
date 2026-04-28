@@ -24,7 +24,6 @@ function App() {
   return (
     <BrowserRouter>
       <ToastContainer position="top-right" autoClose={3000} theme="colored" />
-      {/* ReviewProvider wraps everything OUTSIDE Routes */}
       <ReviewProvider>
         <div className="flex flex-col min-h-screen">
           <Header />

@@ -33,7 +33,7 @@ class ReturnService {
     await order.save();
     return order;
   }
-  // services/returnService.js - Updated approveReturn method
+
   async approveReturn(orderId, adminId) {
     try {
       const order = await Order.findById(orderId);
@@ -52,7 +52,6 @@ class ReturnService {
 
       await order.save();
 
-      // Credit wallet with REFUND transaction type
       try {
         await WalletService.creditWallet(
           order.userId,
@@ -62,13 +61,11 @@ class ReturnService {
           "REFUND",
         );
 
-        // Update refund status to completed
         order.refundStatus = "completed";
         order.refundCompletedAt = new Date();
         await order.save();
       } catch (walletError) {
         console.error("Wallet credit failed:", walletError);
-        // Don't revert status, mark as pending refund
         order.refundStatus = "failed";
         order.refundFailedReason = walletError.message;
         await order.save();
@@ -95,16 +92,16 @@ class ReturnService {
       throw error;
     }
   }
+
   async rejectReturn(orderId, adminId, rejectionReason) {
     const order = await Order.findById(orderId);
-
     if (!order) throw new Error("Order not found");
     if (order.status !== "Return_requested") {
       throw new Error("Order is not in return requested state");
     }
 
     order.status = "Return_rejected";
-    order.returnRequested = false;
+    order.returnRequested = false;  // Set to false since it's rejected
     order.returnRejectedAt = new Date();
     order.returnRejectionReason = rejectionReason;
 
@@ -120,20 +117,20 @@ class ReturnService {
     } else if (status === "approved") {
       query = { status: "Returned" };
     } else if (status === "rejected") {
-      query = {
-        $or: [
-          { status: "Return_rejected" },
-          { returnRejectedAt: { $ne: null } },
-        ],
-      };
+      query = { status: "Return_rejected" };
     } else {
-      query = { returnRequested: true };
+      // Include all return-related orders
+      query = {
+        status: {
+          $in: ["Return_requested", "Returned", "Return_rejected"]
+        }
+      };
     }
 
     const returns = await Order.find(query)
       .populate("userId", "name email phone")
       .select(
-        "_id userId address total status returnReason returnDescription returnRequestedAt returnRejectedAt returnRejectionReason refundAmount",
+        "_id userId address total status returnReason returnDescription returnRequestedAt returnRejectedAt returnRejectionReason refundAmount returnApprovedAt"
       )
       .sort({ returnRequestedAt: -1 });
 

@@ -57,24 +57,25 @@ const CartPage = () => {
   const totalBeforeDiscount = subtotal + shipping + tax;
   const finalTotal = Math.max(totalBeforeDiscount - discount, 0);
 
-  const handleApplyCoupon = async () => {
-    if (!couponCode) return toast.warning("Enter coupon code");
+const handleApplyCoupon = async () => {
+  if (!couponCode) return toast.warning("Enter coupon code");
 
-    try {
-      const res = await validateCoupon({
-        code: couponCode.trim(),
-        subtotal,
-      });
-      const value = Number(res.data?.discount || 0);
-      setDiscount(value);
-      setAppliedCoupon(couponCode);
-      toast.success(`Saved ₹${value} 🎉`);
-    } catch (err) {
-      setDiscount(0);
-      toast.error("Invalid coupon");
-    }
-  };
-
+  try {
+    const res = await validateCoupon({
+      code: couponCode.trim(),
+      subtotal,
+    });
+    const value = Number(res.data?.discount || 0);
+    setDiscount(value);
+    setAppliedCoupon(couponCode);
+    toast.success(`Saved ₹${value} 🎉`);
+  } catch (err) {
+    console.log("Error response:", err.response?.data); // ← ADD THIS
+    console.log("Status:", err.response?.status);
+    setDiscount(0);
+    toast.error(err.response?.data?.message || "Invalid coupon"); // ← show actual message
+  }
+};
   const handleRemoveCoupon = () => {
     setDiscount(0);
     setAppliedCoupon(null);
@@ -212,7 +213,7 @@ const CartPage = () => {
                 <div className="flex gap-2">
                   <input
                     value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value)}
+  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                     placeholder="Coupon"
                     className="flex-1 border px-2 py-1 rounded"
                   />

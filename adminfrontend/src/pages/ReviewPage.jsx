@@ -41,7 +41,6 @@ export default function ReviewsPage() {
       const res = await getAllReviews(status === "all" ? "" : status);
       const data = res.data.data;
       
-      // Debug: Log the data to see what's coming from backend
       console.log("Fetched reviews:", data);
       data.forEach(review => {
         console.log("Review user data:", {

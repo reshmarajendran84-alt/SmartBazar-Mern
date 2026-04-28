@@ -36,14 +36,12 @@ const AdminOrdersPage = () => {
   }, []);
 
   // Helper function to get display name
-  const getDisplayName = (user) => {
-    if (!user) return "Guest";
-    if (user.name && user.name.trim() !== "")
-       return user.name;
-    if (user.email) return user.email.split('@')[0];
-    return "Guest";
-  };
-
+const getDisplayName = (order) => {
+  if (order.userId?.name && order.userId.name.trim() !== "") return order.userId.name;
+  if (order.address?.fullName && order.address.fullName.trim() !== "") return order.address.fullName;
+  if (order.userId?.email) return order.userId.email.split("@")[0];
+  return "Guest";
+};
   const filteredOrders = orders.filter((order) => {
     const matchesFilter = filter === "all" || order.status === filter;
     const matchesSearch = 
@@ -130,10 +128,10 @@ const AdminOrdersPage = () => {
                     <td className="px-6 py-4">
                       {/* Display user name from database */}
                       <div className="font-medium text-gray-900">
-                        {getDisplayName(order.userId)}
+                        {getDisplayName(order)}
                       </div>
                       <div className="text-sm text-gray-500 mt-1">
-                        {order.userId?.email || "No email"}
+                        {order.userId?.email || order.address?.email || "No email"}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">

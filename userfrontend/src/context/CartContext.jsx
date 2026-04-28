@@ -27,7 +27,6 @@ export const CartProvider = ({ children }) => {
     try {
       setLoading(true);
       const res = await getCart();
-      //  backend returns { success, cart } — read res.data.cart
       setCart(res.data?.cart || { items: [], totalAmount: 0 });
     } catch (err) {
       toast.error("Failed to fetch cart");

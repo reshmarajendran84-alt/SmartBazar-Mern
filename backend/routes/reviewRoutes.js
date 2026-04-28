@@ -1,11 +1,11 @@
 import express from "express";
 import ReviewController from "../controllers/reviewController.js"; 
-import {protect} from "../middlewares/authMiddleware.js";
+import {protect,optionalProtect} from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
 
-router.get("/:productId", protect, ReviewController.getReviews);
+router.get("/:productId", optionalProtect , ReviewController.getReviews);
 
 router.post("/", protect, ReviewController.createReview);
 

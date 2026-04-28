@@ -1,9 +1,8 @@
 import React from "react";
 
 const CartItem = React.memo(({ item, onUpdate, onRemove }) => {
-  // Works for both DB items (productId = object) and guest items (productId = string)
   const name  = item.productId?.name  ?? item.name  ?? "Product";
-  const id    = item.productId?._id   ?? item.productId;  // string ID for guest
+  const id    = item.productId?._id   ?? item.productId; 
 
   return (
     <div className="flex justify-between items-center p-4 border-b">

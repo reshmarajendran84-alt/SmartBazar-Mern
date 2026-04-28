@@ -34,8 +34,7 @@ const WalletPage = () => {
         return wallet.transactions.filter(txn => txn.transactionType === "REFUND");
       case "payments":
         return wallet.transactions.filter(txn => txn.transactionType === "PAYMENT");
-      case "topups":
-        return wallet.transactions.filter(txn => txn.transactionType === "TOPUP");
+      
       default:
         return wallet.transactions;
     }
@@ -159,7 +158,6 @@ const WalletPage = () => {
                 { id: "all", label: "All Transactions", icon: "M4 6h16M4 12h16M4 18h16" },
                 { id: "refunds", label: "Refunds", icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" },
                 { id: "payments", label: "Payments", icon: "M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" },
-                { id: "topups", label: "Top Ups", icon: "M12 6v6m0 0v6m0-6h6m-6 0H6" },
               ].map((tab) => (
                 <button
                   key={tab.id}

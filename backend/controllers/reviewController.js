@@ -5,7 +5,7 @@ class ReviewController {
   async getReviews(req, res) {
     try {
       const { productId } = req.params;
-      const currentUserId = req.user?._id ?? null;
+const currentUserId = req.user?._id || req.user?.id || null;
 
       const result = await ReviewService.getReviewsByProduct(
         productId,

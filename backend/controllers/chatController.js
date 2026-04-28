@@ -5,7 +5,6 @@ class ChatController {
     try {
       const { message, aiMode } = req.body
 
-      // Validate first — before anything else
       if (!message) {
         return res.status(400).json({ reply: "Please provide a message." })
       }

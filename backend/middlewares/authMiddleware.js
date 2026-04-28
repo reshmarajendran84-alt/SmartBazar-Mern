@@ -31,3 +31,16 @@ export const admin = async (req, res, next) => {
     res.status(403).json({ message: "Admin access required" });
   }
 };
+
+export const optionalProtect = (req, res, next) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (token) {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = decoded;
+    }
+    next();
+  } catch {
+    next();
+  }
+};

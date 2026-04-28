@@ -1,24 +1,28 @@
 import express from "express";
 import { protect } from "../middlewares/authMiddleware.js";
-import orderController from "../controllers/orderController.js";
-import { validateStock } from "../middlewares/validateStock.js";
-import Order from "../models/Order.js";        
-import PDFDocument from "pdfkit";              
+import OrderController from "../controllers/orderController.js";
 
 const router = express.Router();
 
-router.post("/cod",              protect, validateStock, orderController.placeCODOrder);
-router.post("/razorpay-order",   protect, orderController.createRazorpayOrder);
-router.post("/verify",           protect, orderController.verifyPayment);
-router.post("/wallet",           protect, validateStock, orderController.placeWalletOrder);
+// User routes
+router.post("/", protect, OrderController.placeCODOrder);
+router.post("/create-razorpay-order", protect, OrderController.createRazorpayOrder);
+router.post("/verify-payment", protect, OrderController.verifyPayment);
+router.post("/wallet-order", protect, OrderController.placeWalletOrder);
 
-router.patch("/cancel/:orderId", protect, orderController.cancelOrder);
-router.patch("/return/:orderId", protect, orderController.returnOrder);
-router.patch("/status",          protect, orderController.updateOrderStatus);
+router.get("/my-orders", protect, OrderController.getUserOrders);
+router.get("/:orderId", protect, OrderController.getOrderById);
 
-router.get("/my-orders",         protect, orderController.getUserOrders);
+// Add this new route - Make sure it's BEFORE the /:orderId route
+router.get("/user/delivered/:productId", protect, OrderController.getDeliveredOrderForProduct);
 
-router.get("/invoice/:orderId", protect, orderController.downloadInvoice);
-router.get("/:orderId",          protect, orderController.getOrderById);
+router.put("/:orderId/cancel", protect, OrderController.cancelOrder);
+router.put("/:orderId/return", protect, OrderController.returnOrder);
+
+// Invoice download
+router.get("/:orderId/invoice", protect, OrderController.downloadInvoice);
+
+// Admin route (keep this separate or move to admin routes)
+router.put("/admin/update-status", protect, OrderController.updateOrderStatus);
 
 export default router;

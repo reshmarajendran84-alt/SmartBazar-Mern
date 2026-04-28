@@ -32,7 +32,7 @@ const newAddress = {
     country: addressData.country || "India",
     isDefault: addressData.isDefault || false,
   };
-    user.addresses.push(addressData);
+    user.addresses.push(newAddress);
     await user.save();
     return user.addresses;
   }

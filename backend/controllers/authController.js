@@ -14,11 +14,11 @@ class AuthController {
  async sendSignupOtp(req, res) {
   try {
     const { email } = req.body;
-    console.log("sendSignupOtp called with:", email); // ← add this
+    console.log("sendSignupOtp called with:", email); 
     const data = await authService.sendSignupOtp(email);
     res.json(data);
   } catch (err) {
-    console.error("sendSignupOtp error:", err.message); // ← add this
+    console.error("sendSignupOtp error:", err.message); 
     res.status(400).json({ message: err.message });
   }
 }

@@ -25,7 +25,6 @@ class WalletService {
         });
       }
       
-      // Ensure amount is valid
       if (!amount || amount <= 0) {
         throw new Error("Invalid amount for credit");
       }

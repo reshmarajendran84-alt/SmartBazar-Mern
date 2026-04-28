@@ -13,7 +13,7 @@ import AdminOrderDetail from "./pages/AdminOrderDetail";
 import { AdminOrderProvider } from "./context/OrderContext";
 import SalesReport from "./pages/SalesReportPage";
 import ReviewsPage from "./pages/ReviewPage";
-import AdminReturns from "./pages/AdminReturn";
+import AdminReturns from "./pages/AdminReturns";
 import AdminUsers from "./pages/AdminUsers";
 
 function App() {

@@ -102,7 +102,7 @@ const CategoryList = () => {
           className={`px-3 py-1 text-xs font-semibold rounded-full cursor-pointer transition-all
             ${item.isActive
               ? "bg-green-100 text-green-700 hover:bg-red-100 hover:text-red-600"
-              : "bg-red-100 text-red-600 hover:bg-green-100 hover:text-green-700"
+              : "bg-red-100 text-red-600 hover:bg-green-100 hover:text-red-700"
             }`}
         >
           {item.isActive ? "Active" : "Blocked"}

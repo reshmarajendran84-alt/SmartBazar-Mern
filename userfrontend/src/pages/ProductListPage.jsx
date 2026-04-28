@@ -142,9 +142,9 @@ useEffect(() => {
   const handleRating   = (val) => setParam("rating",   val ); 
    const handlePrice = (val) => {
   if (val < 200000) {
-    setParam("price", String(val)); // ← String("0") is truthy, won't get deleted
+    setParam("price", String(val)); /
   } else {
-    setParam("price", "");          // ← remove filter at max value
+    setParam("price", "");          
   }
 };
 

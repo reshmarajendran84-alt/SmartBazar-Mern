@@ -5,7 +5,7 @@ class AdminUserController {
   async getUsers(req, res) {
     try {
       const users = await User.find({}).select("-password").sort({ createdAt: -1 });
-      console.log(`Found ${users.length} users`); // Debug log
+      console.log(`Found ${users.length} users`); 
       res.json({ 
         success: true, 
         count: users.length,
@@ -53,7 +53,6 @@ class AdminUserController {
         });
       }
       
-      // Prevent admin from deleting themselves
       if (req.user && user._id.toString() === req.user._id.toString()) {
         return res.status(400).json({ 
           success: false, 

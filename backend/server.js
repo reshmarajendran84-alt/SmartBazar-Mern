@@ -14,7 +14,7 @@ import { generalLimiter, authLimiter, adminLimiter } from "./middlewares/rateLim
 import couponRoutes from "./routes/couponRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
-import addressRoutes from "./routes/AddressRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 import publicCategoryRoutes from "./routes/publicCategoryRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import walletRoutes from "./routes/walletRoutes.js";
@@ -73,7 +73,7 @@ app.use("/api/categories", publicCategoryRoutes);
 // app.use("/api/admin/users", noCache, adminUserRoutes,generalLimiter)
 
 
-app.use("/api/user",          noCache, addressRoutes);
+app.use("/api/user",          noCache, userRoutes);
 app.use("/api/cart",          noCache, cartRoutes);
 app.use("/api/order",         noCache, orderRoutes);
 app.use("/api/wallet",        noCache, walletRoutes);
@@ -86,7 +86,7 @@ app.use("/api/return", noCache, returnRoutes);
 app.use("/api/admin",            noCache, adminRoutes);
 app.use("/api/admin/categories", noCache, adminCartegoryRoutes);
 app.use("/api/admin/products", noCache, adminProtectedRoute);
-app.use("/api/admin/coupons",  noCache, couponRoutes);
+app.use("/api/admin/coupon",  noCache, couponRoutes);
 app.use("/api/admin/orders",   noCache, adminOrderRoutes);
 app.use("/api/admin/dashboard", noCache, dashboardRoutes);
 app.use("/api/admin/reports" ,noCache, adminReportRoutes)

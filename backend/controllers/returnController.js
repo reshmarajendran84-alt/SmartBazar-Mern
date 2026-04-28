@@ -88,24 +88,30 @@ const order = await returnService.rejectReturn(orderId, adminId, rejectionReason
   
   // Admin: Get all return requests
   async getReturnRequests(req, res) {
-    try {
-      const { status } = req.query;
-            console.log("Fetching return requests with status:", status);
+  try {
+    const { status } = req.query;
+    console.log("Fetching return requests with status:", status);
 
-      const returns = await returnService.getReturnRequests(status);
-            console.log(`Found ${returns.length} return requests`);
+    // Map frontend status to backend status
+    let backendStatus = status;
+    if (status === "pending") backendStatus = "pending";
+    else if (status === "approved") backendStatus = "approved";
+    else if (status === "rejected") backendStatus = "rejected";
+    
+    const returns = await returnService.getReturnRequests(backendStatus);
+    console.log(`Found ${returns.length} return requests`);
 
-      res.status(200).json({
-        success: true,
-        data: returns
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: error.message
-      });
-    }
+    res.status(200).json({
+      success: true,
+      data: returns
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
   }
+}
   
   // User: Get my returns
   async getUserReturns(req, res) {
