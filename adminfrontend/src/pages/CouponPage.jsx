@@ -32,16 +32,16 @@ const CouponPage = () => {
     }
   };
 
-  const handleApplyCoupon=async()=>{
-    try{
-        const res = await validateCoupon({code:couponCode,subtotal});
-        setDiscount(res.data.discount);
-        toast.success("Coupon applied successfully");
+  // const handleApplyCoupon=async()=>{
+  //   try{
+  //       const res = await validateCoupon({code:couponCode,subtotal});
+  //       setDiscount(res.data.discount);
+  //       toast.success("Coupon applied successfully");
 
-    }catch(err){
-        toast.error (err.response?.data?.message || "Invalid Coupon");
-    }
-  };
+  //   }catch(err){
+  //       toast.error (err.response?.data?.message || "Invalid Coupon");
+  //   }
+  // };
   
   return (
     <div className="p-6">

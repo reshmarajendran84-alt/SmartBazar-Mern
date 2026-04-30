@@ -20,7 +20,7 @@ const AdminUsers = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/users");
+      const response = await api.get("/users"); 
       const usersData = response.data.users || response.data;
       setUsers(Array.isArray(usersData) ? usersData : []);
     } catch (error) {

@@ -1,11 +1,11 @@
 import Coupon from "../models/Coupon.js";
+import couponService from "../services/couponService.js";
 
 class CouponController {
-
   async createCoupon(req, res) {
     try {
       if (req.body.code) req.body.code = req.body.code.toUpperCase();
-      const coupon = await Coupon.create(req.body);
+      const coupon = await couponService.createCoupon(req.body);
       res.json(coupon);
     } catch (err) {
       res.status(500).json({ message: "Error creating coupon" });
@@ -14,7 +14,7 @@ class CouponController {
 
   async getCoupons(req, res) {
     try {
-      const coupons = await Coupon.find();
+      const coupons = await couponService.getAllCoupons();
       res.json(coupons);
     } catch (err) {
       res.status(500).json({ message: "Error fetching coupons" });
@@ -24,7 +24,7 @@ class CouponController {
   async updateCoupon(req, res) {
     try {
       if (req.body.code) req.body.code = req.body.code.toUpperCase();
-      const coupon = await Coupon.findByIdAndUpdate(req.params.id, req.body, { new: true });
+      const coupon = await couponService.updateCoupon(req.params.id, req.body);
       res.json(coupon);
     } catch (err) {
       res.status(500).json({ message: "Update failed" });
@@ -33,7 +33,7 @@ class CouponController {
 
   async deleteCoupon(req, res) {
     try {
-      await Coupon.findByIdAndDelete(req.params.id);
+      await couponService.deleteCoupon(req.params.id);
       res.json({ message: "Coupon deleted" });
     } catch (err) {
       res.status(500).json({ message: "Delete failed" });
@@ -43,51 +43,17 @@ class CouponController {
   async validateCoupon(req, res) {
     try {
       const { code, subtotal } = req.body;
-      const subtotalNum = Number(subtotal);
+      if (!code) return res.status(400).json({ message: "Coupon code required" });
+      if (isNaN(Number(subtotal))) return res.status(400).json({ message: "Invalid subtotal" });
 
-      console.log("code:", code, "subtotal:", subtotal, "subtotalNum:", subtotalNum);
-
-      if (!code) {
-        return res.status(400).json({ message: "Coupon code required" });
-      }
-
-      if (isNaN(subtotalNum)) {
-        return res.status(400).json({ message: "Invalid subtotal" });
-      }
-
-      const coupon = await Coupon.findOne({ code: code.toUpperCase() });
-
-      if (!coupon) {
-        return res.status(400).json({ message: "Invalid coupon code" });
-      }
-
-      if (!coupon.isActive) {
-        return res.status(400).json({ message: "Coupon is inactive" });
-      }
-
-      if (coupon.expiryDate < new Date()) {
-        return res.status(400).json({ message: "Coupon expired" });
-      }
-
-      if (subtotalNum < coupon.minOrderAmount) {
-        return res.status(400).json({
-          message: `Minimum order should be ₹${coupon.minOrderAmount}`,
-        });
-      }
-
-      const discount = (subtotalNum * coupon.discountPercent) / 100;
-
-      res.json({
-        valid: true,
-        discount,
-        finalAmount: subtotalNum - discount,
-      });
-
+      // ✅ delegates to service
+      const result = await couponService.validateCoupon(code, Number(subtotal));
+      res.json(result);
     } catch (err) {
-      console.error("validateCoupon error:", err.message);
-      res.status(500).json({ message: "Error validating coupon" });
+      res.status(400).json({ message: err.message });
     }
   }
 }
+
 
 export default new CouponController();

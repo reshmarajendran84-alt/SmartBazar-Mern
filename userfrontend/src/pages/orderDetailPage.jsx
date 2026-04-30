@@ -13,8 +13,6 @@ const OrderDetailPage = () => {
   const [returnReason, setReturnReason] = useState("");
   const [returnDescription, setReturnDescription] = useState("");
   const [submittingReturn, setSubmittingReturn] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [processingItem, setProcessingItem] = useState(null);
 
   // Check if action=return in URL
   useEffect(() => {
@@ -50,6 +48,36 @@ const OrderDetailPage = () => {
     }
   };
 
+  // Return Request Handler - User requests return (needs admin approval)
+  const handleReturnRequest = async () => {
+    if (!returnReason) {
+      toast.error("Please select a reason for return");
+      return;
+    }
+
+    try {
+      setSubmittingReturn(true);
+      const response = await api.post(`/returns/request/${id}`, {
+        reason: returnReason,
+        description: returnDescription
+      });
+      
+      if (response.data.success) {
+        toast.success("Return request submitted successfully! Admin will review your request.");
+        setShowReturnModal(false);
+        await fetchOrder(); // Refresh order details
+      } else {
+        toast.error(response.data.message || "Failed to submit return request");
+      }
+    } catch (error) {
+      console.error('Error submitting return request:', error);
+      const errorMessage = error.response?.data?.message || "Failed to submit return request. Please try again.";
+      toast.error(errorMessage);
+    } finally {
+      setSubmittingReturn(false);
+    }
+  };
+
   // Fetch order details
   const fetchOrder = async () => {
     try {
@@ -70,106 +98,42 @@ const OrderDetailPage = () => {
     }
   }, [id]);
 
-  // Cancel Individual Item Handler
-  const handleCancelItem = async (itemId, itemName) => {
-    if (!confirm(`Are you sure you want to cancel "${itemName}"? Only this item will be cancelled.`)) return;
+  // Cancel Order Handler
+  const handleCancelOrder = async () => {
+    if (!confirm("Are you sure you want to cancel this order?")) return;
     
     try {
-      setProcessingItem(itemId);
-      const response = await api.put(`/order/${id}/item/${itemId}/cancel`);
+      const response = await api.put(`/order/${id}/cancel`);
       if (response.data.success) {
-        toast.success(`${itemName} cancelled successfully!`);
+        toast.success("Order cancelled successfully!");
         await fetchOrder();
-      } else {
-        toast.error(response.data.message || "Failed to cancel item");
       }
     } catch (error) {
-      console.error('Error cancelling item:', error);
-      toast.error(error.response?.data?.message || "Failed to cancel item");
-    } finally {
-      setProcessingItem(null);
+      console.error('Error cancelling order:', error);
+      toast.error(error.response?.data?.message || "Failed to cancel order");
     }
   };
 
-  // Return Request Handler for Individual Item
-  const handleReturnRequest = async () => {
-    if (!returnReason) {
-      toast.error("Please select a reason for return");
-      return;
-    }
-
-    if (!selectedItem) {
-      toast.error("No item selected for return");
-      return;
-    }
-
+  // Buy Again Handler
+  const handleBuyAgain = async () => {
     try {
-      setSubmittingReturn(true);
-      const response = await api.post(`/returns/request/${id}`, {
-        itemId: selectedItem._id || selectedItem.id,
-        reason: returnReason,
-        description: returnDescription
-      });
-      
-      if (response.data.success) {
-        toast.success(`Return request submitted for "${selectedItem.name}"!`);
-        setShowReturnModal(false);
-        setReturnReason("");
-        setReturnDescription("");
-        setSelectedItem(null);
-        await fetchOrder();
-      } else {
-        toast.error(response.data.message || "Failed to submit return request");
+      toast.info("Adding items to cart...");
+      for (const item of order.cartItems) {
+        await api.post("/cart/add", {
+          productId: item.productId,
+          quantity: item.quantity,
+          name: item.name,
+          image: item.image,
+          price: item.price
+        });
       }
-    } catch (error) {
-      console.error('Error submitting return request:', error);
-      toast.error(error.response?.data?.message || "Failed to submit return request");
-    } finally {
-      setSubmittingReturn(false);
-    }
-  };
-
-  // Buy Single Item Again
-  const handleBuyAgainItem = async (item) => {
-    try {
-      setProcessingItem(item._id || item.id);
-      await api.post("/cart/add", {
-        productId: item.productId,
-        quantity: item.quantity,
-        name: item.name,
-        image: item.image,
-        price: item.price
-      });
-      toast.success(`${item.name} added to cart!`);
+      toast.success("Items added to cart! Redirecting...");
       setTimeout(() => {
         window.location.href = "/cart";
       }, 1500);
     } catch (error) {
       console.error("Error adding to cart:", error);
-      toast.error("Failed to add item to cart");
-    } finally {
-      setProcessingItem(null);
-    }
-  };
-
-  // Open return modal for specific item
-  const openReturnModalForItem = (item) => {
-    setSelectedItem(item);
-    setReturnReason("");
-    setReturnDescription("");
-    setShowReturnModal(true);
-  };
-
-  // Get item status display
-  const getItemStatusBadge = (itemStatus) => {
-    switch(itemStatus) {
-      case 'Delivered': return "bg-green-100 text-green-700";
-      case 'Cancelled': return "bg-red-100 text-red-600";
-      case 'Returned': return "bg-purple-100 text-purple-700";
-      case 'Return_requested': return "bg-yellow-100 text-yellow-700";
-      case 'Return_rejected': return "bg-orange-100 text-orange-700";
-      case 'Shipped': return "bg-blue-100 text-blue-700";
-      default: return "bg-gray-100 text-gray-700";
+      toast.error("Failed to add items to cart");
     }
   };
 
@@ -200,6 +164,48 @@ const OrderDetailPage = () => {
     );
   }
 
+  // Get return request status display
+  const getReturnStatusDisplay = () => {
+    if (order.status === 'Returned') {
+      return { 
+        text: "Return Approved & Completed", 
+        color: "text-green-600", 
+        bg: "bg-green-50",
+        border: "border-green-200",
+        icon: "✅"
+      };
+    }
+    if (order.status === 'Return_requested') {
+      return { 
+        text: "Return Request Pending Approval", 
+        color: "text-yellow-600", 
+        bg: "bg-yellow-50",
+        border: "border-yellow-200",
+        icon: "⏳"
+      };
+    }
+    if (order.status === 'Return_rejected') {
+      return { 
+        text: `Return Request Rejected${order.returnRejectionReason ? `: ${order.returnRejectionReason}` : ''}`, 
+        color: "text-red-600", 
+        bg: "bg-red-50",
+        border: "border-red-200",
+        icon: "❌"
+      };
+    }
+    return null;
+  };
+
+  const returnStatus = getReturnStatusDisplay();
+
+  // Check if return button should be shown
+  const showReturnButton = order.status === "Delivered" && 
+    !order.returnRequested && 
+    order.status !== 'Return_requested' && 
+    order.status !== 'Returned' && 
+    order.status !== 'Return_rejected';
+
+  // Check if cancel button should be shown
   const showCancelButton = order.status === "Pending" || order.status === "Confirmed";
 
   return (
@@ -227,6 +233,18 @@ const OrderDetailPage = () => {
             )}
           </button>
         </div>
+
+        {/* RETURN STATUS BANNER */}
+        {returnStatus && (
+          <div className={`${returnStatus.bg} ${returnStatus.border} p-4 rounded-xl border`}>
+            <div className="flex items-center gap-2">
+              <span className="text-xl">{returnStatus.icon}</span>
+              <p className={`font-semibold ${returnStatus.color}`}>
+                {returnStatus.text}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* MAIN GRID */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -268,7 +286,14 @@ const OrderDetailPage = () => {
 
                 <div>
                   <p className="text-gray-500">Status</p>
-                  <span className="inline-block px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700">
+                  <span className={`inline-block px-2 py-1 rounded text-xs font-medium
+                    ${order.status === "Delivered" ? "bg-green-100 text-green-700" :
+                      order.status === "Cancelled" ? "bg-red-100 text-red-600" :
+                      order.status === "Returned" ? "bg-purple-100 text-purple-700" :
+                      order.status === "Return_requested" ? "bg-yellow-100 text-yellow-700" :
+                      order.status === "Return_rejected" ? "bg-orange-100 text-orange-700" :
+                      order.status === "Shipped" ? "bg-blue-100 text-blue-700" :
+                      "bg-blue-100 text-blue-700"}`}>
                     {order.status}
                   </span>
                 </div>
@@ -294,7 +319,7 @@ const OrderDetailPage = () => {
               )}
             </div>
 
-            {/* ORDER ITEMS TABLE - WITH INDIVIDUAL ACTIONS */}
+            {/* ORDER ITEMS */}
             <div className="bg-white rounded-2xl shadow-md p-5">
               <h2 className="font-semibold mb-4">🛍️ Order Items</h2>
 
@@ -303,107 +328,37 @@ const OrderDetailPage = () => {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="p-3 text-left">Product</th>
-                      <th className="p-3 text-center">Qty</th>
+                      <th className="p-3 text-right">Qty</th>
                       <th className="p-3 text-right">Price</th>
                       <th className="p-3 text-right">Total</th>
-                      <th className="p-3 text-center">Status</th>
-                      <th className="p-3 text-center">Actions</th>
                     </tr>
                   </thead>
 
                   <tbody>
-                    {order.cartItems?.map((item, i) => {
-                      const itemStatus = item.itemStatus || order.status;
-                      const isCancelled = itemStatus === 'Cancelled';
-                      const isReturnRequested = itemStatus === 'Return_requested';
-                      const isReturned = itemStatus === 'Returned';
-                      const canCancelItem = (itemStatus === 'Pending' || itemStatus === 'Confirmed') && !isCancelled;
-                      const canReturnItem = itemStatus === 'Delivered' && !item.returnRequested && !isReturnRequested && !isReturned;
-                      
-                      return (
-                        <tr key={i} className="border-t hover:bg-gray-50">
-                          {/* Product */}
-                          <td className="p-3">
-                            <div className="flex items-center gap-3">
-                              {item.image && (
-                                <img
-                                  src={item.image}
-                                  alt={item.name}
-                                  className="w-12 h-12 rounded object-cover"
-                                  onError={(e) => {
-                                    e.target.src = '/placeholder.jpg';
-                                  }}
-                                />
-                              )}
-                              <span className="font-medium">{item.name}</span>
-                            </div>
-                          </td>
-                          
-                          {/* Quantity */}
-                          <td className="p-3 text-center">{item.quantity}</td>
-                          
-                          {/* Price */}
-                          <td className="p-3 text-right">₹{item.price.toLocaleString()}</td>
-                          
-                          {/* Total */}
-                          <td className="p-3 text-right font-medium">
-                            ₹{(item.price * item.quantity).toLocaleString()}
-                          </td>
-                          
-                          {/* Item Status */}
-                          <td className="p-3 text-center">
-                            <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${getItemStatusBadge(itemStatus)}`}>
-                              {itemStatus}
-                            </span>
-                            {isReturnRequested && (
-                              <p className="text-xs text-yellow-600 mt-1">Pending Approval</p>
+                    {order.cartItems?.map((item, i) => (
+                      <tr key={i} className="border-t">
+                        <td className="p-3">
+                          <div className="flex items-center gap-3">
+                            {item.image && (
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                className="w-12 h-12 rounded object-cover"
+                                onError={(e) => {
+                                  e.target.src = '/placeholder.jpg';
+                                }}
+                              />
                             )}
-                          </td>
-                          
-                          {/* Actions */}
-                          <td className="p-3 text-center">
-                            <div className="flex flex-col gap-2">
-                              {canCancelItem && (
-                                <button
-                                  onClick={() => handleCancelItem(item._id || i, item.name)}
-                                  disabled={processingItem === (item._id || i)}
-                                  className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-medium transition disabled:opacity-50 whitespace-nowrap"
-                                >
-                                  {processingItem === (item._id || i) ? "..." : "❌ Cancel"}
-                                </button>
-                              )}
-                              
-                              {canReturnItem && (
-                                <button
-                                  onClick={() => openReturnModalForItem(item)}
-                                  className="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white rounded text-xs font-medium transition whitespace-nowrap"
-                                >
-                                  🔄 Return
-                                </button>
-                              )}
-                              
-                              {itemStatus === 'Delivered' && (
-                                <button
-                                  onClick={() => handleBuyAgainItem(item)}
-                                  disabled={processingItem === (item._id || i)}
-                                  className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-medium transition disabled:opacity-50 whitespace-nowrap"
-                                >
-                                  {processingItem === (item._id || i) ? "..." : "🛒 Buy Again"}
-                                </button>
-                              )}
-                              
-                              {isCancelled && (
-                                <span className="text-xs text-red-500">Cancelled</span>
-                              )}
-                              
-                              {isReturned && (
-                                <span className="text-xs text-green-500">Returned</span>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                            <span className="font-medium">{item.name}</span>
+                          </div>
+                        </td>
+                        <td className="p-3 text-right">{item.quantity}</td>
+                        <td className="p-3 text-right">₹{item.price.toLocaleString()}</td>
+                        <td className="p-3 text-right font-medium">
+                          ₹{(item.price * item.quantity).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
@@ -457,55 +412,35 @@ const OrderDetailPage = () => {
               )}
             </div>
 
-            {/* ORDER LEVEL ACTIONS */}
+            {/* ACTION BUTTONS */}
             <div className="bg-white rounded-2xl shadow-md p-5">
-              <h2 className="font-semibold mb-4">⚡ Order Actions</h2>
+              <h2 className="font-semibold mb-4">⚡ Actions</h2>
               
               <div className="space-y-3">
                 {showCancelButton && (
                   <button
-                    onClick={async () => {
-                      if (confirm("Cancel entire order? All items will be cancelled.")) {
-                        try {
-                          const response = await api.put(`/order/${id}/cancel`);
-                          if (response.data.success) {
-                            toast.success("Order cancelled successfully!");
-                            await fetchOrder();
-                          }
-                        } catch (error) {
-                          toast.error("Failed to cancel order");
-                        }
-                      }
-                    }}
-                    className="w-full bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-lg font-medium transition"
+                    onClick={handleCancelOrder}
+                    className="w-full bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-lg font-medium transition flex items-center justify-center gap-2"
                   >
-                    ❌ Cancel Entire Order
+                    ❌ Cancel Order
+                  </button>
+                )}
+
+                {showReturnButton && (
+                  <button
+                    onClick={() => setShowReturnModal(true)}
+                    className="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-2.5 rounded-lg font-medium transition flex items-center justify-center gap-2"
+                  >
+                    🔄 Request Return
                   </button>
                 )}
 
                 {order.status === "Delivered" && (
                   <button
-                    onClick={async () => {
-                      toast.info("Adding all items to cart...");
-                      for (const item of order.cartItems) {
-                        if (item.itemStatus !== 'Cancelled') {
-                          await api.post("/cart/add", {
-                            productId: item.productId,
-                            quantity: item.quantity,
-                            name: item.name,
-                            image: item.image,
-                            price: item.price
-                          });
-                        }
-                      }
-                      toast.success("Items added to cart!");
-                      setTimeout(() => {
-                        window.location.href = "/cart";
-                      }, 1500);
-                    }}
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg font-medium transition"
+                    onClick={handleBuyAgain}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg font-medium transition flex items-center justify-center gap-2"
                   >
-                    🛒 Buy All Again
+                    🛒 Buy Again
                   </button>
                 )}
               </div>
@@ -515,36 +450,29 @@ const OrderDetailPage = () => {
       </div>
 
       {/* RETURN REQUEST MODAL */}
-      {showReturnModal && selectedItem && (
+      {showReturnModal && (
         <div 
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowReturnModal(false);
-              setSelectedItem(null);
             }
           }}
         >
           <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-800">Return Item</h2>
+              <h2 className="text-xl font-bold text-gray-800">Request Return</h2>
               <button
-                onClick={() => {
-                  setShowReturnModal(false);
-                  setSelectedItem(null);
-                }}
+                onClick={() => setShowReturnModal(false)}
                 className="text-gray-400 hover:text-gray-600 text-xl"
               >
                 ✕
               </button>
             </div>
 
-            {/* Selected Item Info */}
-            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-              <p className="font-semibold">{selectedItem.name}</p>
-              <p className="text-sm text-gray-600">Quantity: {selectedItem.quantity}</p>
-              <p className="text-sm text-gray-600">Price: ₹{(selectedItem.price * selectedItem.quantity).toLocaleString()}</p>
-            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              Your return request will be reviewed by admin. You'll receive a refund if approved.
+            </p>
 
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -580,10 +508,7 @@ const OrderDetailPage = () => {
 
             <div className="flex gap-3">
               <button
-                onClick={() => {
-                  setShowReturnModal(false);
-                  setSelectedItem(null);
-                }}
+                onClick={() => setShowReturnModal(false)}
                 className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-lg font-medium transition"
                 disabled={submittingReturn}
               >
@@ -592,9 +517,9 @@ const OrderDetailPage = () => {
               <button
                 onClick={handleReturnRequest}
                 disabled={submittingReturn || !returnReason}
-                className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white py-2.5 rounded-lg font-medium transition disabled:opacity-50"
+                className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white py-2.5 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {submittingReturn ? "Submitting..." : "Submit Return"}
+                {submittingReturn ? "Submitting..." : "Submit Request"}
               </button>
             </div>
           </div>

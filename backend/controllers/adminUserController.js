@@ -1,78 +1,41 @@
 import User from "../models/User.js";
+import AdminUserService from "../services/adminUserService.js";
 
 class AdminUserController {
 
-  async getUsers(req, res) {
+ async getUsers(req, res) {
     try {
-      const users = await User.find({}).select("-password").sort({ createdAt: -1 });
-      console.log(`Found ${users.length} users`); 
-      res.json({ 
-        success: true, 
-        count: users.length,
-        users: users 
-      });
+      const users = await AdminUserService.getAllUsers();
+      res.json({ success: true, count: users.length, users });
     } catch (error) {
-      console.error("Error in getUsers:", error);
-      res.status(500).json({ 
-        success: false, 
-        message: "Server error fetching users" 
-      });
+      res.status(500).json({ success: false, message: "Server error" });
     }
   }
 
   async getUserById(req, res) {
     try {
-      const user = await User.findById(req.params.id).select("-password");
-      if (!user) {
-        return res.status(404).json({ 
-          success: false, 
-          message: "User not found" 
-        });
-      }
-      res.json({ 
-        success: true, 
-        user: user 
-      });
+      const user = await AdminUserService.getUserById(req.params.id);
+      if (!user) return res.status(404).json({ success: false, message: "User not found" });
+      res.json({ success: true, user });
     } catch (error) {
-      console.error("Error in getUserById:", error);
-      res.status(500).json({ 
-        success: false, 
-        message: "Server error fetching user" 
-      });
+      res.status(500).json({ success: false, message: "Server error" });
     }
   }
 
   async deleteUser(req, res) {
     try {
-      const user = await User.findById(req.params.id);
-      
-      if (!user) {
-        return res.status(404).json({ 
-          success: false, 
-          message: "User not found" 
-        });
+      const user = await AdminUserService.getUserById(req.params.id);
+      if (!user) return res.status(404).json({ success: false, message: "User not found" });
+      if (req.admin && user._id.toString() === req.admin._id.toString()) {
+        return res.status(400).json({ message: "Cannot delete your own account" });
       }
-      
-      if (req.user && user._id.toString() === req.user._id.toString()) {
-        return res.status(400).json({ 
-          success: false, 
-          message: "Cannot delete your own account" 
-        });
-      }
-      
-      await User.findByIdAndDelete(req.params.id);
-      res.json({ 
-        success: true, 
-        message: "User deleted successfully" 
-      });
+      await AdminUserService.deleteUser(req.params.id);
+      res.json({ success: true, message: "User deleted successfully" });
     } catch (error) {
-      console.error("Error in deleteUser:", error);
-      res.status(500).json({ 
-        success: false, 
-        message: "Server error deleting user" 
-      });
+      res.status(500).json({ success: false, message: "Server error" });
     }
   }
 }
+
 
 export default new AdminUserController();

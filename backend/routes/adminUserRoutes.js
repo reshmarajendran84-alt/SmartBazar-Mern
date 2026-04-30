@@ -4,8 +4,8 @@ import adminProtect from "../middlewares/adminProtect.js"; // Remove curly brace
 
 const router = express.Router();
 
-router.get("/users", adminProtect, AdminUserController.getUsers);
+router.get("/", adminProtect, AdminUserController.getUsers);
 
-router.delete("/users/:id", adminProtect, AdminUserController.deleteUser);
+router.delete("/:id", adminProtect, AdminUserController.deleteUser);
 
 export default router;

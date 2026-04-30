@@ -1,13 +1,13 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import { corsOptions } from "./config/corsConfig.js";
+
 import connectDB from "./config/db.js";
 import cloudinary from "./config/cloudinary.js";
 import razorpay from "./config/razorpay.js";
-
 import noCache from "./middlewares/noCache.js";
 import errorHandler from "./middlewares/errorMiddleware.js";
-import { corsOptions } from "./config/corsConfig.js";
 import { generalLimiter, authLimiter, adminLimiter } from "./middlewares/rateLimiter.js";
 
 
@@ -38,15 +38,16 @@ connectDB();
 
 const app = express();
 
-app.use(cors());
+// app.use(cors());
+app.use(cors(corsOptions));
+
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 
-app.use(cors(corsOptions));
 
 
 //  Public routes — no cache blocking needed
-app.use("/api/auth", authRoutes,authLimiter);
+app.use("/api/auth",authLimiter, authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/categories", publicCategoryRoutes);
 app.use("/api/banners", bannerRoutes);

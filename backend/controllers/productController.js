@@ -1,6 +1,6 @@
 import Product from "../models/Product.js";
 import ProductService from "../services/productService.js";
-
+import mongoose from "mongoose";
 class ProductController {
 
   async getProducts(req, res) {

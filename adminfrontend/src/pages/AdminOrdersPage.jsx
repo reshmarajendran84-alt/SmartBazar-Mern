@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../utils/api";
 import { toast } from "react-hot-toast";
+import { useAdminOrders } from "../context/OrderContext";
 
 const AdminOrdersPage = () => {
   const [orders, setOrders] = useState([]);
@@ -32,7 +33,7 @@ const AdminOrdersPage = () => {
   };
 
   useEffect(() => {
-    fetchOrders();
+    fetchOrders("All", "");
   }, []);
 
 const getDisplayName = (order) => {

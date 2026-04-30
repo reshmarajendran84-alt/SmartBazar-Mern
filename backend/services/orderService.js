@@ -1,5 +1,5 @@
 import razorpay from "../config/razorpay.js";
-import Order from "../models/order.js";
+import Order from "../models/Order.js";
 import crypto from "crypto";
 import WalletService from "./walletService.js";
 import Cart from "../models/Cart.js";
