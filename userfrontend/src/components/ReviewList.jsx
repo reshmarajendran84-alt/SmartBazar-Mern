@@ -22,7 +22,7 @@ const RatingBar = ({ star, count, total }) => {
 };
 
 const StatusBadge = ({ status }) => {
-  if (status === "approved") return null; // don't show badge for normal approved reviews
+  if (status === "approved") return null;
   const styles = {
     pending:  "bg-amber-50 text-amber-600 border-amber-200",
     rejected: "bg-red-50 text-red-500 border-red-200",

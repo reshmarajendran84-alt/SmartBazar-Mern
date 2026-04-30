@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getProductById } from "../../services/productService";
-import { useCart } from "../../context/CartContext";
+// import { useCart } from "../../context/CartContext";
 import toast from "react-hot-toast";
 import { FiArrowLeft, FiShoppingCart } from "react-icons/fi";
 
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  // const { addToCart } = useCart();
   const [product, setProduct]     = useState(null);
   const [loading, setLoading]     = useState(true);
   const [mainImage, setMainImage] = useState(null);
@@ -93,20 +93,7 @@ const ProductDetails = () => {
 
           <p className="text-sm text-gray-500 leading-relaxed">{product.description}</p>
 
-          <div className="flex gap-3 pt-2">
-            <button
-              onClick={() => { addToCart(product); toast.success("Added to cart"); }}
-              disabled={product.stock === 0}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-white transition ${
-                product.stock > 0 ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-300 cursor-not-allowed"
-              }`}>
-              <FiShoppingCart size={14} /> Add to cart
-            </button>
-            <button onClick={() => navigate("/cart")}
-              className="px-5 py-2.5 rounded-lg text-sm border border-gray-200 hover:bg-gray-50 text-gray-600 transition">
-              Go to cart
-            </button>
-          </div>
+        
         </div>
 
       </div>

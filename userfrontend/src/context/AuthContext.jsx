@@ -36,10 +36,15 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const login = async (token) => {
+  const login = async (token,userData) => {
     localStorage.setItem("token", token);
+      if (userData) {
+    setUser(userData);
+    setLoading(false);
+  } else {
     setLoading(true);
     await loadProfile();
+  }
   };
 
   useEffect(() => {

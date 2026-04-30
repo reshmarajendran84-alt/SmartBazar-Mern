@@ -15,6 +15,7 @@ import SalesReport from "./pages/SalesReportPage";
 import ReviewsPage from "./pages/ReviewPage";
 import AdminReturns from "./pages/AdminReturns";
 import AdminUsers from "./pages/AdminUsers";
+import BannerManagement from "./pages/BannerManagement";
 
 function App() {
   return (
@@ -49,6 +50,8 @@ function App() {
             <Route path="reviews" element={<ReviewsPage />} />
             <Route path="returns" element={<AdminReturns />} />
             <Route path="users" element={<AdminUsers/>}/>
+<Route path="banners" element={<BannerManagement/>}/>
+      
           </Route>
         </Routes>
       </AdminOrderProvider>

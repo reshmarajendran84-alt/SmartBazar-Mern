@@ -6,13 +6,17 @@ import { validateCoupon } from "../services/couponService";
 
 const CartPage = () => {
   const { cart, loading, handleUpdate, handleRemove } = useCart();
+
   const [couponCode, setCouponCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
+
   const navigate = useNavigate();
 
+  //  Reset coupon when cart changes
   useEffect(() => {
     setDiscount(0);
+    setAppliedCoupon(null);
   }, [cart.items]);
 
   if (loading) {
@@ -23,8 +27,10 @@ const CartPage = () => {
     );
   }
 
+  //  Normalize item
   const normalizeItem = (item) => {
     if (item.productId && typeof item.productId === "object") return item;
+
     return {
       ...item,
       productId: {
@@ -35,55 +41,77 @@ const CartPage = () => {
     };
   };
 
+  //  Merge duplicates
   const mergeDuplicates = (items) => {
     const map = {};
+
     for (const item of items) {
       const id = item.productId?._id || item.productId;
       if (!id) continue;
-      map[id]
-        ? (map[id].quantity += item.quantity)
-        : (map[id] = { ...item });
+
+      if (map[id]) {
+        map[id].quantity += item.quantity;
+      } else {
+        map[id] = { ...item };
+      }
     }
+
     return Object.values(map);
   };
 
   const validItems = mergeDuplicates(
-    (cart.items?.filter(i => i.productId) || []).map(normalizeItem)
+    (cart.items?.filter((i) => i.productId) || []).map(normalizeItem)
   );
 
-  const subtotal = validItems.reduce((a, i) => a + i.price * i.quantity, 0);
+  // 💰 Calculations
+  const subtotal = validItems.reduce(
+    (acc, item) => acc + item.price * item.quantity,
+    0
+  );
+
   const shipping = validItems.length ? 100 : 0;
   const tax = validItems.length ? 50 : 0;
+
   const totalBeforeDiscount = subtotal + shipping + tax;
   const finalTotal = Math.max(totalBeforeDiscount - discount, 0);
 
-const handleApplyCoupon = async () => {
-  if (!couponCode) return toast.warning("Enter coupon code");
+  //  Apply Coupon
+  const handleApplyCoupon = async () => {
+    if (!couponCode) return toast.warning("Enter coupon code");
 
-  try {
-    const res = await validateCoupon({
-      code: couponCode.trim(),
-      subtotal,
-    });
-    const value = Number(res.data?.discount || 0);
-    setDiscount(value);
-    setAppliedCoupon(couponCode);
-    toast.success(`Saved ₹${value} 🎉`);
-  } catch (err) {
-    console.log("Error response:", err.response?.data); // ← ADD THIS
-    console.log("Status:", err.response?.status);
-    setDiscount(0);
-    toast.error(err.response?.data?.message || "Invalid coupon"); // ← show actual message
-  }
-};
+    try {
+      const res = await validateCoupon({
+        code: couponCode.trim(),
+        subtotal,
+        cartItems: validItems, 
+      });
+
+      const value = Number(res.data?.discount || 0);
+
+      setDiscount(value);
+      setAppliedCoupon(couponCode);
+
+      toast.success(`Saved ₹${value} 🎉`);
+    } catch (err) {
+      console.log("Coupon Error:", err.response?.data);
+      setDiscount(0);
+
+      toast.error(
+        err.response?.data?.message || "Invalid or expired coupon"
+      );
+    }
+  };
+
+  //  Remove Coupon
   const handleRemoveCoupon = () => {
     setDiscount(0);
     setAppliedCoupon(null);
     setCouponCode("");
   };
 
+  //  Checkout
   const handleCheckout = () => {
-    if (!validItems.length) return toast.warning("Cart empty");
+    if (!validItems.length) return toast.warning("Cart is empty");
 
     navigate("/checkout", {
       state: {
@@ -98,8 +126,7 @@ const handleApplyCoupon = async () => {
     });
   };
 
-  // ─────────────────────────────────────────
-
+  //  Empty Cart UI
   if (!validItems.length) {
     return (
       <div className="flex flex-col items-center justify-center h-[70vh] text-center">
@@ -122,8 +149,9 @@ const handleApplyCoupon = async () => {
 
   return (
     <div className="bg-gray-50 min-h-screen px-4 md:px-8 py-6">
-
-      <h1 className="text-2xl md:text-3xl font-bold mb-6">Shopping Cart</h1>
+      <h1 className="text-2xl md:text-3xl font-bold mb-6">
+        Shopping Cart
+      </h1>
 
       <div className="grid lg:grid-cols-3 gap-6">
 
@@ -135,7 +163,7 @@ const handleApplyCoupon = async () => {
               className="bg-white p-4 rounded-xl shadow flex gap-4 hover:shadow-lg transition"
             >
               <img
-                src={item.productId.images?.[0]}
+                src={item.productId.images?.[0] || "/placeholder.png"}
                 className="w-24 h-24 object-cover rounded-lg"
               />
 
@@ -152,7 +180,11 @@ const handleApplyCoupon = async () => {
                 <div className="flex items-center gap-2 mt-3">
                   <button
                     onClick={() =>
-                      handleUpdate(item.productId._id, item.quantity - 1)
+                      item.quantity > 1 &&
+                      handleUpdate(
+                        item.productId._id,
+                        item.quantity - 1
+                      )
                     }
                     className="w-8 h-8 bg-gray-200 rounded"
                   >
@@ -163,7 +195,10 @@ const handleApplyCoupon = async () => {
 
                   <button
                     onClick={() =>
-                      handleUpdate(item.productId._id, item.quantity + 1)
+                      handleUpdate(
+                        item.productId._id,
+                        item.quantity + 1
+                      )
                     }
                     className="w-8 h-8 bg-gray-200 rounded"
                   >
@@ -171,7 +206,9 @@ const handleApplyCoupon = async () => {
                   </button>
 
                   <button
-                    onClick={() => handleRemove(item.productId._id)}
+                    onClick={() =>
+                      handleRemove(item.productId._id)
+                    }
                     className="ml-auto text-red-500 text-sm"
                   >
                     Remove
@@ -188,8 +225,9 @@ const handleApplyCoupon = async () => {
 
         {/* RIGHT */}
         <div className="bg-white p-5 rounded-xl shadow h-fit sticky top-20">
-
-          <h3 className="font-semibold text-lg mb-4">Order Summary</h3>
+          <h3 className="font-semibold text-lg mb-4">
+            Order Summary
+          </h3>
 
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
@@ -213,13 +251,16 @@ const handleApplyCoupon = async () => {
                 <div className="flex gap-2">
                   <input
                     value={couponCode}
-  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    onChange={(e) =>
+                      setCouponCode(e.target.value.toUpperCase())
+                    }
                     placeholder="Coupon"
                     className="flex-1 border px-2 py-1 rounded"
                   />
                   <button
                     onClick={handleApplyCoupon}
-                    className="bg-green-600 text-white px-3 rounded"
+                    disabled={!couponCode}
+                    className="bg-green-600 text-white px-3 rounded disabled:opacity-50"
                   >
                     Apply
                   </button>

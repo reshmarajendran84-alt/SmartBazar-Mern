@@ -390,7 +390,7 @@ const AdminOrderDetail = () => {
               </div>
               <div className="p-4 space-y-3">
                 {(() => {
-                  // ✅ Get name from userId first, then address
+                  //  Get name from userId first, then address
                   const name =
                     order.userId?.name?.trim() ||
                     order.address?.fullName?.trim() ||

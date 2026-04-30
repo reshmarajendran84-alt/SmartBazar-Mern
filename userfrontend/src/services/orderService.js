@@ -1,18 +1,22 @@
 import api from "../utils/api";
 
-export const placeCODOrder = (data) => api.post("/order/cod", data);
-export const createRazorpayOrder = (data) => api.post("/order/razorpay-order", data);
-export const verifyPayment = (data) => api.post("/order/verify", data);
+//  Orders
+export const placeCODOrder = (data) => api.post("/order", data);
+export const createRazorpayOrder = (data) =>
+  api.post("/order/create-razorpay-order", data);
+export const verifyPayment = (data) =>
+  api.post("/order/verify-payment", data);
+export const placeWalletOrder = (data) =>
+  api.post("/order/wallet-order", data);
 
-
-export const placeWalletOrder = (data) => api.post("/order/wallet", data);
-
+//  Get Orders
 export const getUserOrders = () =>
-  api.get("/order/my-orders").then(r => {
-    console.log("ORDERS RECEIVED:", r.data);
-    return r.data.orders;  
-  });
+  api.get("/order/my-orders").then((r) => r.data.orders);
 
-
-
-export default { placeCODOrder, createRazorpayOrder, verifyPayment ,placeWalletOrder};
+// Default export
+export default {
+  placeCODOrder,
+  createRazorpayOrder,
+  verifyPayment,
+  placeWalletOrder,
+};

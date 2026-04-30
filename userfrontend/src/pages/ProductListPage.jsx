@@ -99,16 +99,18 @@ const ProductListPage = () => {
   const [products, setProducts]         = useState([]);
   const [totalPages, setTotalPages]     = useState(1);
   const [sidebarOpen, setSidebarOpen]   = useState(false);
-const [priceInput, setPriceInput] = useState(price);
-useEffect(() => {
-  setPriceInput(price);
-}, [price]);
+  const [priceInput, setPriceInput] = useState(price);
+  
+  useEffect(() => {
+    setPriceInput(price);
+  }, [price]);
+  
   // ── Fetch ──────────────────────────────────────────────────────────────────
   const loadProducts = useCallback(async () => {
     try {
       setLoading(true);
       setProducts([]);
-      const { data } = await getProducts({ page, category, search, sort, price:price < 200000 ?price :"", rating :rating >0 ?rating :"" });
+      const { data } = await getProducts({ page, category, search, sort, price: price < 200000 ? price : "", rating: rating > 0 ? rating : "" });
       setProducts(data.products);
       setTotalPages(data.pages);
     } catch (err) {
@@ -125,7 +127,7 @@ useEffect(() => {
   const setParam = (key, value) => {
     setSearchParams((prev) => {
       const p = new URLSearchParams(prev);
-    if (value !== "" && value !== null && value !== undefined) {
+      if (value !== "" && value !== null && value !== undefined) {
         p.set(key, value);
       } else {
         p.delete(key);
@@ -136,17 +138,17 @@ useEffect(() => {
   };
 
   const handleSearch = () => setParam("search", searchInput.trim());
-  const handleSort     = (val) => setParam("sort",     val);
+  const handleSort     = (val) => setParam("sort", val);
   const handleCategory = (val) => setParam("category", val);
-// const handlePrice = (val) => setParam("price", val < 200000 ? val : "");
-  const handleRating   = (val) => setParam("rating",   val ); 
-   const handlePrice = (val) => {
-  if (val < 200000) {
-    setParam("price", String(val)); /
-  } else {
-    setParam("price", "");          
-  }
-};
+  const handleRating   = (val) => setParam("rating", val);
+  
+  const handlePrice = (val) => {
+    if (val < 200000) {
+      setParam("price", String(val));
+    } else {
+      setParam("price", "");
+    }
+  };
 
   const handlePage = (newPage) => {
     setSearchParams((prev) => {
@@ -238,11 +240,10 @@ useEffect(() => {
           {/* Category */}
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Category</p>
-            {/* Pass selectedCategory and onChange into your existing CategoryFilter */}
             <CategoryFilter selected={category} onChange={handleCategory} />
           </div>
 
-          {/* Price */}
+          {/* Price - FIXED VERSION */}
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Max Price</p>
             <div className="flex justify-between text-sm text-gray-500 mb-1">
@@ -255,10 +256,15 @@ useEffect(() => {
               max={200000}
               step={100}
               value={priceInput}
-                  onChange={(e) => setPriceInput(Number(e.target.value))}  // ← only update display
-              onChange={(e) => handlePrice(Number(e.target.value))}
-                  onTouchEnd={(e) => handlePrice(Number(e.target.value))}  // ← mobile support
-
+              onChange={(e) => {
+                const value = Number(e.target.value);
+                setPriceInput(value);
+                handlePrice(value);
+              }}
+              onTouchEnd={(e) => {
+                const value = Number(e.target.value);
+                handlePrice(value);
+              }}
               className="w-full accent-gray-900 cursor-pointer"
             />
             <div className="flex justify-between text-xs text-gray-300 mt-1">
@@ -266,7 +272,7 @@ useEffect(() => {
             </div>
           </div>
 
-          {/* Rating ✅ */}
+          {/* Rating  */}
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Min Rating</p>
             <StarRating value={rating} onChange={handleRating} />

@@ -14,6 +14,32 @@ import {
   AlertCircle
 } from "lucide-react";
 
+const COLOR_MAP = {
+  gray:  {
+    text: "text-gray-600",
+    bg: "bg-gray-100",
+    border: "border-gray-400",
+    ring: "ring-gray-200",
+  },
+  amber: {
+    text: "text-amber-600",
+    bg: "bg-amber-100",
+    border: "border-amber-400",
+    ring: "ring-amber-200",
+  },
+  green: {
+    text: "text-green-600",
+    bg: "bg-green-100",
+    border: "border-green-400",
+    ring: "ring-green-200",
+  },
+  red: {
+    text: "text-red-600",
+    bg: "bg-red-100",
+    border: "border-red-400",
+    ring: "ring-red-200",
+  },
+};
 const STATUS_COLORS = {
   pending: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200", dot: "bg-amber-500" },
   approved: { bg: "bg-green-50", text: "text-green-700", border: "border-green-200", dot: "bg-green-500" },
@@ -199,35 +225,39 @@ export default function ReviewsPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
-          {FILTERS.map(filterItem => (
-            <div
-              key={filterItem.key}
-              onClick={() => setFilter(filterItem.key)}
-              className={`bg-white rounded-xl border p-3 sm:p-4 shadow-sm hover:shadow-md transition-all cursor-pointer ${
-                filter === filterItem.key
-                  ? `border-${filterItem.color}-400 ring-2 ring-${filterItem.color}-200`
-                  : "border-gray-100"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs sm:text-sm text-gray-500 mb-1">{filterItem.label}</p>
-                  <p className={`text-xl sm:text-2xl font-bold text-${filterItem.color}-600`}>
-                    {stats[filterItem.key]}
-                  </p>
-                </div>
-                <div className={`w-8 h-8 sm:w-10 sm:h-10 bg-${filterItem.color}-100 rounded-full flex items-center justify-center`}>
-                  {filterItem.key === "pending" && <AlertCircle size={18} className={`text-${filterItem.color}-600`} />}
-                  {filterItem.key === "approved" && <CheckCircle size={18} className={`text-${filterItem.color}-600`} />}
-                  {filterItem.key === "rejected" && <XCircle size={18} className={`text-${filterItem.color}-600`} />}
-                  {filterItem.key === "all" && <Filter size={18} className="text-gray-600" />}
-                </div>
-              </div>
-            </div>
-          ))}
+       {/* Stats Cards */}
+<div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
+  {FILTERS.map(filterItem => {
+    const colors = COLOR_MAP[filterItem.color];
+    return (
+      <div
+        key={filterItem.key}
+        onClick={() => setFilter(filterItem.key)}
+        className={`bg-white rounded-xl border p-3 sm:p-4 shadow-sm hover:shadow-md 
+          transition-all cursor-pointer ${
+          filter === filterItem.key
+            ? `${colors.border} ring-2 ${colors.ring}`
+            : "border-gray-100"
+        }`}
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs sm:text-sm text-gray-500 mb-1">{filterItem.label}</p>
+            <p className={`text-xl sm:text-2xl font-bold ${colors.text}`}>
+              {stats[filterItem.key]}
+            </p>
+          </div>
+          <div className={`w-8 h-8 sm:w-10 sm:h-10 ${colors.bg} rounded-full flex items-center justify-center`}>
+            {filterItem.key === "pending"  && <AlertCircle size={18} className={colors.text} />}
+            {filterItem.key === "approved" && <CheckCircle size={18} className={colors.text} />}
+            {filterItem.key === "rejected" && <XCircle     size={18} className={colors.text} />}
+            {filterItem.key === "all"      && <Filter      size={18} className="text-gray-600" />}
+          </div>
         </div>
-
+      </div>
+    );
+  })}
+</div>
         {/* Search Bar */}
         <div className="mb-6">
           <div className="relative">

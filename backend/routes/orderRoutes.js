@@ -13,7 +13,6 @@ router.post("/wallet-order", protect, OrderController.placeWalletOrder);
 router.get("/my-orders", protect, OrderController.getUserOrders);
 router.get("/:orderId", protect, OrderController.getOrderById);
 
-// Add this new route - Make sure it's BEFORE the /:orderId route
 router.get("/user/delivered/:productId", protect, OrderController.getDeliveredOrderForProduct);
 
 router.put("/:orderId/cancel", protect, OrderController.cancelOrder);

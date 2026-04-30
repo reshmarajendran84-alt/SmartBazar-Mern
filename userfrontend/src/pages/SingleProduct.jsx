@@ -20,7 +20,7 @@ const SingleProduct = () => {
   const [deliveredOrderId, setDeliveredOrderId] = useState(null);
   const [checkingOrder, setCheckingOrder] = useState(false);
 
-  const isLoggedIn = !!localStorage.getItem("userToken");
+  const isLoggedIn = !!localStorage.getItem("token");
 
   useEffect(() => {
     loadProduct();
@@ -42,10 +42,13 @@ const SingleProduct = () => {
       console.log("User orders:", data);
       
       // Find delivered order containing this product
-      const deliveredOrder = data.orders?.find(order => 
-        order.status === "Delivered" && 
-        order.cartItems?.some(item => item.productId === product._id)
-      );
+      const deliveredOrder = data.orders?.find(order =>
+  order.status === "Delivered" &&
+  order.cartItems?.some(item => {
+    const itemProductId = item.productId?._id || item.productId; // handle both object and string
+    return itemProductId === product._id;
+  })
+);
       
       if (deliveredOrder) {
         setDeliveredOrderId(deliveredOrder._id);
@@ -69,7 +72,7 @@ const SingleProduct = () => {
       setMainImage(data.images?.[0]);
 
       if (data.category?._id) {
-        const rel = await getProducts(1, data.category._id);
+        const rel = await getProducts({ page: 1, category: data.category._id });
         setRelated(rel.data.products.filter((p) => p._id !== id).slice(0, 4));
       }
     } catch (error) {

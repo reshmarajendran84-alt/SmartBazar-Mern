@@ -7,7 +7,7 @@ const AboutPage = () => {
       {/* ─── HERO SECTION ─── */}
       <div className="relative h-[250px] sm:h-[350px] md:h-[400px] overflow-hidden">
         <img
-          src="/images/download (3).jpg"
+          src="/images/1.jpg"
           alt="Shopping"
           className="w-full h-full object-cover scale-105"
         />
@@ -30,7 +30,7 @@ const AboutPage = () => {
           {/* Image */}
           <div className="overflow-hidden rounded-2xl shadow-lg group">
             <img
-              src="/images/download (3).jpg"
+              src="/images/78bb9974428a1c13.webp"
               alt="Shopping Experience"
               className="w-full h-[250px] sm:h-[350px] object-cover 
               group-hover:scale-110 transition duration-500"

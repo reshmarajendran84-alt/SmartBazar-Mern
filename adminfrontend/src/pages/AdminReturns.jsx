@@ -73,7 +73,7 @@ const AdminReturns = () => {
   const handleApprove = async (returnId) => {
     try {
       setProcessingId(returnId);
-      const response = await api.post(`/returns/${returnId}/approve`);
+    const response = await api.post(`/returns/${returnId}/approve`);
       console.log("Approve response:", response.data);
       if (response.data.success) {
         toast.success(`Return approved! Refund: ₹${response.data.refundAmount || 'N/A'}`);
@@ -99,7 +99,7 @@ const AdminReturns = () => {
     
     try {
       setProcessingId(returnId);
-      const response = await api.post(`/returns/${returnId}/reject`, { 
+    const response = await api.post(`/returns/${returnId}/reject`, { 
         rejectionReason: reason 
       });
       console.log("Reject response:", response.data);

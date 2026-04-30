@@ -3,7 +3,7 @@ import {
   LayoutDashboard, List, ShoppingCart, X, Menu, Percent, 
   PackageSearch, BarChart2, Star, RefreshCw, Users, 
   LogOut, ChevronLeft, ChevronRight
-} from "lucide-react";
+,Image } from "lucide-react";
 import { useState, useEffect } from "react";
 import { adminLogout } from "../utils/adminLogout";
 
@@ -42,6 +42,7 @@ const Sidebar = ({ open, setOpen }) => {
     { name: "Reviews", path: "/admin/reviews", icon: Star },
     { name: "Sales Report", path: "/admin/sales-report", icon: BarChart2 },
     { name: "Users", path: "/admin/users", icon: Users },
+    { name: "Banners", path: "/admin/banners", icon: Image  },
   ];
 
   const isActive = (path) => {

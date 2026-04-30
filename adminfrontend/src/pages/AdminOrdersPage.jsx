@@ -35,7 +35,6 @@ const AdminOrdersPage = () => {
     fetchOrders();
   }, []);
 
-  // Helper function to get display name
 const getDisplayName = (order) => {
   if (order.userId?.name && order.userId.name.trim() !== "") return order.userId.name;
   if (order.address?.fullName && order.address.fullName.trim() !== "") return order.address.fullName;

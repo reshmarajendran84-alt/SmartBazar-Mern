@@ -24,13 +24,15 @@ const ReturnRequestModal = ({ order, onClose, onSuccess }) => {
 
     setLoading(true);
     try {
-await api.post(`/return/request/${order._id}`, {
-  reason,
-        description
-      });
-      toast.success("Return request submitted successfully");
+    const response = await api.post(`/returns/request/${order._id}`, {
+ reason: reason,
+      description: description
+    });
+      if (response.data.success) {
+      toast.success("Return request submitted successfully! Admin will review it.");
       onSuccess();
       onClose();
+    }
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to submit return request");
     } finally {

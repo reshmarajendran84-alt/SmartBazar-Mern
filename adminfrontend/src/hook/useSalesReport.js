@@ -33,10 +33,23 @@ export default function useSalesReport() {
   const downloadPDF = () => {
     if (!reportData) return;
     const doc = new jsPDF({ orientation: "landscape" });
-    const { summary, financialBreakdown, topProducts, orderDetails, couponBreakdown, revenueByDate, operationalMetrics } = reportData;
+    const {
+      summary,
+      financialBreakdown,
+      topProducts,
+      orderDetails,
+      revenueByDate,
+      operationalMetrics,
+    } = reportData;
     const pageW = doc.internal.pageSize.getWidth();
 
-const pdfCurrency = (val) => `Rs. ${Number(val ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;    // Header
+    const pdfCurrency = (val) =>
+      `Rs. ${Number(val ?? 0).toLocaleString("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`;
+
+    // ── Header ──────────────────────────────────────────────────────────
     doc.setFillColor(79, 70, 229);
     doc.rect(0, 0, pageW, 28, "F");
     doc.setTextColor(255, 255, 255);
@@ -48,14 +61,13 @@ const pdfCurrency = (val) => `Rs. ${Number(val ?? 0).toLocaleString("en-IN", { m
     doc.text(`Period: ${startDate} to ${endDate}`, 14, 25);
     doc.text(`Generated: ${new Date().toLocaleString()}`, pageW - 50, 25);
 
-    // Summary Box
+    // ── Summary Box ──────────────────────────────────────────────────────
     doc.setTextColor(30, 30, 30);
     doc.setFillColor(238, 242, 255);
     doc.roundedRect(14, 34, pageW - 28, 65, 3, 3, "F");
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
-    
-    // Row 1
+
     doc.text(`Total Revenue: ${pdfCurrency(summary?.totalRevenue)}`, 20, 44);
     doc.text(`Net Revenue: ${pdfCurrency(summary?.netRevenue)}`, 20, 52);
     doc.text(`Total Orders: ${summary?.totalOrders ?? 0}`, 20, 60);
@@ -74,34 +86,36 @@ const pdfCurrency = (val) => `Rs. ${Number(val ?? 0).toLocaleString("en-IN", { m
 
     let currentY = 108;
 
-    // Status Breakdown
+    // ── Status Breakdown ─────────────────────────────────────────────────
     if (operationalMetrics?.statusBreakdown) {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
       doc.text("Order Status Breakdown", 14, currentY);
-      
+
       autoTable(doc, {
         startY: currentY + 4,
         head: [["Status", "Count", "Percentage"]],
-        body: Object.entries(operationalMetrics.statusBreakdown).map(([status, count]) => [
-          status,
-          count,
-          `${((count / summary?.totalOrders) * 100).toFixed(1)}%`
-        ]),
+        body: Object.entries(operationalMetrics.statusBreakdown).map(
+          ([status, count]) => [
+            status,
+            count,
+            `${((count / summary?.totalOrders) * 100).toFixed(1)}%`,
+          ]
+        ),
         styles: { fontSize: 8, cellPadding: 2 },
         headStyles: { fillColor: [79, 70, 229], textColor: 255 },
       });
       currentY = doc.lastAutoTable?.finalY + 10;
     }
 
-    // Financial Breakdown
+    // ── Financial Breakdown ──────────────────────────────────────────────
     if (financialBreakdown) {
       if (currentY > 180) { doc.addPage(); currentY = 20; }
-      
+
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
       doc.text("Financial Breakdown", 14, currentY);
-      
+
       autoTable(doc, {
         startY: currentY + 4,
         head: [["Gross Revenue", "Discounts", "Shipping", "Tax", "Gateway Fees", "Net Revenue", "Margin"]],
@@ -112,7 +126,7 @@ const pdfCurrency = (val) => `Rs. ${Number(val ?? 0).toLocaleString("en-IN", { m
           pdfCurrency(financialBreakdown.totalTax),
           pdfCurrency(financialBreakdown.estimatedPaymentGatewayFees),
           pdfCurrency(financialBreakdown.netRevenue),
-          `${financialBreakdown.profitMargin}%`
+          `${financialBreakdown.profitMargin}%`,
         ]],
         styles: { fontSize: 8, cellPadding: 2.5 },
         headStyles: { fillColor: [79, 70, 229], textColor: 255 },
@@ -120,14 +134,14 @@ const pdfCurrency = (val) => `Rs. ${Number(val ?? 0).toLocaleString("en-IN", { m
       currentY = doc.lastAutoTable?.finalY + 10;
     }
 
-    // Top Products with Images (text-based)
+    // ── Top Products ─────────────────────────────────────────────────────
     if (topProducts?.length > 0) {
       if (currentY > 180) { doc.addPage(); currentY = 20; }
-      
+
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
       doc.text("Top Selling Products", 14, currentY);
-      
+
       autoTable(doc, {
         startY: currentY + 4,
         head: [["#", "Product", "Category", "Price", "Stock", "Sold", "Delivered", "Cancelled", "Returned", "Revenue"]],
@@ -150,43 +164,61 @@ const pdfCurrency = (val) => `Rs. ${Number(val ?? 0).toLocaleString("en-IN", { m
       currentY = doc.lastAutoTable?.finalY + 10;
     }
 
-    // Order Details with Full Information
+    // ── Order Details ────────────────────────────────────────────────────
     if (orderDetails?.length > 0) {
       if (currentY > 180) { doc.addPage(); currentY = 20; }
-      
+
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
       doc.text("Recent Orders", 14, currentY);
-      
+
       autoTable(doc, {
         startY: currentY + 4,
-        head: [["Order ID", "Date", "Customer", "Items", "Coupon", "Total", "Status", "Delivered/Cancelled Date"]],
-        body: orderDetails.slice(0, 30).map((o) => [
-          o.orderNumber,
-          formatDate(o.createdAt),
-          `${o.customer.name}\n${o.customer.email}`,
-          o.itemCount,
-          o.pricing.couponCode || "-",
-          pdfCurrency(o.pricing.total),
-          o.status,
-          o.deliveredAt ? formatDate(o.deliveredAt) : (o.cancelledAt ? formatDate(o.cancelledAt) : (o.returnedAt ? formatDate(o.returnedAt) : "-")),
-        ]),
+        head: [["Order ID", "Date", "Customer", "Items", "Coupon & Discount", "Total", "Status", "Status Date"]],
+        body: orderDetails.slice(0, 30).map((o) => {
+          // ✅ o.coupon = coupon code (top-level), o.discount = rupee amount (top-level)
+          const couponCode = o.coupon || o.pricing?.couponCode || "";
+          const couponDiscount = o.discount || 0;
+
+          const couponText = couponCode
+            ? `${couponCode} (-${pdfCurrency(couponDiscount)})`
+            : couponDiscount > 0
+            ? `-${pdfCurrency(couponDiscount)}`
+            : "-";
+
+          return [
+            o.orderNumber,
+            formatDate(o.createdAt),
+            `${o.customer.name}\n${o.customer.email}`,
+            o.itemCount,
+            couponText,
+            pdfCurrency(o.pricing.total),
+            o.status,
+            o.deliveredAt
+              ? formatDate(o.deliveredAt)
+              : o.cancelledAt
+              ? formatDate(o.cancelledAt)
+              : o.returnedAt
+              ? formatDate(o.returnedAt)
+              : "-",
+          ];
+        }),
         styles: { fontSize: 7, cellPadding: 2 },
         headStyles: { fillColor: [15, 118, 110], textColor: 255 },
         alternateRowStyles: { fillColor: [236, 253, 245] },
       });
     }
 
-    // Daily Revenue
+    // ── Daily Revenue ────────────────────────────────────────────────────
     if (revenueByDate?.length > 0) {
       const yd = doc.lastAutoTable?.finalY ?? 200;
       if (yd > 250) { doc.addPage(); currentY = 20; }
       else { currentY = yd + 10; }
-      
+
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
       doc.text("Daily Performance", 14, currentY);
-      
+
       autoTable(doc, {
         startY: currentY + 4,
         head: [["Date", "Orders", "Delivered", "Cancelled", "Units Sold", "Revenue", "Avg Order"]],
@@ -208,9 +240,16 @@ const pdfCurrency = (val) => `Rs. ${Number(val ?? 0).toLocaleString("en-IN", { m
     doc.save(`sales-report-${startDate}-to-${endDate}.pdf`);
   };
 
+  // ── Print ────────────────────────────────────────────────────────────
   const handlePrint = () => {
     if (!reportData) return;
-    const { summary, financialBreakdown, topProducts, orderDetails, couponBreakdown, operationalMetrics } = reportData;
+    const {
+      summary,
+      financialBreakdown,
+      topProducts,
+      orderDetails,
+      operationalMetrics,
+    } = reportData;
 
     const productRows = (topProducts || [])
       .map(
@@ -232,8 +271,19 @@ const pdfCurrency = (val) => `Rs. ${Number(val ?? 0).toLocaleString("en-IN", { m
 
     const orderRows = (orderDetails || [])
       .slice(0, 50)
-      .map(
-        (o) => `
+      .map((o) => {
+        // ✅ o.coupon = coupon code (top-level), o.discount = rupee amount (top-level)
+        const couponCode = o.coupon || o.pricing?.couponCode || "";
+        const couponDiscount = o.discount || 0;
+
+        const couponCell = couponCode
+          ? `<span class="coupon-badge">${couponCode}</span><br>
+             <span style="color:#dc2626;font-weight:600;">-₹${Number(couponDiscount).toFixed(2)} off</span>`
+          : couponDiscount > 0
+          ? `<span style="color:#dc2626;font-weight:600;">-₹${Number(couponDiscount).toFixed(2)}</span>`
+          : "—";
+
+        return `
           <tr>
             <td class="print-td">${o.orderNumber}</td>
             <td class="print-td">${formatDate(o.createdAt)}</td>
@@ -243,26 +293,29 @@ const pdfCurrency = (val) => `Rs. ${Number(val ?? 0).toLocaleString("en-IN", { m
               <small>📞 ${o.customer.phone}</small>
             </td>
             <td class="print-td">${o.itemCount} items<br><small>${o.totalQuantity} qty</small></td>
-            <td class="print-td">
-              ${o.pricing.couponCode ? `<span class="coupon-badge">${o.pricing.couponCode}</span><br>₹${o.pricing.couponDiscount.toFixed(2)} off` : '—'}
-            </td>
+            <td class="print-td">${couponCell}</td>
             <td class="print-td">₹${o.pricing.total.toFixed(2)}</td>
             <td class="print-td">${o.paymentMethod}</td>
             <td class="print-td">
               <span class="status-badge status-${o.status.toLowerCase()}">${o.status}</span>
             </td>
             <td class="print-td">
-              ${o.deliveredAt ? `✅ Delivered: ${formatDate(o.deliveredAt)}` : 
-                o.cancelledAt ? `❌ Cancelled: ${formatDate(o.cancelledAt)}` : 
-                o.returnedAt ? `↩️ Returned: ${formatDate(o.returnedAt)}` : 
-                `⏳ ${o.status}`}
+              ${
+                o.deliveredAt
+                  ? `✅ Delivered: ${formatDate(o.deliveredAt)}`
+                  : o.cancelledAt
+                  ? `❌ Cancelled: ${formatDate(o.cancelledAt)}`
+                  : o.returnedAt
+                  ? `↩️ Returned: ${formatDate(o.returnedAt)}`
+                  : `⏳ ${o.status}`
+              }
             </td>
             <td class="print-td">
               <small>${o.address.city}, ${o.address.state}<br>${o.address.pincode}</small>
             </td>
           </tr>
-        `
-      )
+        `;
+      })
       .join("");
 
     const win = window.open("", "_blank");
@@ -337,12 +390,12 @@ const pdfCurrency = (val) => `Rs. ${Number(val ?? 0).toLocaleString("en-IN", { m
             font-size: 0.65rem;
             font-weight: 600;
           }
-          .status-delivered { background: #d1fae5; color: #065f46; }
-          .status-cancelled { background: #fee2e2; color: #991b1b; }
-          .status-returned { background: #fed7aa; color: #92400e; }
-          .status-pending { background: #fef3c7; color: #92400e; }
-          .status-confirmed { background: #bfdbfe; color: #1e40af; }
-          .status-shipped { background: #e0e7ff; color: #3730a3; }
+          .status-delivered  { background: #d1fae5; color: #065f46; }
+          .status-cancelled  { background: #fee2e2; color: #991b1b; }
+          .status-returned   { background: #fed7aa; color: #92400e; }
+          .status-pending    { background: #fef3c7; color: #92400e; }
+          .status-confirmed  { background: #bfdbfe; color: #1e40af; }
+          .status-shipped    { background: #e0e7ff; color: #3730a3; }
           .coupon-badge {
             display: inline-block;
             background: #fef3c7;
@@ -362,8 +415,15 @@ const pdfCurrency = (val) => `Rs. ${Number(val ?? 0).toLocaleString("en-IN", { m
           }
           @media print {
             body { padding: 0.3in; }
-            .print-table th { background: #4f46e5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .stats-grid, .status-badge, .coupon-badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .print-table th {
+              background: #4f46e5 !important;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .stats-grid, .status-badge, .coupon-badge {
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
           }
         </style>
       </head>
@@ -375,7 +435,7 @@ const pdfCurrency = (val) => `Rs. ${Number(val ?? 0).toLocaleString("en-IN", { m
           </div>
           <div class="print-period">Generated: ${new Date().toLocaleString()}</div>
         </div>
-        
+
         <div class="stats-grid">
           <div class="stat-card"><strong>₹${(summary?.totalRevenue || 0).toFixed(2)}</strong>Total Revenue</div>
           <div class="stat-card"><strong>₹${(summary?.netRevenue || 0).toFixed(2)}</strong>Net Revenue</div>
@@ -403,18 +463,29 @@ const pdfCurrency = (val) => `Rs. ${Number(val ?? 0).toLocaleString("en-IN", { m
         ${topProducts?.length > 0 ? `
           <h2 class="section-title">🏆 Top Selling Products</h2>
           <table class="print-table">
-            <thead><tr><th>#</th><th>Product</th><th>Price</th><th>Stock</th><th>Sold</th><th>Delivered</th><th>Cancelled</th><th>Returned</th><th>Revenue</th></tr></thead>
+            <thead>
+              <tr>
+                <th>#</th><th>Product</th><th>Price</th><th>Stock</th>
+                <th>Sold</th><th>Delivered</th><th>Cancelled</th><th>Returned</th><th>Revenue</th>
+              </tr>
+            </thead>
             <tbody>${productRows}</tbody>
           </table>
-        ` : ''}
+        ` : ""}
 
         ${orderDetails?.length > 0 ? `
           <h2 class="section-title">📋 Order Details (with Delivery/Cancellation Dates)</h2>
           <table class="print-table">
-            <thead><tr><th>Order ID</th><th>Date</th><th>Customer</th><th>Items</th><th>Coupon</th><th>Total</th><th>Payment</th><th>Status</th><th>Status Date</th><th>Address</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Order ID</th><th>Date</th><th>Customer</th><th>Items</th>
+                <th>Coupon &amp; Discount</th><th>Total</th><th>Payment</th>
+                <th>Status</th><th>Status Date</th><th>Address</th>
+              </tr>
+            </thead>
             <tbody>${orderRows}</tbody>
           </table>
-        ` : ''}
+        ` : ""}
 
         <div class="print-footer">
           <p>This report includes all orders from ${startDate} to ${endDate}</p>

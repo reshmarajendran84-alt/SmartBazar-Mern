@@ -24,6 +24,7 @@ class ReturnController {
         order
       });
     } catch (error) {
+      console.error("Request return error:", error);
       res.status(400).json({
         success: false,
         message: error.message
@@ -33,27 +34,27 @@ class ReturnController {
   
   // Admin: Approve return
   async approveReturn(req, res) {
-  try {
-    const { orderId } = req.params;
-    const adminId = req.admin?.id || req.user?.id;
+    try {
+      const { orderId } = req.params;
+      const adminId = req.admin?.id || req.user?.id;
 
-    const { order, refundAmount } =
-      await returnService.approveReturn(orderId, adminId);
+      const result = await returnService.approveReturn(orderId, adminId);
 
-    res.status(200).json({
-      success: true,
-      message: `Return approved. Refund amount: ₹${refundAmount}`,
-      order,
-      refundAmount
-    });
-
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error.message
-    });
+      res.status(200).json({
+        success: true,
+        message: result.message,
+        order: result.order,
+        refundAmount: result.refundAmount
+      });
+    } catch (error) {
+      console.error("Approve return error:", error);
+      res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
   }
-}
+  
   // Admin: Reject return
   async rejectReturn(req, res) {
     try {
@@ -61,24 +62,25 @@ class ReturnController {
       const { rejectionReason } = req.body;
       const adminId = req.admin?.id || req.user?.id;
       
-       console.log("=== REJECT RETURN DEBUG ===");
-    console.log("Order ID:", orderId);
-    console.log("Rejection reason received:", rejectionReason);
-    console.log("Request body:", req.body);
-    console.log("===========================");
-        if (!rejectionReason || rejectionReason.trim() === "") {
-      return res.status(400).json({
-        success: false,
-        message: "Rejection reason is required"
-      });
-    }
-const order = await returnService.rejectReturn(orderId, adminId, rejectionReason);      
+      console.log("Rejecting return - Order ID:", orderId);
+      console.log("Rejection reason:", rejectionReason);
+      
+      if (!rejectionReason || rejectionReason.trim() === "") {
+        return res.status(400).json({
+          success: false,
+          message: "Rejection reason is required"
+        });
+      }
+      
+      const order = await returnService.rejectReturn(orderId, adminId, rejectionReason);      
+      
       res.status(200).json({
         success: true,
         message: "Return request rejected",
         order
       });
     } catch (error) {
+      console.error("Reject return error:", error);
       res.status(400).json({
         success: false,
         message: error.message
@@ -88,30 +90,30 @@ const order = await returnService.rejectReturn(orderId, adminId, rejectionReason
   
   // Admin: Get all return requests
   async getReturnRequests(req, res) {
-  try {
-    const { status } = req.query;
-    console.log("Fetching return requests with status:", status);
+    try {
+      const { status } = req.query;
+      console.log("Fetching return requests with status:", status);
 
-    // Map frontend status to backend status
-    let backendStatus = status;
-    if (status === "pending") backendStatus = "pending";
-    else if (status === "approved") backendStatus = "approved";
-    else if (status === "rejected") backendStatus = "rejected";
-    
-    const returns = await returnService.getReturnRequests(backendStatus);
-    console.log(`Found ${returns.length} return requests`);
+      let backendStatus = status;
+      if (status === "pending") backendStatus = "pending";
+      else if (status === "approved") backendStatus = "approved";
+      else if (status === "rejected") backendStatus = "rejected";
+      
+      const returns = await returnService.getReturnRequests(backendStatus);
+      console.log(`Found ${returns.length} return requests`);
 
-    res.status(200).json({
-      success: true,
-      data: returns
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+      res.status(200).json({
+        success: true,
+        data: returns
+      });
+    } catch (error) {
+      console.error("Get return requests error:", error);
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+    }
   }
-}
   
   // User: Get my returns
   async getUserReturns(req, res) {
@@ -124,6 +126,7 @@ const order = await returnService.rejectReturn(orderId, adminId, rejectionReason
         data: returns
       });
     } catch (error) {
+      console.error("Get user returns error:", error);
       res.status(500).json({
         success: false,
         message: error.message

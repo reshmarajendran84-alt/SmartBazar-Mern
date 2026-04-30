@@ -3,6 +3,12 @@ import { Link } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
 import { getProducts } from "../services/productService";
 import { getCategories } from "../services/categoryService";
+import BannerCarousel from "../components/BannerCarousel";
+
+import "swiper/css";
+import "swiper/css/pagination";
+import "swiper/css/navigation";
+import "swiper/css/effect-fade";
 
 const SkeletonCard = () => (
   <div className="bg-white rounded-xl shadow-sm p-4 animate-pulse space-y-3">
@@ -39,30 +45,9 @@ function HomePage() {
   return (
     <div className="bg-gray-100 min-h-screen">
 
-      {/* ─── HERO SECTION ─── */}
+      {/* ─── BANNER CAROUSEL ─── */}
       <section className="px-4 md:px-8 mt-6">
-        <div className="relative h-52 sm:h-64 md:h-80 rounded-2xl overflow-hidden shadow-lg">
-
-          {/* Background Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-700 via-purple-600 to-pink-500" />
-
-          {/* Content */}
-          <div className="relative z-10 flex flex-col items-center justify-center h-full text-white text-center px-4">
-            <h1 className="text-3xl md:text-5xl font-extrabold mb-3">
-              SmartBazar
-            </h1>
-            <p className="text-sm md:text-lg opacity-90 mb-5">
-              Discover amazing deals on top products 🚀
-            </p>
-
-            <Link
-              to="/products"
-              className="bg-white text-indigo-600 font-semibold px-6 py-2 rounded-full shadow hover:scale-105 transition"
-            >
-              Shop Now →
-            </Link>
-          </div>
-        </div>
+        <BannerCarousel />
       </section>
 
       {/* ─── CATEGORIES ─── */}
@@ -70,7 +55,6 @@ function HomePage() {
         <h2 className="text-lg font-semibold text-gray-700 mb-4">
           Shop by Category
         </h2>
-
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           <Link
             to="/products"
@@ -78,7 +62,6 @@ function HomePage() {
           >
             All
           </Link>
-
           {categories.map((cat) => (
             <Link
               key={cat._id}
@@ -94,9 +77,7 @@ function HomePage() {
       {/* ─── FEATURED PRODUCTS ─── */}
       <section className="px-4 md:px-8 mt-10 pb-12">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">
-            Featured Products
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-800">Featured Products</h2>
           <Link
             to="/products"
             className="text-indigo-600 text-sm font-medium hover:underline"
@@ -112,9 +93,7 @@ function HomePage() {
             ))}
           </div>
         ) : products.length === 0 ? (
-          <p className="text-gray-400 text-center py-10">
-            No products available
-          </p>
+          <p className="text-gray-400 text-center py-10">No products available</p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {products.slice(0, 8).map((product) => (
@@ -128,18 +107,16 @@ function HomePage() {
 
       {/* ─── PROMO SECTION ─── */}
       <section className="px-4 md:px-8 pb-12">
-        <div className="bg-white rounded-2xl shadow p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="bg-gradient-to-r from-indigo-700 via-purple-600 to-pink-500 rounded-2xl shadow p-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div>
-            <h3 className="text-xl font-bold text-gray-800">
-              Special Offer 🎉
-            </h3>
-            <p className="text-sm text-gray-500">
+            <h3 className="text-xl font-bold text-white">Special Offer 🎉</h3>
+            <p className="text-sm text-white/80">
               Get up to 50% off on selected items
             </p>
           </div>
           <Link
             to="/products"
-            className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700"
+            className="bg-white text-indigo-600 font-semibold px-6 py-2 rounded-lg hover:bg-gray-100 transition"
           >
             Explore Deals
           </Link>

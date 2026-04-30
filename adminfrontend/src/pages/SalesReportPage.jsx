@@ -94,8 +94,9 @@ export default function SalesReportPage() {
       Items: o.itemCount,
       "Total Quantity": o.totalQuantity,
       Coupon: o.pricing.couponCode || "",
-      "Discount": o.pricing.discount,
-      "Total": o.pricing.total,
+  "Coupon Code": o.coupon || "",           
+  "Coupon Discount": o.discount || 0, 
+  "Total": o.pricing.total,
       "Payment Method": o.paymentMethod,
       Status: o.status,
       "Status Date": o.deliveredAt ? formatDate(o.deliveredAt) : (o.cancelledAt ? formatDate(o.cancelledAt) : ""),
@@ -463,7 +464,7 @@ export default function SalesReportPage() {
                           <th className="px-2 sm:px-3 py-1.5 sm:py-2 text-left">Date</th>
                           <th className="px-2 sm:px-3 py-1.5 sm:py-2 text-left">Customer</th>
                           <th className="px-2 sm:px-3 py-1.5 sm:py-2 text-right">Items</th>
-                          <th className="px-2 sm:px-3 py-1.5 sm:py-2 text-left">Coupon</th>
+                          {/* <th className="px-2 sm:px-3 py-1.5 sm:py-2 text-left">Coupon</th> */}
                           <th className="px-2 sm:px-3 py-1.5 sm:py-2 text-right">Total</th>
                           <th className="px-2 sm:px-3 py-1.5 sm:py-2 text-left">Status</th>
                           <th className="px-2 sm:px-3 py-1.5 sm:py-2 text-left">Status Date</th>
@@ -484,14 +485,30 @@ export default function SalesReportPage() {
                               <div className="text-xs">{o.itemCount} items</div>
                               <div className="text-[9px] sm:text-xs text-gray-500">{o.totalQuantity} qty</div>
                             </td>
-                            <td className="px-2 sm:px-3 py-1.5 sm:py-2">
-                              {o.pricing.couponCode ? (
-                                <div>
-                                  <span className="px-1.5 sm:px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-[9px] sm:text-xs">{o.pricing.couponCode}</span>
-                                  <div className="text-[9px] sm:text-xs text-red-600">-{formatCurrency(o.pricing.couponDiscount)}</div>
-                                </div>
-                              ) : '—'}
-                            </td>
+   <td className="px-2 sm:px-3 py-1.5 sm:py-2">
+  {(() => {
+    const couponCode = o.coupon || o.pricing?.couponCode || "";
+    // discount is top-level in your order model, not inside pricing
+    const couponDiscount = o.discount || 0;
+
+    return couponCode ? (
+      <div className="space-y-0.5">
+        <span className="px-1.5 sm:px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-[9px] sm:text-xs font-mono">
+          {couponCode}
+        </span>
+       <div className="text-[9px] sm:text-xs text-red-600 font-medium">
+          -{formatCurrency(couponDiscount)}
+        </div>
+{/*          ({o.discountPercent || ""}% off)
+        </div> */}
+      </div>
+    ) : couponDiscount > 0 ? (
+      <div className="text-[9px] sm:text-xs text-red-600">
+        -{formatCurrency(couponDiscount)}
+      </div>
+    ) : "—";
+  })()}
+</td>
                             <td className="px-2 sm:px-3 py-1.5 sm:py-2 text-right font-bold text-xs">{formatCurrency(o.pricing.total)}</td>
                             <td className="px-2 sm:px-3 py-1.5 sm:py-2">
                               <span className={`px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-xs font-medium capitalize ${

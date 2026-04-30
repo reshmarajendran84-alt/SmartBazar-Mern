@@ -29,16 +29,19 @@ const WalletPage = () => {
   const getFilteredTransactions = () => {
     if (!wallet?.transactions) return [];
     
-    switch (activeTab) {
-      case "refunds":
-        return wallet.transactions.filter(txn => txn.transactionType === "REFUND");
-      case "payments":
-        return wallet.transactions.filter(txn => txn.transactionType === "PAYMENT");
-      
-      default:
-        return wallet.transactions;
-    }
-  };
+    let txns = [];
+  switch (activeTab) {
+    case "refunds":
+      txns = wallet.transactions.filter(txn => txn.transactionType === "REFUND");
+      break;
+    case "payments":
+      txns = wallet.transactions.filter(txn => txn.transactionType === "PAYMENT");
+      break;
+    default:
+      txns = wallet.transactions;
+  }
+  return [...txns].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+};
 
   // Calculate balances
   const refundTransactions = wallet?.transactions?.filter(

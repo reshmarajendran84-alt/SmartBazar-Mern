@@ -165,9 +165,9 @@ const OrderSuccess = () => {
           <div className="flex justify-between">
             <span className="text-gray-500">Payment</span>
             <span className="font-medium">
-              {order.paymentMethod === "COD"
-                ? "Cash on Delivery"
-                : "Online Payment"}
+     {     order.paymentMethod === "COD" ? "Cash on Delivery" 
+: order.paymentMethod === "WALLET" ? "Wallet Payment"
+: "Online Payment"}
             </span>
           </div>
 
