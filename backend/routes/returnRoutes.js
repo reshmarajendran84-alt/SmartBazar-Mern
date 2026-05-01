@@ -11,7 +11,7 @@ router.get("/my-returns", protect, ReturnController.getUserReturns);
 
 // Admin routes
 router.get("/", adminProtect, ReturnController.getReturnRequests);
-router.post("/:orderId/approve", adminProtect, ReturnController.approveReturn);
+router.post("/approve/:orderId", adminProtect, ReturnController.approveReturn);
 router.post("/:orderId/reject", adminProtect, ReturnController.rejectReturn);
 
 export default router;

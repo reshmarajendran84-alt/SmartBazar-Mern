@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation, EffectFade } from "swiper/modules";
 import api from "../utils/api";
- 
+
 export default function BannerCarousel() {
   const [banners, setBanners] = useState([]);
   const [loading, setLoading] = useState(true);

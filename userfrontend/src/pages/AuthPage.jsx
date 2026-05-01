@@ -211,7 +211,13 @@ function PrimaryButton({ children, onClick, loading }) {
                     : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90"
                   }`}
     >
-      {loading ? "Please wait..." : children}
+      <span className="flex items-center justify-center gap-2">
+        {loading && (
+          <div className="w-4 h-4 border-2 border-white border-t-transparent 
+                          rounded-full animate-spin" />
+        )}
+        {loading ? "Please wait..." : children}
+      </span>
     </button>
   );
 }

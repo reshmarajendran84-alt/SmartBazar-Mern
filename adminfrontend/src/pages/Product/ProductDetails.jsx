@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getProductById } from "../../services/productService";
-// import { useCart } from "../../context/CartContext";
 import toast from "react-hot-toast";
 import { FiArrowLeft, FiShoppingCart } from "react-icons/fi";
 

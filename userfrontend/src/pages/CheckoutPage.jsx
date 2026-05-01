@@ -87,55 +87,49 @@ const CheckoutPage = () => {
   // Function to save inline address to user's profile
   const saveAddressToProfile = async () => {
     if (!saveNewAddress) return null;
-    
-    // Validate address fields
+
     const { name, phone, addressLine, city, state, pincode } = inlineAddress;
     if (!name || !phone || !addressLine || !city || !state || !pincode) {
       return null;
     }
-    
-    // Check if address already exists (by comparing fields)
-    const addressExists = addresses.some(addr => 
-      addr.name === name &&
-      addr.phone === phone &&
-      addr.addressLine === addressLine &&
-      addr.city === city &&
-      addr.state === state &&
-      addr.pincode === pincode
-    );
-    
-    if (addressExists) {
-      // Find the existing address ID
-      const existingAddr = addresses.find(addr => 
+
+    const addressExists = addresses.some(
+      (addr) =>
         addr.name === name &&
         addr.phone === phone &&
         addr.addressLine === addressLine &&
         addr.city === city &&
         addr.state === state &&
         addr.pincode === pincode
+    );
+
+    if (addressExists) {
+      const existingAddr = addresses.find(
+        (addr) =>
+          addr.name === name &&
+          addr.phone === phone &&
+          addr.addressLine === addressLine &&
+          addr.city === city &&
+          addr.state === state &&
+          addr.pincode === pincode
       );
       return existingAddr._id;
     }
-    
+
     try {
-      // Save the new address
       const response = await addAddress(inlineAddress);
       toast.success("Address saved to your profile!");
-      
-      // Refresh addresses list (if refreshAddresses exists)
       if (refreshAddresses) {
         await refreshAddresses();
       }
-      
       return response.data?.address?._id || response._id;
     } catch (error) {
       console.error("Failed to save address:", error);
-      // Don't show error toast here to avoid interrupting checkout
       return null;
     }
   };
 
-  //  VALIDATION
+  // VALIDATION
   const validateOrderData = () => {
     if (!cartItems.length) {
       toast.error("Cart is empty");
@@ -174,7 +168,7 @@ const CheckoutPage = () => {
     return true;
   };
 
-  //ORDER DATA
+  // ORDER DATA
   const getOrderData = (savedAddressId = null) => {
     return {
       cartItems: cartItems.map((item) => ({
@@ -206,13 +200,15 @@ const CheckoutPage = () => {
               state: selectedAddress?.state,
               pincode: selectedAddress?.pincode,
             },
-      addressId: savedAddressId || (addresses.length === 0 ? null : selectedAddressId),
+      addressId:
+        savedAddressId ||
+        (addresses.length === 0 ? null : selectedAddressId),
       coupon: appliedCoupon || "",
       paymentMethod,
     };
   };
 
-  //  PLACE ORDER
+  // PLACE ORDER
   const handlePlaceOrder = async () => {
     if (!validateOrderData()) return;
 
@@ -220,7 +216,6 @@ const CheckoutPage = () => {
     let savedAddressId = null;
 
     try {
-      // If user entered a new address (no saved addresses), save it to profile first
       if (addresses.length === 0 && saveNewAddress) {
         savedAddressId = await saveAddressToProfile();
       }
@@ -292,6 +287,17 @@ const CheckoutPage = () => {
     }
   };
 
+  const isButtonDisabled =
+    loading ||
+    (!selectedAddress && addresses.length > 0) ||
+    (paymentMethod === "WALLET" && walletBalance < total);
+
+  const getButtonLabel = () => {
+    if (paymentMethod === "WALLET")
+      return `Pay with Wallet — ₹${total.toLocaleString("en-IN")}`;
+    return `Place Order — ₹${total.toLocaleString("en-IN")}`;
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 py-10 px-4">
       <div className="max-w-lg mx-auto bg-white rounded-xl shadow-lg p-6">
@@ -343,8 +349,7 @@ const CheckoutPage = () => {
                   className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                 />
               </div>
-              
-              {/* Option to save address to profile */}
+
               <label className="flex items-center gap-2 mt-3 cursor-pointer">
                 <input
                   type="checkbox"
@@ -384,9 +389,9 @@ const CheckoutPage = () => {
                   </div>
                 </label>
               ))}
-              
+
               <button
-                onClick={() => navigate('/profile')}
+                onClick={() => navigate("/profile")}
                 className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-dashed border-gray-300 rounded-lg text-indigo-600 hover:border-indigo-400 hover:bg-indigo-50 transition"
               >
                 <span>+</span>
@@ -396,7 +401,7 @@ const CheckoutPage = () => {
           )}
         </div>
 
-        {/* Order summary */}
+        {/* ORDER SUMMARY */}
         <div className="mb-6 bg-gray-50 rounded-lg p-4 text-sm space-y-2">
           <h3 className="font-semibold mb-2 text-gray-800">Order Summary</h3>
           <div className="flex justify-between">
@@ -425,11 +430,13 @@ const CheckoutPage = () => {
           )}
           <div className="flex justify-between font-bold border-t pt-2 mt-2">
             <span className="text-gray-800">Total</span>
-            <span className="text-indigo-600 text-lg">₹{total.toLocaleString("en-IN")}</span>
+            <span className="text-indigo-600 text-lg">
+              ₹{total.toLocaleString("en-IN")}
+            </span>
           </div>
         </div>
 
-        {/* Payment method */}
+        {/* PAYMENT METHOD */}
         <div className="mb-6">
           <h3 className="font-semibold mb-3">Payment Method</h3>
 
@@ -457,7 +464,9 @@ const CheckoutPage = () => {
             />
             <div>
               <span className="font-medium">Online Payment</span>
-              <p className="text-xs text-gray-500">Credit/Debit Card, UPI, NetBanking</p>
+              <p className="text-xs text-gray-500">
+                Credit/Debit Card, UPI, NetBanking
+              </p>
             </div>
           </label>
 
@@ -496,26 +505,22 @@ const CheckoutPage = () => {
           )}
         </div>
 
+        {/* ✅ PLACE ORDER BUTTON — with spinner */}
         <button
           onClick={handlePlaceOrder}
-          disabled={
-            loading ||
-            (!selectedAddress && addresses.length > 0) ||
-            (paymentMethod === "WALLET" && walletBalance < total)
-          }
+          disabled={isButtonDisabled}
           className={`w-full py-3 rounded-lg font-semibold transition ${
-            loading ||
-            (!selectedAddress && addresses.length > 0) ||
-            (paymentMethod === "WALLET" && walletBalance < total)
-              ? "bg-gray-300 cursor-not-allowed"
+            isButtonDisabled
+              ? "bg-gray-300 cursor-not-allowed text-gray-500"
               : "bg-indigo-600 hover:bg-indigo-700 text-white"
           }`}
         >
-          {loading
-            ? "Processing..."
-            : paymentMethod === "WALLET"
-            ? `Pay with Wallet — ₹${total.toLocaleString("en-IN")}`
-            : `Place Order — ₹${total.toLocaleString("en-IN")}`}
+          <span className="flex items-center justify-center gap-2">
+            {loading && (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            )}
+            {loading ? "Processing..." : getButtonLabel()}
+          </span>
         </button>
       </div>
     </div>
