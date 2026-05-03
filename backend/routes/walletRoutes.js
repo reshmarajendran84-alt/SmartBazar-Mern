@@ -7,9 +7,9 @@ import WalletService from "../services/walletService.js";
 
 const router = express.Router();
 
-router.get("/",        protect, walletController.getWallet);
-router.post("/credit", protect, walletController.creditWallet);
-router.post("/debit",  protect, walletController.debitWallet);
+router.get("/",        protect, WalletController.getWallet);
+router.post("/credit", protect, WalletController.creditWallet);
+router.post("/debit",  protect, WalletController.debitWallet);
 
 router.post("/topup/create", protect, async (req, res) => {
   try {

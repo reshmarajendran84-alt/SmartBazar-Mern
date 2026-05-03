@@ -3,7 +3,7 @@ import CategoryController from "../controllers/categoryController.js";
 
 const router = express.Router();
 
-router.get("/", categoryController.getCategory);
-router.get("/:id", categoryController.getSingleCategory);
+router.get("/", CategoryController.getCategory);
+router.get("/:id", CategoryController.getSingleCategory);
 
 export default router;

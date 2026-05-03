@@ -4,10 +4,10 @@ import adminProtect from "../middlewares/adminProtect.js";
 
 const router = express.Router();
 
-router.post("/",      adminProtect, categoryController.addCategory.bind(categoryController));
-router.get("/",       adminProtect, categoryController.getCategory.bind(categoryController));
-router.put("/:id",    adminProtect, categoryController.updateCategory.bind(categoryController));
-router.delete("/:id", adminProtect, categoryController.deleteCategory.bind(categoryController));
-router.patch("/:id/toggle-status", adminProtect, categoryController.toggleCategoryStatus.bind(categoryController)); 
+router.post("/",      adminProtect, CategoryController.addCategory.bind(CategoryController));
+router.get("/",       adminProtect, CategoryController.getCategory.bind(CategoryController));
+router.put("/:id",    adminProtect, CategoryController.updateCategory.bind(CategoryController));
+router.delete("/:id", adminProtect, CategoryController.deleteCategory.bind(CategoryController));
+router.patch("/:id/toggle-status", adminProtect, CategoryController.toggleCategoryStatus.bind(CategoryController)); 
 
 export default router;
