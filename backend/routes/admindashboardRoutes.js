@@ -1,6 +1,6 @@
 import express from "express";
 import adminProtect from "../middlewares/adminProtect.js";
-import dashboardController from "../controllers/adminDashboardController.js";
+import DashboardController from "../controllers/adminDashboardController.js";
 
 const router = express.Router();
 

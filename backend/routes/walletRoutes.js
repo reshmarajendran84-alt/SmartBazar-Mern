@@ -1,6 +1,6 @@
 import express from "express";
 import {protect} from "../middlewares/authMiddleware.js";
-import walletController from "../controllers/walletController.js";
+import WalletController from "../controllers/walletController.js";
 import razorpay from "../config/razorpay.js";
 import crypto from "crypto";
 import WalletService from "../services/walletService.js";

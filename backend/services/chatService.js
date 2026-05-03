@@ -2,7 +2,7 @@ import Order from "../models/Order.js"
 import Product from "../models/Product.js"
 import getAIReply from "../config/groq.js"
 import Coupon from "../models/Coupon.js";
-import Wallet from "../models/wallet.js"
+import Wallet from "../models/Wallet.js"
 
 class ChatService {
   async getReply(message, userId, aiMode = false) {

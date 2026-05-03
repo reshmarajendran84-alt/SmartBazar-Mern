@@ -1,4 +1,4 @@
-import Wallet from "../models/wallet.js";
+import Wallet from "../models/Wallet.js";
 
 class WalletService {
   async getWallet(userId) {

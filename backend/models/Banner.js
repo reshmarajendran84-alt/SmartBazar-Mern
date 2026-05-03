@@ -1,4 +1,3 @@
-// models/Banner.js
 import mongoose from "mongoose";
 
 const bannerSchema = new mongoose.Schema(

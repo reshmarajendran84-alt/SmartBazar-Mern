@@ -1,5 +1,5 @@
 import express from "express";
-import couponController from "../controllers/couponController.js";
+import CouponController from "../controllers/couponController.js";
 import adminProtect from "../middlewares/adminProtect.js";
 import { protect } from "../middlewares/authMiddleware.js"; 
 
