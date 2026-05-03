@@ -11,7 +11,14 @@ class CouponController {
       res.status(500).json({ message: "Error creating coupon" });
     }
   }
-
+async getActiveCoupons(req, res) {
+  try {
+    const coupons = await couponService.getActiveCoupons();
+    res.json({ coupons });
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching coupons" });
+  }
+}
   async getCoupons(req, res) {
     try {
       const coupons = await couponService.getAllCoupons();

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useCart } from "../context/CartContext";
 import { validateCoupon } from "../services/couponService";
+import AvailableCoupons from "../components/AvailableCoupons"; // adjust path as needed
 
 const CartPage = () => {
   const { cart, loading, handleUpdate, handleRemove } = useCart();
@@ -13,7 +14,7 @@ const CartPage = () => {
 
   const navigate = useNavigate();
 
-  //  Reset coupon when cart changes
+  // Reset coupon when cart changes
   useEffect(() => {
     setDiscount(0);
     setAppliedCoupon(null);
@@ -27,10 +28,9 @@ const CartPage = () => {
     );
   }
 
-  //  Normalize item
+  // Normalize item
   const normalizeItem = (item) => {
     if (item.productId && typeof item.productId === "object") return item;
-
     return {
       ...item,
       productId: {
@@ -41,21 +41,18 @@ const CartPage = () => {
     };
   };
 
-  //  Merge duplicates
+  // Merge duplicates
   const mergeDuplicates = (items) => {
     const map = {};
-
     for (const item of items) {
       const id = item.productId?._id || item.productId;
       if (!id) continue;
-
       if (map[id]) {
         map[id].quantity += item.quantity;
       } else {
         map[id] = { ...item };
       }
     }
-
     return Object.values(map);
   };
 
@@ -63,56 +60,53 @@ const CartPage = () => {
     (cart.items?.filter((i) => i.productId) || []).map(normalizeItem)
   );
 
-  // 💰 Calculations
+  // Calculations
   const subtotal = validItems.reduce(
     (acc, item) => acc + item.price * item.quantity,
     0
   );
-
   const shipping = validItems.length ? 100 : 0;
   const tax = validItems.length ? 50 : 0;
-
   const totalBeforeDiscount = subtotal + shipping + tax;
   const finalTotal = Math.max(totalBeforeDiscount - discount, 0);
 
-  //  Apply Coupon
-  const handleApplyCoupon = async () => {
-    if (!couponCode) return toast.warning("Enter coupon code");
+  // Apply Coupon (shared between manual input and AvailableCoupons click)
+  const applyCoupon = async (code) => {
+    const trimmedCode = code.trim().toUpperCase();
+    if (!trimmedCode) return toast.warning("Enter coupon code");
 
     try {
       const res = await validateCoupon({
-        code: couponCode.trim(),
+        code: trimmedCode,
         subtotal,
-        cartItems: validItems, 
+        cartItems: validItems,
       });
 
       const value = Number(res.data?.discount || 0);
-
       setDiscount(value);
-      setAppliedCoupon(couponCode);
-
+      setAppliedCoupon(trimmedCode);
+      setCouponCode(trimmedCode);
       toast.success(`Saved ₹${value} 🎉`);
     } catch (err) {
       console.log("Coupon Error:", err.response?.data);
       setDiscount(0);
-
-      toast.error(
-        err.response?.data?.message || "Invalid or expired coupon"
-      );
+      toast.error(err.response?.data?.message || "Invalid or expired coupon");
     }
   };
 
-  //  Remove Coupon
+  // Triggered from the manual input Apply button
+  const handleApplyCoupon = () => applyCoupon(couponCode);
+
+  // Remove Coupon
   const handleRemoveCoupon = () => {
     setDiscount(0);
     setAppliedCoupon(null);
     setCouponCode("");
   };
 
-  //  Checkout
+  // Checkout
   const handleCheckout = () => {
     if (!validItems.length) return toast.warning("Cart is empty");
-
     navigate("/checkout", {
       state: {
         cartItems: validItems,
@@ -126,13 +120,14 @@ const CartPage = () => {
     });
   };
 
-  //  Empty Cart UI
+  // Empty Cart UI
   if (!validItems.length) {
     return (
       <div className="flex flex-col items-center justify-center h-[70vh] text-center">
         <img
           src="https://cdn-icons-png.flaticon.com/512/2038/2038854.png"
           className="w-32 mb-4 opacity-80"
+          alt="Empty cart"
         />
         <h2 className="text-xl font-semibold text-gray-700 mb-2">
           Your cart is empty
@@ -149,13 +144,11 @@ const CartPage = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen px-4 md:px-8 py-6">
-      <h1 className="text-2xl md:text-3xl font-bold mb-6">
-        Shopping Cart
-      </h1>
+      <h1 className="text-2xl md:text-3xl font-bold mb-6">Shopping Cart</h1>
 
       <div className="grid lg:grid-cols-3 gap-6">
 
-        {/* LEFT */}
+        {/* LEFT — Cart items */}
         <div className="lg:col-span-2 space-y-4">
           {validItems.map((item) => (
             <div
@@ -165,50 +158,37 @@ const CartPage = () => {
               <img
                 src={item.productId.images?.[0] || "/placeholder.png"}
                 className="w-24 h-24 object-cover rounded-lg"
+                alt={item.productId.name}
               />
 
               <div className="flex-1">
                 <h3 className="font-semibold text-gray-800">
                   {item.productId.name}
                 </h3>
+                <p className="text-indigo-600 font-medium mt-1">₹{item.price}</p>
 
-                <p className="text-indigo-600 font-medium mt-1">
-                  ₹{item.price}
-                </p>
-
-                {/* Quantity */}
+                {/* Quantity controls */}
                 <div className="flex items-center gap-2 mt-3">
                   <button
                     onClick={() =>
                       item.quantity > 1 &&
-                      handleUpdate(
-                        item.productId._id,
-                        item.quantity - 1
-                      )
+                      handleUpdate(item.productId._id, item.quantity - 1)
                     }
                     className="w-8 h-8 bg-gray-200 rounded"
                   >
                     -
                   </button>
-
                   <span>{item.quantity}</span>
-
                   <button
                     onClick={() =>
-                      handleUpdate(
-                        item.productId._id,
-                        item.quantity + 1
-                      )
+                      handleUpdate(item.productId._id, item.quantity + 1)
                     }
                     className="w-8 h-8 bg-gray-200 rounded"
                   >
                     +
                   </button>
-
                   <button
-                    onClick={() =>
-                      handleRemove(item.productId._id)
-                    }
+                    onClick={() => handleRemove(item.productId._id)}
                     className="ml-auto text-red-500 text-sm"
                   >
                     Remove
@@ -223,62 +203,73 @@ const CartPage = () => {
           </Link>
         </div>
 
-        {/* RIGHT */}
+        {/* RIGHT — Order Summary */}
         <div className="bg-white p-5 rounded-xl shadow h-fit sticky top-20">
-          <h3 className="font-semibold text-lg mb-4">
-            Order Summary
-          </h3>
+          <h3 className="font-semibold text-lg mb-4">Order Summary</h3>
 
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span>Subtotal</span>
               <span>₹{subtotal}</span>
             </div>
-
             <div className="flex justify-between">
               <span>Shipping</span>
               <span>₹{shipping}</span>
             </div>
-
             <div className="flex justify-between">
               <span>Tax</span>
               <span>₹{tax}</span>
             </div>
 
-            {/* Coupon */}
+            {/* ─── Coupon Section ─── */}
             <div className="mt-3 border p-3 rounded">
               {!appliedCoupon ? (
-                <div className="flex gap-2">
-                  <input
-                    value={couponCode}
-                    onChange={(e) =>
-                      setCouponCode(e.target.value.toUpperCase())
-                    }
-                    placeholder="Coupon"
-                    className="flex-1 border px-2 py-1 rounded"
+                <>
+                  {/* Manual coupon input */}
+                  <div className="flex gap-2">
+                    <input
+                      value={couponCode}
+                      onChange={(e) =>
+                        setCouponCode(e.target.value.toUpperCase())
+                      }
+                      placeholder="Coupon code"
+                      className="flex-1 border px-2 py-1 rounded text-sm"
+                    />
+                    <button
+                      onClick={handleApplyCoupon}
+                      disabled={!couponCode}
+                      className="bg-green-600 text-white px-3 rounded disabled:opacity-50 text-sm"
+                    >
+                      Apply
+                    </button>
+                  </div>
+
+                  {/* Available coupons accordion */}
+                  <AvailableCoupons
+                    subtotal={Number(subtotal)}   
+                    appliedCoupon={appliedCoupon}
+                    onApply={applyCoupon}
+                    onRemove={handleRemoveCoupon}
                   />
-                  <button
-                    onClick={handleApplyCoupon}
-                    disabled={!couponCode}
-                    className="bg-green-600 text-white px-3 rounded disabled:opacity-50"
-                  >
-                    Apply
-                  </button>
-                </div>
+                </>
               ) : (
-                <div className="flex justify-between">
-                  <span className="text-green-600 text-sm">
-                    {appliedCoupon}
-                  </span>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <span className="text-green-600 text-sm font-mono font-semibold">
+                      {appliedCoupon}
+                    </span>
+                    <span className="ml-2 text-xs text-green-500">applied ✓</span>
+                  </div>
                   <button
                     onClick={handleRemoveCoupon}
-                    className="text-red-500 text-xs"
+                    className="text-red-500 text-xs hover:underline"
                   >
                     Remove
                   </button>
                 </div>
               )}
             </div>
+            {/* ─────────────────────── */}
 
             {discount > 0 && (
               <div className="flex justify-between text-green-600">
@@ -304,7 +295,7 @@ const CartPage = () => {
         </div>
       </div>
 
-      {/* MOBILE BAR */}
+      {/* MOBILE bottom bar */}
       <div className="fixed bottom-0 left-0 w-full bg-white p-3 flex justify-between md:hidden shadow">
         <span className="font-bold">₹{finalTotal}</span>
         <button

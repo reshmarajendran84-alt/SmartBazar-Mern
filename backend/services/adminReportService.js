@@ -69,9 +69,16 @@ class ReportService {
       const totalConfirmed = confirmedOrders.length;
       const totalShipped = shippedOrders.length;
       
-      const totalDiscount = mappedOrders.reduce((sum, o) => sum + (o.discount || 0), 0);
-      const totalShipping = mappedOrders.reduce((sum, o) => sum + (o.shipping || 0), 0);
-      const totalTax = mappedOrders.reduce((sum, o) => sum + (o.tax || 0), 0);
+      const totalDiscount = mappedOrders
+  .filter(o => !["Cancelled", "Returned"].includes(o.status))
+  .reduce((sum, o) => sum + (o.discount || 0), 0);
+      const totalShipping = mappedOrders
+  .filter(o => !["Cancelled", "Returned"].includes(o.status))
+  .reduce((sum, o) => sum + (o.shipping || 0), 0);
+
+const totalTax = mappedOrders
+  .filter(o => !["Cancelled", "Returned"].includes(o.status))
+  .reduce((sum, o) => sum + (o.tax || 0), 0);
       
       const totalProductsSold = mappedOrders
         .filter(o => !["Cancelled", "Returned"].includes(o.status))
@@ -95,7 +102,7 @@ class ReportService {
       const cancellationRate = totalOrders > 0 ? ((totalCancelled / totalOrders) * 100).toFixed(1) : 0;
       const returnRate = totalDelivered + totalReturned > 0 ? ((totalReturned / (totalDelivered + totalReturned)) * 100).toFixed(1) : 0;
       const couponsUsed = mappedOrders.filter(o => o.coupon?.trim()).length;
-      const netRevenue = totalRevenue - totalDiscount;
+      const netRevenue = totalRevenue - totalDiscount + totalShipping + totalTax;
 
       // ── FINANCIAL BREAKDOWN ────────────────────────────────────
       const paymentGatewayFees = mappedOrders.reduce((sum, o) => {

@@ -86,14 +86,23 @@ const CheckoutPage = () => {
 
   // Function to save inline address to user's profile
   const saveAddressToProfile = async () => {
-    if (!saveNewAddress) return null;
+  if (!saveNewAddress) return null;
 
-    const { name, phone, addressLine, city, state, pincode } = inlineAddress;
-    if (!name || !phone || !addressLine || !city || !state || !pincode) {
-      return null;
-    }
+  const { name, phone, addressLine, city, state, pincode } = inlineAddress;
+  if (!name || !phone || !addressLine || !city || !state || !pincode) return null;
 
-    const addressExists = addresses.some(
+  const addressExists = addresses.some(
+    (addr) =>
+      addr.name === name &&
+      addr.phone === phone &&
+      addr.addressLine === addressLine &&
+      addr.city === city &&
+      addr.state === state &&
+      addr.pincode === pincode
+  );
+
+  if (addressExists) {
+    const existingAddr = addresses.find(
       (addr) =>
         addr.name === name &&
         addr.phone === phone &&
@@ -102,33 +111,28 @@ const CheckoutPage = () => {
         addr.state === state &&
         addr.pincode === pincode
     );
+    return existingAddr._id;
+  }
 
-    if (addressExists) {
-      const existingAddr = addresses.find(
-        (addr) =>
-          addr.name === name &&
-          addr.phone === phone &&
-          addr.addressLine === addressLine &&
-          addr.city === city &&
-          addr.state === state &&
-          addr.pincode === pincode
-      );
-      return existingAddr._id;
-    }
+  try {
+    const response = await addAddress(inlineAddress);
+    console.log("addAddress response:", response); // ✅ check exact shape
+    toast.success("Address saved to your profile!");
+    if (refreshAddresses) await refreshAddresses();
 
-    try {
-      const response = await addAddress(inlineAddress);
-      toast.success("Address saved to your profile!");
-      if (refreshAddresses) {
-        await refreshAddresses();
-      }
-      return response.data?.address?._id || response._id;
-    } catch (error) {
-      console.error("Failed to save address:", error);
-      return null;
-    }
-  };
-
+    // ✅ handle all possible response shapes
+    return (
+      response?.data?.address?._id ||
+      response?.address?._id ||
+      response?.data?._id ||
+      response?._id ||
+      null
+    );
+  } catch (error) {
+    console.error("Failed to save address:", error);
+    return null; // ✅ don't crash, just skip saving address
+  }
+};
   // VALIDATION
   const validateOrderData = () => {
     if (!cartItems.length) {

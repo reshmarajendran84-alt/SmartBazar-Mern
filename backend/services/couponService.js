@@ -8,6 +8,16 @@ class couponService{
    async getAllCoupons(){
     return Coupon.find();
    }
+
+   async getActiveCoupons() {
+  return Coupon.find({
+    isActive: true,
+    expiryDate: { $gt: new Date() },
+  }).select("code discountPercent minOrderAmount expiryDate");
+console.log("Active coupons from DB:", coupons); 
+  return coupons;
+}
+
    async updateCoupon(id,data){
     return Coupon.findByIdAndUpdate(id,data,{new:true});
    }

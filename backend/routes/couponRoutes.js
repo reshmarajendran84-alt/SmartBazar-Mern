@@ -4,6 +4,7 @@ import adminProtect from "../middlewares/adminProtect.js";
 import { protect } from "../middlewares/authMiddleware.js"; 
 
 const router = express.Router();
+router.get("/active", protect, couponController.getActiveCoupons);
 router.post("/validate", protect, couponController.validateCoupon);
 
 router.post("/", adminProtect, couponController.createCoupon);
