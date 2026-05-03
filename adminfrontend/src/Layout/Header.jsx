@@ -77,7 +77,7 @@ const Header = ({ setOpen }) => {
                   <p className="text-sm font-semibold text-gray-800">Admin User</p>
                   <p className="text-xs text-gray-500 truncate">admin@smartbazar.com</p>
                 </div>
-                <button
+                {/* <button
                   onClick={() => {
                     setShowProfileMenu(false);
                     navigate("/settings");
@@ -89,7 +89,7 @@ const Header = ({ setOpen }) => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                   Settings
-                </button>
+                </button> */}
                 <button
                   onClick={() => {
                     setShowProfileMenu(false);

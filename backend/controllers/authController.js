@@ -21,7 +21,7 @@ class AuthController {
     console.error("sendSignupOtp error:", err.message); 
     res.status(400).json({ message: err.message });
   }
-}
+} 
   async verifyOtp(req, res) {
     try {
       const { email, otp } = req.body;

@@ -89,11 +89,20 @@ const SingleProduct = () => {
     setAddingToCart(false);
   };
 
-  const handleBuyNow = async () => {
-    await handleAdd(product);
-    navigate("/cart");
-  };
-
+  const handleBuyNow = () => {
+  navigate("/checkout", {
+    state: {
+      buyNowItem: {
+        productId: product._id,
+        name: product.name,
+        price: product.price,
+        image: product.images?.[0],
+        quantity: 1,
+        stock: product.stock,
+      },
+    },
+  });
+};
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center">

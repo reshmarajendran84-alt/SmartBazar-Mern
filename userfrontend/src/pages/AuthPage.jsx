@@ -82,17 +82,21 @@ if (res.data.flow === "LOGIN") {
 
   // VERIFY OTP
   const verifyOtp = async () => {
-    try {
-      setLoading(true);
-      await api.post("/auth/verify-otp", { email, otp });
-      toast.success("OTP verified successfully ✅");
-      setStep("SET_PASSWORD");
-    } catch {
-      toast.error("Invalid OTP");
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (!otp.trim()) return toast.warning("Please enter the OTP");
+  try {
+    setLoading(true);
+    await api.post("/auth/verify-otp", { email, otp });
+    toast.success("OTP verified successfully ✅");
+    setOtp("");
+    setStep("SET_PASSWORD");
+  } catch (err) {
+    const msg = err.response?.data?.message || "Invalid OTP";
+    toast.error(msg);
+    setOtp(""); // clear OTP field so user can re-enter
+  } finally {
+    setLoading(false);
+  }
+};
 
   // SET PASSWORD
   const setPasswordFn = async () => {

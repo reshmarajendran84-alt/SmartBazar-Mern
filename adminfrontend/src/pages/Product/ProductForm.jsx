@@ -27,10 +27,10 @@ const ProductForm = ({ onClose, refresh, editData }) => {
   const loadCategories = async () => {
     try {
       const { data } = await getCategories();
-      setCategories(Array.isArray(data) ? data : []);
-    } catch {}
-  };
-
+    const all = Array.isArray(data) ? data : data.categories || [];
+       setCategories(all.filter(c => c.isActive));
+     } catch {}
+};
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleImageChange = (e) => {

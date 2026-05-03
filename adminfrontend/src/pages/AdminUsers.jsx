@@ -1,400 +1,456 @@
 import { useEffect, useState } from "react";
 import api from "../utils/api";
 import { toast } from "react-hot-toast";
-import { 
-  Search, UserCheck, UserX, Mail, Phone, Calendar, 
-  Trash2, Eye, RefreshCw, MapPin, Star, ShoppingBag,
-  ChevronLeft, ChevronRight, Filter, X
+import {
+  Search, UserCheck, UserX, Mail, Phone, Calendar,
+  Trash2, Eye, RefreshCw, MapPin, ShoppingBag,
+  ChevronLeft, ChevronRight, X, AlertTriangle
 } from "lucide-react";
 
 const AdminUsers = () => {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [users, setUsers]               = useState([]);
+  const [loading, setLoading]           = useState(true);
+  const [searchTerm, setSearchTerm]     = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
-  const [showUserModal, setShowUserModal] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(12);
-  const [filterRole, setFilterRole] = useState("all");
+  const [showUserModal, setShowUserModal]     = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [userToDelete, setUserToDelete]       = useState(null);
+  const [deletingId, setDeletingId]           = useState(null);
+  const [currentPage, setCurrentPage]   = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/users"); 
+      const response = await api.get("/users");
       const usersData = response.data.users || response.data;
       setUsers(Array.isArray(usersData) ? usersData : []);
     } catch (error) {
-      console.error("Error fetching users:", error);
       toast.error(error.response?.data?.message || "Failed to load users");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  useEffect(() => { fetchUsers(); }, []);
 
   const getUserName = (user) => {
-    if (user.name && user.name.trim()) return user.name;
-    const defaultAddress = user.addresses?.find(addr => addr.isDefault);
-    if (defaultAddress?.name) return defaultAddress.name;
-    if (user.addresses?.[0]?.name) return user.addresses[0].name;
-    if (user.email) return user.email.split('@')[0];
-    return "Guest User";
+    if (user.name?.trim()) return user.name;
+    const def = user.addresses?.find(a => a.isDefault) || user.addresses?.[0];
+    if (def?.name) return def.name;
+    return user.email?.split("@")[0] || "Guest User";
   };
 
   const getUserPhone = (user) => {
-    const defaultAddress = user.addresses?.find(addr => addr.isDefault);
-    if (defaultAddress?.phone) return defaultAddress.phone;
-    if (user.addresses?.[0]?.phone) return user.addresses[0].phone;
-    return null;
+    const def = user.addresses?.find(a => a.isDefault) || user.addresses?.[0];
+    return def?.phone || null;
   };
 
-  const handleDeleteUser = async (userId, userName) => {
-    if (!window.confirm(`Delete user "${userName}" permanently?`)) return;
-    try {
-      await api.delete(`/users/${userId}`);
-      toast.success("User deleted");
-      fetchUsers();
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Delete failed");
-    }
+  const getUserInitials = (name) => {
+    if (!name || name === "Guest User") return "?";
+    return name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
   };
-
-  const filteredUsers = users.filter(user => {
-    const searchLower = searchTerm.toLowerCase();
-    const userName = getUserName(user).toLowerCase();
-    const userPhone = (getUserPhone(user) || "").toLowerCase();
-    const matchesSearch = userName.includes(searchLower) ||
-      user.email?.toLowerCase().includes(searchLower) ||
-      userPhone.includes(searchLower);
-    
-    const matchesRole = filterRole === "all" || 
-      (filterRole === "user" && (!user.role || user.role === "user"));
-    
-    return matchesSearch && matchesRole;
-  });
-
-  // Pagination
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentUsers = filteredUsers.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
 
   const formatDate = (date) => {
     if (!date) return "N/A";
     return new Date(date).toLocaleDateString("en-IN", {
-      day: "numeric", month: "short", year: "numeric"
+      day: "numeric", month: "short", year: "numeric",
     });
   };
 
-  const getUserInitials = (name) => {
-    if (!name || name === "Guest User") return "👤";
-    return name.split(" ").map(word => word[0]).join("").toUpperCase().slice(0, 2);
+  const confirmDelete = (user) => {
+    setUserToDelete(user);
+    setShowDeleteModal(true);
   };
 
-  if (loading) {
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+    try {
+      setDeletingId(userToDelete._id);
+      await api.delete(`/users/${userToDelete._id}`);
+      toast.success("User deleted");
+      setShowDeleteModal(false);
+      setUserToDelete(null);
+      fetchUsers();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Delete failed");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  // Filter + paginate
+  const filtered = users.filter(user => {
+    const q = searchTerm.toLowerCase();
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-500">Loading users...</p>
-        </div>
-      </div>
+      getUserName(user).toLowerCase().includes(q) ||
+      user.email?.toLowerCase().includes(q) ||
+      (getUserPhone(user) || "").includes(q)
     );
-  }
+  });
+
+  const totalPages     = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginated      = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const startIdx       = (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const endIdx         = Math.min(currentPage * ITEMS_PER_PAGE, filtered.length);
+
+  // Reset to page 1 on search
+  const handleSearch = (val) => { setSearchTerm(val); setCurrentPage(1); };
+
+  // Page numbers to show
+  const getPageNumbers = () => {
+    const pages = [];
+    const delta = 2;
+    for (let i = Math.max(1, currentPage - delta); i <= Math.min(totalPages, currentPage + delta); i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
+
+  if (loading) return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mx-auto" />
+        <p className="mt-3 text-sm text-gray-500">Loading users...</p>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto space-y-5">
+
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
-              User Management
-            </h1>
-            <p className="text-sm text-gray-500 mt-1">Manage and monitor all registered users</p>
+            <h1 className="text-2xl font-bold text-gray-800">User Management</h1>
+            <p className="text-sm text-gray-500 mt-0.5">Manage all registered users</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             <button
               onClick={fetchUsers}
-              className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition flex items-center gap-2"
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition"
             >
-              <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+              <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
               Refresh
             </button>
-            <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-              <span className="text-sm text-gray-500">Total: </span>
+            <div className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm">
+              <span className="text-gray-500">Total: </span>
               <span className="font-semibold text-indigo-600">{users.length}</span>
             </div>
           </div>
         </div>
 
-        {/* Search and Filter */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                type="text"
-                placeholder="Search by name, email, or phone..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-            <div className="flex gap-2">
-              {["all"].map(role => (
-                <button
-                  key={role}
-                  onClick={() => setFilterRole(role)}
-                  className={`px-4 py-2 rounded-lg text-sm capitalize transition ${
-                    filterRole === role
-                      ? "bg-indigo-600 text-white shadow"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  {role === "all" ? "All Users" : role + "s"}
-                </button>
-              ))}
-            </div>
+        {/* Search */}
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+            <input
+              type="text"
+              placeholder="Search by name, email or phone..."
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            {searchTerm && (
+              <button onClick={() => handleSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                <X size={15} />
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Users Grid */}
-        {filteredUsers.length === 0 ? (
-          <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
-            <UserX className="mx-auto text-gray-400 mb-4" size={48} />
-            <p className="text-gray-500 text-lg">No users found</p>
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {currentUsers.map((user) => {
-                const displayName = getUserName(user);
-                const displayPhone = getUserPhone(user);
-                
-                return (
-                  <div
-                    key={user._id}
-                    className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 overflow-hidden group"
-                  >
-                    <div className="p-5">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center text-white font-semibold text-lg">
-                            {getUserInitials(displayName)}
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-800">{displayName}</h3>
-                            <p className="text-xs text-gray-400 font-mono">#{user._id?.slice(-8)}</p>
-                          </div>
-                        </div>
-                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                          <button
-                            onClick={() => {
-                              setSelectedUser(user);
-                              setShowUserModal(true);
-                            }}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                            title="View Details"
-                          >
-                            <Eye size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteUser(user._id, displayName)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                            title="Delete User"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Mail size={14} className="text-gray-400 flex-shrink-0" />
-                          <span className="text-gray-600 truncate">{user.email || "No email"}</span>
-                        </div>
-                        
-                        {displayPhone && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <Phone size={14} className="text-gray-400 flex-shrink-0" />
-                            <span className="text-gray-600">{displayPhone}</span>
-                          </div>
-                        )}
-                        
-                        <div className="flex items-center gap-2 text-sm">
-                          <Calendar size={14} className="text-gray-400 flex-shrink-0" />
-                          <span className="text-gray-600">{formatDate(user.createdAt)}</span>
-                        </div>
-                      </div>
-
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        
-                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                          user.isVerified 
-                            ? "bg-green-100 text-green-700" 
-                            : "bg-yellow-100 text-yellow-700"
-                        }`}>
-                          {user.isVerified ? <UserCheck size={12} /> : <UserX size={12} />}
-                          {user.isVerified ? "Verified" : "Unverified"}
-                        </span>
-                        {user.addresses && user.addresses.length > 0 && (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                            <MapPin size={12} />
-                            {user.addresses.length} Address{user.addresses.length !== 1 ? 'es' : ''}
-                          </span>
-                        )}
-                        {user.totalOrders > 0 && (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
-                            <ShoppingBag size={12} />
-                            {user.totalOrders} Orders
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+        {/* Table */}
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          {filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+              <UserX size={40} className="mb-3" />
+              <p className="text-sm">No users found</p>
             </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-100">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      {["User", "Email", "Phone", "Joined", "Status", "Addresses", "Actions"].map(col => (
+                        <th key={col} className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          {col}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {paginated.map((user) => {
+                      const name  = getUserName(user);
+                      const phone = getUserPhone(user);
+                      return (
+                        <tr key={user._id} className="hover:bg-gray-50 transition">
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
-                <p className="text-sm text-gray-500">
-                  Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredUsers.length)} of {filteredUsers.length} users
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
-                    className="p-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                  >
-                    <ChevronLeft size={18} />
-                  </button>
-                  {[...Array(Math.min(totalPages, 5))].map((_, i) => {
-                    let pageNum;
-                    if (totalPages <= 5) pageNum = i + 1;
-                    else if (currentPage <= 3) pageNum = i + 1;
-                    else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
-                    else pageNum = currentPage - 2 + i;
-                    
-                    return (
+                          {/* User */}
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+                                {getUserInitials(name)}
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-gray-800">{name}</p>
+                                <p className="text-[11px] text-gray-400 font-mono">#{user._id?.slice(-8)}</p>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Email */}
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                              <Mail size={13} className="text-gray-400 flex-shrink-0" />
+                              <span className="truncate max-w-[180px]">{user.email || "—"}</span>
+                            </div>
+                          </td>
+
+                          {/* Phone */}
+                          <td className="px-4 py-3">
+                            {phone ? (
+                              <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                                <Phone size={13} className="text-gray-400 flex-shrink-0" />
+                                {phone}
+                              </div>
+                            ) : (
+                              <span className="text-gray-300 text-sm">—</span>
+                            )}
+                          </td>
+
+                          {/* Joined */}
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                              <Calendar size={13} className="text-gray-400 flex-shrink-0" />
+                              {formatDate(user.createdAt)}
+                            </div>
+                          </td>
+
+                          {/* Status */}
+                          <td className="px-4 py-3">
+                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                              user.isVerified
+                                ? "bg-green-100 text-green-700"
+                                : "bg-yellow-100 text-yellow-700"
+                            }`}>
+                              {user.isVerified ? <UserCheck size={11} /> : <UserX size={11} />}
+                              {user.isVerified ? "Verified" : "Unverified"}
+                            </span>
+                          </td>
+
+                          {/* Addresses */}
+                          <td className="px-4 py-3">
+                            {user.addresses?.length > 0 ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                <MapPin size={11} />
+                                {user.addresses.length}
+                              </span>
+                            ) : (
+                              <span className="text-gray-300 text-sm">—</span>
+                            )}
+                          </td>
+
+                          {/* Actions */}
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => { setSelectedUser(user); setShowUserModal(true); }}
+                                className="p-1.5 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 transition"
+                                title="View"
+                              >
+                                <Eye size={14} />
+                              </button>
+                              <button
+                                onClick={() => confirmDelete(user)}
+                                className="p-1.5 rounded-md bg-red-50 text-red-600 hover:bg-red-100 transition"
+                                title="Delete"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </td>
+
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-gray-100 bg-gray-50">
+                  <p className="text-xs text-gray-500">
+                    Showing <span className="font-medium">{startIdx}</span> to <span className="font-medium">{endIdx}</span> of <span className="font-medium">{filtered.length}</span> users
+                  </p>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+                      disabled={currentPage === 1}
+                      className="p-1.5 rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+
+                    {currentPage > 3 && (
+                      <>
+                        <button onClick={() => setCurrentPage(1)} className="px-3 py-1.5 rounded-lg text-xs border border-gray-200 bg-white text-gray-600 hover:bg-gray-50">1</button>
+                        {currentPage > 4 && <span className="px-1 text-gray-400 text-xs">…</span>}
+                      </>
+                    )}
+
+                    {getPageNumbers().map(n => (
                       <button
-                        key={i}
-                        onClick={() => setCurrentPage(pageNum)}
-                        className={`px-3 py-1.5 rounded-lg text-sm transition ${
-                          currentPage === pageNum
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                        key={n}
+                        onClick={() => setCurrentPage(n)}
+                        className={`px-3 py-1.5 rounded-lg text-xs border transition ${
+                          currentPage === n
+                            ? "bg-indigo-600 text-white border-indigo-600"
+                            : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
                         }`}
                       >
-                        {pageNum}
+                        {n}
                       </button>
-                    );
-                  })}
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                    disabled={currentPage === totalPages}
-                    className="p-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                  >
-                    <ChevronRight size={18} />
-                  </button>
+                    ))}
+
+                    {currentPage < totalPages - 2 && (
+                      <>
+                        {currentPage < totalPages - 3 && <span className="px-1 text-gray-400 text-xs">…</span>}
+                        <button onClick={() => setCurrentPage(totalPages)} className="px-3 py-1.5 rounded-lg text-xs border border-gray-200 bg-white text-gray-600 hover:bg-gray-50">{totalPages}</button>
+                      </>
+                    )}
+
+                    <button
+                      onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className="p-1.5 rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </>
-        )}
+              )}
+            </>
+          )}
+        </div>
       </div>
 
-      {/* User Details Modal */}
-      {showUserModal && selectedUser && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">User Details</h2>
-              <button onClick={() => setShowUserModal(false)} className="p-1 hover:bg-gray-100 rounded-lg">
-                <X size={20} />
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && userToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+            <div className="flex flex-col items-center text-center gap-3">
+              <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center">
+                <AlertTriangle size={26} className="text-red-600" />
+              </div>
+              <h2 className="text-base font-semibold text-gray-800">Delete User?</h2>
+              <p className="text-sm text-gray-500">
+                You're about to permanently delete{" "}
+                <span className="font-semibold text-gray-700">{getUserName(userToDelete)}</span>.
+                This action cannot be undone.
+              </p>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => { setShowDeleteModal(false); setUserToDelete(null); }}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteUser}
+                disabled={!!deletingId}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition disabled:opacity-50"
+              >
+                {deletingId ? "Deleting..." : "Yes, Delete"}
               </button>
             </div>
-            <div className="p-6 space-y-6">
-              {/* User Info */}
+          </div>
+        </div>
+      )}
+
+      {/* User Detail Modal */}
+      {showUserModal && selectedUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-4 flex items-center justify-between">
+              <h2 className="text-base font-semibold text-gray-800">User Details</h2>
+              <button onClick={() => setShowUserModal(false)} className="p-1.5 hover:bg-gray-100 rounded-lg transition">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-5 space-y-5">
+
+              {/* Avatar + name */}
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center text-white text-2xl font-bold">
                   {getUserInitials(getUserName(selectedUser))}
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold">{getUserName(selectedUser)}</h3>
-                  <p className="text-gray-500">{selectedUser.email}</p>
+                  <h3 className="text-lg font-bold text-gray-800">{getUserName(selectedUser)}</h3>
+                  <p className="text-sm text-gray-500">{selectedUser.email}</p>
                   <p className="text-xs text-gray-400 font-mono">ID: {selectedUser._id}</p>
                 </div>
               </div>
 
-              {/* Details Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <p className="text-xs font-medium text-gray-500 uppercase">Account Info</p>
-                  <div className="bg-gray-50 rounded-lg p-3 space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-500">Role:</span>
-                      <span className="text-sm font-medium capitalize">{selectedUser.role || "User"}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-500">Verified:</span>
-                      <span className={`text-sm font-medium ${selectedUser.isVerified ? 'text-green-600' : 'text-yellow-600'}`}>
-                        {selectedUser.isVerified ? "Yes" : "No"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-500">Joined:</span>
-                      <span className="text-sm">{formatDate(selectedUser.createdAt)}</span>
-                    </div>
+              {/* Info grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Account Info</p>
+                  <div className="bg-gray-50 rounded-xl p-3 space-y-2">
+                    {[
+                      { label: "Role", val: selectedUser.role || "User" },
+                      { label: "Verified", val: selectedUser.isVerified ? "Yes" : "No", cls: selectedUser.isVerified ? "text-green-600" : "text-yellow-600" },
+                      { label: "Joined", val: formatDate(selectedUser.createdAt) },
+                    ].map(r => (
+                      <div key={r.label} className="flex justify-between">
+                        <span className="text-xs text-gray-500">{r.label}</span>
+                        <span className={`text-xs font-medium capitalize ${r.cls || "text-gray-700"}`}>{r.val}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-
-                <div className="space-y-2">
-                  <p className="text-xs font-medium text-gray-500 uppercase">Statistics</p>
-                  <div className="bg-gray-50 rounded-lg p-3 space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-500">Total Orders:</span>
-                      <span className="text-sm font-medium">{selectedUser.totalOrders || 0}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-500">Total Spent:</span>
-                      <span className="text-sm font-medium">₹{selectedUser.totalSpent?.toLocaleString() || 0}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-500">Addresses:</span>
-                      <span className="text-sm font-medium">{selectedUser.addresses?.length || 0}</span>
-                    </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Statistics</p>
+                  <div className="bg-gray-50 rounded-xl p-3 space-y-2">
+                    {[
+                      { label: "Total Orders", val: selectedUser.totalOrders || 0 },
+                      { label: "Total Spent", val: `₹${(selectedUser.totalSpent || 0).toLocaleString("en-IN")}` },
+                      { label: "Addresses", val: selectedUser.addresses?.length || 0 },
+                    ].map(r => (
+                      <div key={r.label} className="flex justify-between">
+                        <span className="text-xs text-gray-500">{r.label}</span>
+                        <span className="text-xs font-medium text-gray-700">{r.val}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
 
               {/* Addresses */}
-              {selectedUser.addresses && selectedUser.addresses.length > 0 && (
+              {selectedUser.addresses?.length > 0 && (
                 <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase mb-2">Saved Addresses</p>
+                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Saved Addresses</p>
                   <div className="space-y-2">
                     {selectedUser.addresses.map((addr, idx) => (
-                      <div key={idx} className="bg-gray-50 rounded-lg p-3">
+                      <div key={idx} className="bg-gray-50 rounded-xl p-3">
                         <div className="flex items-center justify-between mb-1">
-                          <p className="font-medium text-sm">{addr.fullName}</p>
+                          <p className="text-sm font-medium text-gray-800">{addr.fullName}</p>
                           {addr.isDefault && (
-                            <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Default</span>
+                            <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Default</span>
                           )}
                         </div>
-                        <p className="text-sm text-gray-600">{addr.addressLine}</p>
-                        <p className="text-sm text-gray-600">{addr.city}, {addr.state} - {addr.pincode}</p>
-                        <p className="text-sm text-gray-500">Phone: {addr.phone}</p>
+                        <p className="text-xs text-gray-500">{addr.addressLine}</p>
+                        <p className="text-xs text-gray-500">{addr.city}, {addr.state} — {addr.pincode}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">📞 {addr.phone}</p>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
+
             </div>
           </div>
         </div>
