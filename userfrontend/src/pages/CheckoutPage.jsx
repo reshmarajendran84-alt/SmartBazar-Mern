@@ -24,16 +24,9 @@ const loadRazorpayScript = () =>
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { cartItems: contextCartItems, fetchCart } = useCart();
-  
-  // Determine if this is a "Buy Now" flow
-  const isBuyNow = !!location.state?.buyNowItem;
-  const orderItems = isBuyNow
-    ? [location.state.buyNowItem]
-    : contextCartItems;
-  
+
   const {
-    cartItems: stateCartItems = [],
+    cartItems = [],
     subtotal = 0,
     shipping = 0,
     tax = 0,
@@ -43,6 +36,7 @@ const CheckoutPage = () => {
   } = location.state || {};
 
   const { addresses = [], addAddress, refreshAddresses } = useAddress();
+  const { fetchCart } = useCart();
 
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("COD");
@@ -87,16 +81,28 @@ const CheckoutPage = () => {
     }
   }, [addresses]);
 
-  const selectedAddress = addresses.find((a) => a._id === selectedAddressId) || null;
+  const selectedAddress =
+    addresses.find((a) => a._id === selectedAddressId) || null;
 
   // Function to save inline address to user's profile
   const saveAddressToProfile = async () => {
-    if (!saveNewAddress) return null;
+  if (!saveNewAddress) return null;
 
-    const { name, phone, addressLine, city, state, pincode } = inlineAddress;
-    if (!name || !phone || !addressLine || !city || !state || !pincode) return null;
+  const { name, phone, addressLine, city, state, pincode } = inlineAddress;
+  if (!name || !phone || !addressLine || !city || !state || !pincode) return null;
 
-    const addressExists = addresses.some(
+  const addressExists = addresses.some(
+    (addr) =>
+      addr.name === name &&
+      addr.phone === phone &&
+      addr.addressLine === addressLine &&
+      addr.city === city &&
+      addr.state === state &&
+      addr.pincode === pincode
+  );
+
+  if (addressExists) {
+    const existingAddr = addresses.find(
       (addr) =>
         addr.name === name &&
         addr.phone === phone &&
@@ -105,43 +111,32 @@ const CheckoutPage = () => {
         addr.state === state &&
         addr.pincode === pincode
     );
+    return existingAddr._id;
+  }
 
-    if (addressExists) {
-      const existingAddr = addresses.find(
-        (addr) =>
-          addr.name === name &&
-          addr.phone === phone &&
-          addr.addressLine === addressLine &&
-          addr.city === city &&
-          addr.state === state &&
-          addr.pincode === pincode
-      );
-      return existingAddr._id;
-    }
+  try {
+    const response = await addAddress(inlineAddress);
+    console.log("addAddress response:", response); // ✅ check exact shape
+    toast.success("Address saved to your profile!");
+    if (refreshAddresses) await refreshAddresses();
 
-    try {
-      const response = await addAddress(inlineAddress);
-      console.log("addAddress response:", response);
-      toast.success("Address saved to your profile!");
-      if (refreshAddresses) await refreshAddresses();
-
-      return (
-        response?.data?.address?._id ||
-        response?.address?._id ||
-        response?.data?._id ||
-        response?._id ||
-        null
-      );
-    } catch (error) {
-      console.error("Failed to save address:", error);
-      return null;
-    }
-  };
-
-  // VALIDATION - Use orderItems instead of cartItems
+    //  handle all possible response shapes
+    return (
+      response?.data?.address?._id ||
+      response?.address?._id ||
+      response?.data?._id ||
+      response?._id ||
+      null
+    );
+  } catch (error) {
+    console.error("Failed to save address:", error);
+    return null; // ✅ don't crash, just skip saving address
+  }
+};
+  // VALIDATION
   const validateOrderData = () => {
-    if (!orderItems.length) {
-      toast.error(isBuyNow ? "Product not found" : "Cart is empty");
+    if (!cartItems.length) {
+      toast.error("Cart is empty");
       return false;
     }
 
@@ -177,42 +172,42 @@ const CheckoutPage = () => {
     return true;
   };
 
-  // ORDER DATA - Use orderItems instead of cartItems
+  // ORDER DATA
   const getOrderData = (savedAddressId = null) => {
-    // Get items from either buy now or cart
-    const itemsToOrder = orderItems.map((item) => ({
-      productId: item.productId?._id || item.productId,
-      name: item.productId?.name || item.name,
-      quantity: item.quantity,
-      price: item.price,
-    }));
-
     return {
-      cartItems: itemsToOrder,
-      subtotal: isBuyNow ? (orderItems[0]?.price || 0) : subtotal,
-      shipping: isBuyNow ? 0 : shipping,
-      tax: isBuyNow ? 0 : tax,
-      discount: isBuyNow ? 0 : discount,
-      total: isBuyNow ? (orderItems[0]?.price || 0) : total,
-      address: addresses.length === 0
-        ? {
-            fullName: inlineAddress.name,
-            phone: inlineAddress.phone,
-            addressLine: inlineAddress.addressLine,
-            city: inlineAddress.city,
-            state: inlineAddress.state,
-            pincode: inlineAddress.pincode,
-          }
-        : {
-            fullName: selectedAddress?.name,
-            phone: selectedAddress?.phone,
-            addressLine: selectedAddress?.addressLine,
-            city: selectedAddress?.city,
-            state: selectedAddress?.state,
-            pincode: selectedAddress?.pincode,
-          },
-      addressId: savedAddressId || (addresses.length === 0 ? null : selectedAddressId),
-      coupon: isBuyNow ? "" : (appliedCoupon || ""),
+      cartItems: cartItems.map((item) => ({
+        productId: item.productId?._id || item.productId,
+        name: item.productId?.name || item.name,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+      subtotal,
+      shipping,
+      tax,
+      discount,
+      total,
+      address:
+        addresses.length === 0
+          ? {
+              fullName: inlineAddress.name,
+              phone: inlineAddress.phone,
+              addressLine: inlineAddress.addressLine,
+              city: inlineAddress.city,
+              state: inlineAddress.state,
+              pincode: inlineAddress.pincode,
+            }
+          : {
+              fullName: selectedAddress?.name,
+              phone: selectedAddress?.phone,
+              addressLine: selectedAddress?.addressLine,
+              city: selectedAddress?.city,
+              state: selectedAddress?.state,
+              pincode: selectedAddress?.pincode,
+            },
+      addressId:
+        savedAddressId ||
+        (addresses.length === 0 ? null : selectedAddressId),
+      coupon: appliedCoupon || "",
       paymentMethod,
     };
   };
@@ -233,7 +228,7 @@ const CheckoutPage = () => {
 
       if (paymentMethod === "WALLET") {
         const res = await placeWalletOrder(orderData);
-        if (!isBuyNow) await fetchCart(); // Only clear cart for normal checkout
+        await fetchCart();
         toast.success("Order placed successfully using wallet!");
         navigate("/order-success", { state: { order: res.data.order } });
         return;
@@ -241,7 +236,7 @@ const CheckoutPage = () => {
 
       if (paymentMethod === "COD") {
         const res = await placeCODOrder(orderData);
-        if (!isBuyNow) await fetchCart(); // Only clear cart for normal checkout
+        await fetchCart();
         toast.success("Order placed successfully!");
         navigate("/order-success", { state: { order: res.data.order } });
         return;
@@ -255,7 +250,7 @@ const CheckoutPage = () => {
         return;
       }
 
-      const rpRes = await createRazorpayOrder({ amount: orderData.total });
+      const rpRes = await createRazorpayOrder({ amount: total });
       const rpOrder = rpRes.data.order;
 
       const options = {
@@ -271,7 +266,7 @@ const CheckoutPage = () => {
               razorpay_signature: response.razorpay_signature,
               orderData,
             });
-            if (!isBuyNow) await fetchCart(); // Only clear cart for normal checkout
+            await fetchCart();
             toast.success("Payment successful!");
             navigate("/order-success", {
               state: { order: verifyRes.data.order },
@@ -296,51 +291,21 @@ const CheckoutPage = () => {
     }
   };
 
-  // Display total based on buy now or cart
-  const displayTotal = isBuyNow ? (orderItems[0]?.price || 0) : total;
-  
   const isButtonDisabled =
     loading ||
     (!selectedAddress && addresses.length > 0) ||
-    (paymentMethod === "WALLET" && walletBalance < displayTotal);
+    (paymentMethod === "WALLET" && walletBalance < total);
 
   const getButtonLabel = () => {
     if (paymentMethod === "WALLET")
-      return `Pay with Wallet — ₹${displayTotal.toLocaleString("en-IN")}`;
-    return `Place Order — ₹${displayTotal.toLocaleString("en-IN")}`;
+      return `Pay with Wallet — ₹${total.toLocaleString("en-IN")}`;
+    return `Place Order — ₹${total.toLocaleString("en-IN")}`;
   };
-
-  // Display order items in summary
-  const displaySubtotal = isBuyNow ? (orderItems[0]?.price || 0) : subtotal;
-  const displayShipping = isBuyNow ? 0 : shipping;
-  const displayTax = isBuyNow ? 0 : tax;
-  const displayDiscount = isBuyNow ? 0 : discount;
 
   return (
     <div className="min-h-screen bg-gray-100 py-10 px-4">
       <div className="max-w-lg mx-auto bg-white rounded-xl shadow-lg p-6">
         <h2 className="text-2xl font-bold mb-6">Checkout</h2>
-
-        {/* Show Order Items Preview for Buy Now */}
-        {isBuyNow && orderItems[0] && (
-          <div className="mb-6 bg-gray-50 rounded-lg p-4">
-            <h3 className="font-semibold mb-2">Item to Purchase</h3>
-            <div className="flex gap-3">
-              {orderItems[0].image && (
-                <img 
-                  src={orderItems[0].image} 
-                  alt={orderItems[0].name}
-                  className="w-16 h-16 object-cover rounded"
-                />
-              )}
-              <div className="flex-1">
-                <p className="font-medium">{orderItems[0].name}</p>
-                <p className="text-indigo-600 font-bold">₹{orderItems[0].price}</p>
-                <p className="text-sm text-gray-500">Quantity: 1</p>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* ADDRESS SECTION */}
         <div className="mb-6">
@@ -445,36 +410,32 @@ const CheckoutPage = () => {
           <h3 className="font-semibold mb-2 text-gray-800">Order Summary</h3>
           <div className="flex justify-between">
             <span className="text-gray-600">Subtotal</span>
-            <span className="text-gray-800">₹{displaySubtotal.toLocaleString("en-IN")}</span>
+            <span className="text-gray-800">₹{subtotal.toLocaleString("en-IN")}</span>
           </div>
-          {!isBuyNow && (
-            <>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Shipping</span>
-                <span className="text-gray-800">₹{displayShipping.toLocaleString("en-IN")}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Tax</span>
-                <span className="text-gray-800">₹{displayTax.toLocaleString("en-IN")}</span>
-              </div>
-              {displayDiscount > 0 && (
-                <div className="flex justify-between text-green-600">
-                  <span>Discount</span>
-                  <span>-₹{displayDiscount.toLocaleString("en-IN")}</span>
-                </div>
-              )}
-              {appliedCoupon && (
-                <div className="flex justify-between text-indigo-600 text-xs">
-                  <span>Coupon Applied</span>
-                  <span className="font-mono">{appliedCoupon}</span>
-                </div>
-              )}
-            </>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Shipping</span>
+            <span className="text-gray-800">₹{shipping.toLocaleString("en-IN")}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Tax</span>
+            <span className="text-gray-800">₹{tax.toLocaleString("en-IN")}</span>
+          </div>
+          {discount > 0 && (
+            <div className="flex justify-between text-green-600">
+              <span>Discount</span>
+              <span>-₹{discount.toLocaleString("en-IN")}</span>
+            </div>
+          )}
+          {appliedCoupon && (
+            <div className="flex justify-between text-indigo-600 text-xs">
+              <span>Coupon Applied</span>
+              <span className="font-mono">{appliedCoupon}</span>
+            </div>
           )}
           <div className="flex justify-between font-bold border-t pt-2 mt-2">
             <span className="text-gray-800">Total</span>
             <span className="text-indigo-600 text-lg">
-              ₹{displayTotal.toLocaleString("en-IN")}
+              ₹{total.toLocaleString("en-IN")}
             </span>
           </div>
         </div>
@@ -548,7 +509,7 @@ const CheckoutPage = () => {
           )}
         </div>
 
-        {/* PLACE ORDER BUTTON */}
+        {/* ✅ PLACE ORDER BUTTON — with spinner */}
         <button
           onClick={handlePlaceOrder}
           disabled={isButtonDisabled}
