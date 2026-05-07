@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
+import api from "../utils/api";
+// const BASE_URL = import.meta.env.VITE_API_URL;
 
-const BASE_URL = import.meta.env.VITE_API_URL;
-
-const getAuthHeaders = () => ({
-  "Content-Type": "application/json",
-  Authorization: `Bearer ${localStorage.getItem("adminToken") || ""}`,
-});
+// const getAuthHeaders = () => ({
+//   "Content-Type": "application/json",
+//   Authorization: `Bearer ${localStorage.getItem("adminToken") || ""}`,
+// });
 
 const STATUS_COLORS = {
   Pending:   "bg-amber-50 text-amber-700 ring-1 ring-amber-200",
@@ -91,20 +91,18 @@ const AdminDashboard = () => {
         setLoading(true);
         setError(null);
 
-        const res = await fetch(`${BASE_URL}/api/admin/dashboard/stats`, {
-          headers: getAuthHeaders(),
-        });
+        const res = await api.get("/dashboard/stats");
 
-        const contentType = res.headers.get("content-type") || "";
-        if (!contentType.includes("application/json")) {
-          const text = await res.text();
-          console.error("Non-JSON response:", text.slice(0, 300));
-          throw new Error(`Server returned HTML (status ${res.status}) — check backend route`);
-        }
+        // const contentType = res.headers.get("content-type") || "";
+        // if (!contentType.includes("application/json")) {
+        //   const text = await res.text();
+        //   console.error("Non-JSON response:", text.slice(0, 300));
+        //   throw new Error(`Server returned HTML (status ${res.status}) — check backend route`);
+        // }
 
-        const data = await res.json();
-        if (!res.ok) throw new Error(data?.message || `Server error: ${res.status}`);
-        setStats(data);
+        // const data = await res.json();
+        // if (!res.ok) throw new Error(data?.message || `Server error: ${res.status}`);
+        setStats(res.data);
       } catch (err) {
         setError(err.message);
       } finally {

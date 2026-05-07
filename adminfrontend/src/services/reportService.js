@@ -10,12 +10,13 @@ const getAuthHeaders = () => {
 
 export const fetchSalesReport = async (startDate, endDate) => {
  
-  const url = `http://localhost:5000/api/admin/reports/sales?startDate=${startDate}&endDate=${endDate}`;
-
-  const response = await fetch(url, {
-    method: "GET",
-    headers: getAuthHeaders(),
-  });
+const response = await api.get(
+    `/reports/sales?startDate=${startDate}&endDate=${endDate}`
+  );
+  // const response = await fetch(url, {
+  //   method: "GET",
+  //   headers: getAuthHeaders(),
+  // });
 
 
   if (!response.ok) {
