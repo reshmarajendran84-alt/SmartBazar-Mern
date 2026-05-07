@@ -1,6 +1,10 @@
 import nodemailer from "nodemailer";
+
 const sendEmail = async (to, otp) => {
   try {
+    console.log("EMAIL_USER:", process.env.EMAIL_USER);
+    console.log("EMAIL_PASS exists:", !!process.env.EMAIL_PASS);
+
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -8,6 +12,9 @@ const sendEmail = async (to, otp) => {
         pass: process.env.EMAIL_PASS,
       },
     });
+
+    await transporter.verify();
+    console.log("SMTP Ready");
 
     await transporter.sendMail({
       from: `"SmartBazar" <${process.env.EMAIL_USER}>`,
@@ -18,8 +25,11 @@ const sendEmail = async (to, otp) => {
         <p>This OTP is valid for 5 minutes.</p>
       `,
     });
+
+    console.log("Email sent successfully");
   } catch (error) {
-    throw new Error("Email sending failed");
+    console.error("MAIL ERROR:", error);
+    throw new Error(error.message);
   }
 };
 
