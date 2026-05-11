@@ -45,15 +45,48 @@ class CategoryController {
     }
   }
 
-  async updateCategory(req, res) {
-    try {
-      const data = await CategoryService.updateCategory(req.params.id, req.body);
-      res.json(data);
-    } catch (error) {
-      res.status(400).json({ message: error.message });
-    }
-  }
+async updateCategory(req, res) {
+  try {
+    const { name } = req.body;
 
+    if (!name || !name.trim()) {
+      return res.status(400).json({
+        message: "Category name is required"
+      });
+    }
+
+    const duplicate = await Category.findOne({
+      _id: { $ne: req.params.id },
+      name: { $regex: new RegExp(`^${name.trim()}$`, "i") }
+    });
+
+    if (duplicate) {
+      return res.status(400).json({
+        message: "Category already exists"
+      });
+    }
+
+    const updated = await Category.findByIdAndUpdate(
+      req.params.id,
+      { name: name.trim() },
+      { new: true, runValidators: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({
+        message: "Category not found"
+      });
+    }
+
+    res.json(updated);
+
+  } catch (error) {
+    console.log("UPDATE ERROR:", error);
+    res.status(400).json({
+      message: error.message
+    });
+  }
+}
   async deleteCategory(req, res) {
     try {
       await CategoryService.deleteCategory(req.params.id);

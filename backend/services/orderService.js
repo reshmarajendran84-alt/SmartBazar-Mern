@@ -93,27 +93,43 @@ class OrderService {
 
 
   // ─── Verify Razorpay signature + save order ───────────────────────────────
-  async verifyAndSaveOrder(userId, body) {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderData } = body;
+async verifyAndSaveOrder(userId, body) {
+  const {
+    razorpay_order_id,
+    razorpay_payment_id,
+    razorpay_signature,
+    orderData = {}
+  } = body;
 
-    const expectedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-      .update(razorpay_order_id + "|" + razorpay_payment_id)
-      .digest("hex");
-
-    if (expectedSignature !== razorpay_signature) throw new Error("INVALID_SIGNATURE");
-
-    const order = await this.createOrder(
-      userId,
-      { ...orderData, paymentMethod: "ONLINE" },
-      razorpay_order_id
-    );
-    order.status = "Confirmed";
-    order.razorpayPaymentId = razorpay_payment_id;
-    await order.save();
-    return order;
+  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+    throw new Error("Missing payment details");
   }
 
+  const expectedSignature = crypto
+    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+    .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+    .digest("hex");
+
+  if (expectedSignature !== razorpay_signature) {
+    throw new Error("INVALID_SIGNATURE");
+  }
+
+  const order = await this.createOrder(
+    userId,
+    {
+      ...orderData,
+      paymentMethod: "ONLINE"
+    },
+    razorpay_order_id
+  );
+
+  order.status = "Confirmed";
+  order.razorpayPaymentId = razorpay_payment_id;
+
+  await order.save();
+
+  return order;
+}
   // ─── Cancel order ─────────────────────────────────────────────────────────
   async cancelOrder(orderId, userId) {
     const order = await Order.findById(orderId);

@@ -16,9 +16,16 @@ class CategoryService {
     return await Category.findById(id);
   }
 
-  async updateCategory(id, data) {
-    return await Category.findByIdAndUpdate(id, data, { new: true });
-  }
+ async updateCategory(id, data) {
+  return await Category.findByIdAndUpdate(
+    id,
+    data,
+    {
+      new: true,
+      runValidators: true
+    }
+  );
+}
 
   async deleteCategory(id) {
   return await Category.findByIdAndUpdate(id, { isDeleted: true }, { new: true });
